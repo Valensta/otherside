@@ -1,0 +1,121 @@
+using System.Collections.Generic;
+using UnityEngine;
+[System.Serializable]
+public class SaveGameState: System.Object {
+    public SaveGameType type;
+    public List<IslandSaver> islands = new List<IslandSaver>();
+    public float dreams;
+    public float health;
+    public float sensible_wish;
+    public float airy_wish;
+    public float vexing_wish;
+    public List<ScoreDetails> score_details;
+    public float total_score;
+    public float possible_wishes;
+    public float possible_dreams;
+    public float difficulty;
+
+    public int sensible_hero_point;
+    public int airy_hero_point;
+    public int vexing_hero_point;
+    public int current_wave;
+    public int current_event;
+    public bool current_event_is_ingame;
+	public List<actorStats> actor_stats = new List<actorStats> ();
+	public List<ToySaver> hero_stats = new List<ToySaver>();
+    public List<EffectType> skills_in_inventory = new List<EffectType>();
+	public bool snapshot;
+	public float time_of_day;
+    public List<string> concurrent_events;
+    public List<Wish> wishes;
+    public Reward[] rewards;
+
+    public SaveGameState()
+    {
+
+    }	
+   
+
+  
+    public SaveGameState(float _dreams, float _health, int _current_wave, float _sens, float _airy, float _vex, int _sens_hero, int _airy_hero, int _vex_hero, float _difficulty)
+    {
+		
+        dreams = _dreams;
+        health = _health;
+        sensible_wish = _sens;
+        airy_wish = _airy;
+        vexing_wish = _vex;
+        current_wave = _current_wave;
+        sensible_hero_point = _sens_hero;
+        airy_hero_point = _airy_hero;
+        vexing_hero_point = _vex_hero;
+        difficulty = _difficulty;
+
+    }
+
+
+
+    public void SaveInventory()
+    {
+        wishes = Peripheral.Instance.my_inventory.getWishList();
+        skills_in_inventory = Peripheral.Instance.my_skillmaster.in_inventory;
+    }
+
+	public void SaveTime(){		
+		
+		time_of_day = Sun.Instance.current_time_of_day;
+	}
+
+    public void SaveIslands()
+	{
+    
+        foreach (Island_Button island in Monitor.Instance.islands.Values)
+        {
+        
+            
+            IslandSaver saver = island.getSnapshot();            
+			if (saver == null) continue;
+            
+            else
+            {
+                if (saver.toy_saver != null && (saver.toy_saver.type == ToyType.Hero || saver.toy_saver.rune.runetype == RuneType.Castle))
+                {
+                    Central.Instance.game_saver.getHeroStats(saver.toy_saver);
+                }
+                islands.Add(saver);
+            }
+           
+            
+        } 		
+     
+				
+	}
+
+    public ToySaver getCastle()
+    {
+        foreach (ToySaver t in hero_stats) if (t.rune.runetype == RuneType.Castle) return t;
+        return null;
+    }
+
+    public void LoadHeroStats()
+    {
+        foreach (ToySaver t in hero_stats)
+        {
+            Central.Instance.game_saver.setHeroStats(t);
+        }
+    }
+
+
+	public void SaveToyStats(){
+		foreach (actorStats a in Central.Instance.actors){
+			if (a.friendly) //monsters never change
+				actor_stats.Add (a);
+		}
+		
+		hero_stats = Central.Instance.getAllHeroStats();
+	}
+
+
+	
+
+}

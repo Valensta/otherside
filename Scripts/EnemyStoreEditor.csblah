@@ -1,0 +1,191 @@
+using UnityEngine;
+using System.Collections;
+using System.Text;
+using System.IO;
+using System.Collections.Generic;
+using UnityEditor;
+
+
+
+public class EnemyStoreEditor : EditorWindow
+{
+
+    public EnemyStore enemyStore;
+    private int viewIndex = 1;
+
+    [MenuItem("Window/Enemy Store Editor %#e")]
+    static void Init()
+    {
+        EditorWindow.GetWindow(typeof(EnemyStoreEditor));
+    }
+
+    void OnEnable()
+    {
+        if (EditorPrefs.HasKey("ObjectPath"))
+        {
+            string objectPath = EditorPrefs.GetString("ObjectPath");
+            enemyStore = AssetDatabase.LoadAssetAtPath(objectPath, typeof(EnemyStore)) as EnemyStore;
+        }
+
+    }
+
+    void OnGUI()
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Inventory Item Editor", EditorStyles.boldLabel);
+        if (enemyStore != null)
+        {
+            if (GUILayout.Button("Show Item List"))
+            {
+                EditorUtility.FocusProjectWindow();
+                Selection.activeObject = enemyStore;
+            }
+        }
+        if (GUILayout.Button("Open Item List"))
+        {
+            OpenItemList();
+        }
+        if (GUILayout.Button("New Item List"))
+        {
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = enemyStore;
+        }
+        GUILayout.EndHorizontal();
+
+        if (enemyStore == null)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+            if (GUILayout.Button("Create New Item List", GUILayout.ExpandWidth(false)))
+            {
+                CreateNewItemList();
+            }
+            if (GUILayout.Button("Open Existing Item List", GUILayout.ExpandWidth(false)))
+            {
+                OpenItemList();
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        GUILayout.Space(20);
+
+        if (enemyStore != null)
+        {
+            GUILayout.BeginHorizontal();
+
+            GUILayout.Space(10);
+
+            if (GUILayout.Button("Prev", GUILayout.ExpandWidth(false)))
+            {
+                if (viewIndex > 1)
+                    viewIndex--;
+            }
+            GUILayout.Space(5);
+            if (GUILayout.Button("Next", GUILayout.ExpandWidth(false)))
+            {
+                if (viewIndex < enemyStore.itemList.Count)
+                {
+                    viewIndex++;
+                }
+            }
+
+            GUILayout.Space(60);
+
+            if (GUILayout.Button("Add Item", GUILayout.ExpandWidth(false)))
+            {
+                AddItem();
+            }
+            if (GUILayout.Button("Delete Item", GUILayout.ExpandWidth(false)))
+            {
+                DeleteItem(viewIndex - 1);
+            }
+
+            GUILayout.EndHorizontal();
+            if (enemyStore.itemList == null)
+                Debug.Log("wtf");
+            if (enemyStore.itemList.Count > 0)
+            {
+                GUILayout.BeginHorizontal();
+                viewIndex = Mathf.Clamp(EditorGUILayout.IntField("Current Item", viewIndex, GUILayout.ExpandWidth(false)), 1, enemyStore.itemList.Count);
+                //Mathf.Clamp (viewIndex, 1, enemyStore.itemList.Count);
+                EditorGUILayout.LabelField("of   " + enemyStore.itemList.Count.ToString() + "  items", "", GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+                
+                enemyStore.itemList[viewIndex - 1].inventory = EditorGUILayout.ObjectField("Item Name", enemyStore.itemList[viewIndex - 1].itemName as string);
+                enemyStore.itemList[viewIndex - 1].itemIcon = EditorGUILayout.ObjectField("Item Icon", enemyStore.itemList[viewIndex - 1].itemIcon, typeof(Texture2D), false) as Texture2D;
+                enemyStore.itemList[viewIndex - 1].itemObject = EditorGUILayout.ObjectField("Item Object", enemyStore.itemList[viewIndex - 1].itemObject, typeof(Rigidbody), false) as Rigidbody;
+
+                GUILayout.Space(10);
+
+                GUILayout.BeginHorizontal();
+                enemyStore.itemList[viewIndex - 1].isUnique = (bool)EditorGUILayout.Toggle("Unique", enemyStore.itemList[viewIndex - 1].isUnique, GUILayout.ExpandWidth(false));
+                enemyStore.itemList[viewIndex - 1].isIndestructible = (bool)EditorGUILayout.Toggle("Indestructable", enemyStore.itemList[viewIndex - 1].isIndestructible, GUILayout.ExpandWidth(false));
+                enemyStore.itemList[viewIndex - 1].isQuestItem = (bool)EditorGUILayout.Toggle("QuestItem", enemyStore.itemList[viewIndex - 1].isQuestItem, GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+
+                GUILayout.Space(10);
+
+                GUILayout.BeginHorizontal();
+                enemyStore.itemList[viewIndex - 1].isStackable = (bool)EditorGUILayout.Toggle("Stackable ", enemyStore.itemList[viewIndex - 1].isStackable, GUILayout.ExpandWidth(false));
+                enemyStore.itemList[viewIndex - 1].destroyOnUse = (bool)EditorGUILayout.Toggle("Destroy On Use", enemyStore.itemList[viewIndex - 1].destroyOnUse, GUILayout.ExpandWidth(false));
+                enemyStore.itemList[viewIndex - 1].encumbranceValue = EditorGUILayout.FloatField("Encumberance", enemyStore.itemList[viewIndex - 1].encumbranceValue, GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+                
+                GUILayout.Space(10);
+
+            }
+            else
+            {
+                GUILayout.Label("This Inventory List is Empty.");
+            }
+        }
+        if (GUI.changed)
+        {
+            EditorUtility.SetDirty(enemyStore);
+        }
+    }
+
+    void CreateNewItemList()
+    {
+        // There is no overwrite protection here!
+        // There is No "Are you sure you want to overwrite your existing object?" if it exists.
+        // This should probably get a string from the user to create a new name and pass it ...
+        viewIndex = 1;
+        enemyStore = CreateEnemyStore.Create();
+        if (enemyStore)
+        {
+            enemyStore.itemList = new List<actorStats>();
+            string relPath = AssetDatabase.GetAssetPath(enemyStore);
+            EditorPrefs.SetString("ObjectPath", relPath);
+        }
+    }
+
+    void OpenItemList()
+    {
+        string absPath = EditorUtility.OpenFilePanel("Select Inventory Item List", "", "");
+        if (absPath.StartsWith(Application.dataPath))
+        {
+            string relPath = absPath.Substring(Application.dataPath.Length - "Assets".Length);
+            enemyStore = AssetDatabase.LoadAssetAtPath(relPath, typeof(EnemyStore)) as EnemyStore;
+            if (enemyStore.itemList == null)
+                enemyStore.itemList = new List<actorStats>();
+            if (enemyStore)
+            {
+                EditorPrefs.SetString("ObjectPath", relPath);
+            }
+        }
+    }
+
+    void AddItem()
+    {
+        actorStats newItem = new actorStats();
+        newItem.name = "New Item";
+        enemyStore.itemList.Add(newItem);
+        viewIndex = enemyStore.itemList.Count;
+    }
+
+    void DeleteItem(int index)
+    {
+        enemyStore.itemList.RemoveAt(index);
+    }
+}

@@ -1,0 +1,406 @@
+using UnityEngine;
+using System.Collections;
+using System.Text;
+using System.IO;
+using System.Collections.Generic;
+
+public class Actor : MonoBehaviour
+{
+
+		public float currHP;
+		public int lvl;
+		public int maxHP_l = 0;
+		public int dmg_l = 0;
+		public Light light;
+		public Transform arrow_origin;
+		//public float range = 6;
+		Vector2 myAngle = new Vector2 (0, -1);
+		public float TIME = 0;
+		public Tweener tween = new Tweener ();
+		[Range(0f,1f)]
+		public float defense_size;
+		[Range(0f,1f)]
+		public float defense_speed;
+		[Range(0f,1f)]
+		public float defense_damage;
+		public float reload_time;
+		public actorStats stats;
+		float turnSpeed = 0.05f; //(between 0 and 1, should be angle/360)
+		public Transform myTarget = null;
+		public float reloadTime;
+		public float firePauseTime;
+		public Transform center;
+		public GameObject island;
+		private float nextMoveTime;
+		private float nextFireTime;
+		private Quaternion desiredRotation;
+		private Quaternion turn;
+		private float errorAmount = 0f;
+		private float aimError = 0f;
+		private Vector3 a_pos;
+		private Vector3 a_size = new Vector3 (10f, 10f, 10f) ; //arrow dimensions
+		public bool animate;
+		public GameObject player_range; // for areaeffect collider0
+		public GameObject parent;
+		public GameObject actor;
+		private int display_lvl;
+		private int max_lvl; //maximum number off upgrades
+		private Arrow shh;
+		public int ammo;
+		float tileSize;
+		Hashtable inArgs = new Hashtable ();
+		Hashtable outArgs = new Hashtable ();
+		Hashtable colors = new Hashtable ();
+		public GameObject mesh;
+		Animator animator;
+		float lavafloor;
+		Vector3 init_scale;
+		float init_speed;
+		float init_mass;
+
+		public void initStats (actorStats s)
+		{
+				currHP = s.maxHP [maxHP_l];
+				stats = s;
+				tileSize = Peripheral.Instance.tileSize;
+				if (this.tag == "Enemy") {
+						init_scale = s.scale;
+						init_speed = GetComponent<AI> ().speed;
+						init_mass = GetComponent<Rigidbody> ().mass;
+				}
+		}
+
+		void Start ()
+		{
+				lavafloor = Peripheral.Instance.getLavaFloor ();
+				if (tween) {
+						tween.SetTargetMaterial ("Hurt (Instance)");
+						tween.mesh = mesh;
+				}
+				lvl = 0;
+				display_lvl = 1;
+
+				if (animate) {
+						animator = GetComponentInChildren<Animator> ();
+				}
+		 
+		}
+
+		public void HurtMe (EffectType type, Vector3 force)
+		{
+				if (type == EffectType.Force && defense_damage < 1) {
+						ForceMe ((1f - defense_damage) * force);
+						tween.TweenMe (Tweener.TweenType.ColorOnce, type.ToString ());
+				}
+		}
+
+		public void HurtMe (EffectType type, float dam)
+		{
+				if (type == EffectType.Scale && defense_size < 1) {
+						SizeMe (2f - defense_size);
+				}
+
+				if (type == EffectType.Force && defense_damage < 1) {
+						ForceMe ((1f - defense_damage) * dam);
+						if (animate) {
+								animator.SetTrigger ("hit");//Debug.Log ("Hit\n");
+						}
+				}
+				if (type == EffectType.Speed && defense_speed < 1) {
+						SpeedMe (defense_speed);
+				}
+	
+				tween.TweenMe (Tweener.TweenType.ColorOnce, type.ToString ());
+
+		}
+		// Update is called once per frame
+		void Update ()
+		{
+				//	Debug.Log ("update");
+				TIME += Time.deltaTime;
+				if (this.tag != null && this.tag.Equals ("Player")) {
+						if (stats != null &&  stats.areaEffect == false) {
+								
+								if (myTarget) {
+										//	Debug.Log("got enemy " + myTarget.name);
+										CalcAimPosition (myTarget.transform.position);
+										center.rotation = turn;
+								
+										if (TIME > nextFireTime) {
+												//	Debug.Log("Firing " + TIME + "\n");
+												FireProjectile ();
+										} 
+								} else {
+										if (Peripheral.Instance.monsters > 0) {
+												//	Debug.Log("gonna get closest enemy");
+												getClosestEnemy ();
+										}
+										if (GetComponent<AI> () && GetComponent<AI> ().player && GetComponent<AI> ().player.position != GetComponent<AI> ().transform.position) {
+												CalcAimPosition (GetComponent<AI> ().player.position);
+
+												center.rotation = turn;
+		
+										}
+								}
+						}
+				}
+				//too low
+				if (transform.position.y < lavafloor) {
+					//	Debug.Log (this.name + "f is dying because too low @ " + lavafloor + "\n");
+						Die ();
+				}
+
+				//too high
+				/*
+		if (transform.position.y > 5*tileSize) {
+			Debug.Log(this.name + " is dying because too high\n");
+			Die ();
+		}*/
+				/*
+		if (currHP <= 0) {
+			Debug.Log(stats.name + " DYING");
+			Die();
+		}
+		*/
+
+
+				if (this.transform.localScale.magnitude < 0.1) {
+						Debug.Log (this.name + " is dying because too small\n");
+						Die ();
+				}
+
+				if (ammo == 0) {
+						Debug.Log (this.name + " is dying because ammo is 0\n");
+						Die ();
+				}
+/*
+		if (this.tag == "Enemy" && GetComponent<Rigidbody>().velocity.magnitude < 1) {
+			Debug.Log(this.name + " is dying because too slow\n");
+			Die();
+		}
+
+*/
+		}
+
+		void FireProjectile ()
+		{
+				if (ammo != -1) {
+						//		Debug.Log ("AMMO IS " + ammo);
+						if (ammo == 0) {
+								return;
+						}
+			
+						ammo--;
+				}
+
+				CalculateAimError ();
+
+				Vector3 firefrom = transform.position;
+				if (arrow_origin != null) {
+						firefrom = arrow_origin.position;
+				}
+	
+				CalcAimPosition (myTarget.position);
+				desiredRotation = center.transform.localRotation;
+
+
+				GameObject parent = GameObject.Find ("Arrows");
+				GameObject newMissile = (GameObject)Instantiate (Resources.Load ("Arrows/" + stats.arrow + "_arrow"), firefrom, desiredRotation);
+				newMissile.transform.parent = parent.transform;
+				newMissile.GetComponent<Arrow> ().range = stats.range;
+
+				//	Debug.Log ("Arrow's forward could also be " + newMissile.transform.forward);
+				if (this.tag.Equals ("Enemy")) {
+						newMissile.tag = "EnemyArrow";
+				}
+				if (this.tag.Equals ("Player")) {
+						newMissile.tag = "PlayerArrow";
+				}
+
+
+				newMissile.GetComponent<Arrow> ().damage = stats.dmg [dmg_l];
+
+				shh = newMissile.GetComponent<Arrow> ();
+				shh.myTarget = myTarget;
+
+				getClosestEnemy ();
+
+		}
+
+		void CalculateAimError ()
+		{
+				aimError = Random.Range (-errorAmount, errorAmount);
+		}
+
+		public void DieSpecial ()
+		{
+				StartCoroutine (this.DieSlowly ());	
+		}
+
+		IEnumerator DieSlowly ()	
+		{
+		float total = 1f;
+		int steps = 10;
+		for (int i = 0; i< steps; i++) {
+			SizeMe(0.85f);
+		//	Debug.Log("Sized to die " + i);
+			yield return new WaitForSeconds (total/steps);
+		}
+		Die ();
+
+		}
+
+		public void Die ()
+		{
+
+				if (this.tag.Equals ("Player"))
+						Peripheral.Instance.toys--;
+				if (island != null) {	
+						Destroy (island.GetComponent<Island_Button> ().parent);
+				}
+		
+				if (this.tag.Equals ("Enemy") || this.tag.Equals ("EnemyWon")) {
+						float yay = ((float)stats.cost [0]) / 10f;
+					//Debug.Log("adding dreams: " + yay + "\n");
+						Peripheral.Instance.addDreams(yay);
+						Peripheral.Instance.monsters--;
+						MakeEffect (this.transform.position);
+				}
+				Destroy (this.gameObject);
+				DestroyObject (this);
+		
+		}
+
+		void MakeEffect (Vector3 pos)
+		{
+	
+				float random = Random.Range (0, 1f);
+				EffectType[] list = new EffectType[stats.inventory.Count];
+				stats.inventory.Keys.CopyTo (list, 0);
+				bool make = false;
+				Effect e = new Effect ();
+   
+				float random_place = 0;
+				foreach (EffectType t in list) {
+						random_place += stats.inventory [t].percent;
+						if (random < random_place) {
+								e = stats.inventory [t];
+								make = true;
+								break;
+						}
+				}
+
+				if (make) {
+						GameObject effect = (GameObject)Instantiate (Resources.Load ("Effects/" + e.type.ToString ()), pos, Quaternion.identity);
+						effect.transform.parent = GameObject.Find ("Effects").transform;
+				}
+	
+		}
+
+		void getClosestEnemy ()
+		{
+				Transform best = null;
+				float best_distance = Mathf.Infinity;
+				GameObject parent = GameObject.Find ("Monsters");
+				foreach (Transform m in parent.transform) {
+
+						float new_dist = Vector3.Distance (m.position, this.transform.position);
+
+						if (new_dist < best_distance && new_dist < stats.range * Peripheral.Instance.tileSize) {
+								best = m;
+								best_distance = new_dist; 
+						}
+			
+				}
+				if (best_distance != Mathf.Infinity) {
+						//		Debug.Log("nextFireTime is " + nextFireTime);
+						nextFireTime = TIME + (reloadTime);
+						myTarget = best;
+				} else {
+						myTarget = null;
+				}
+
+
+		}
+
+		public void MassMe (float aff)
+		{
+				if (GetComponent<Rigidbody> ().mass * aff > init_mass * 0.15f) {
+						//	Debug.Log ("Massing down by " + aff);
+						this.GetComponent<Rigidbody> ().mass = this.GetComponent<Rigidbody> ().mass * aff;
+				}
+		}
+
+		public void SizeMe (float aff)
+		{
+				if ((aff < 1 && this.transform.localScale.magnitude * aff > init_scale.magnitude * 0.15f) || 
+		    (aff > 1 && this.transform.localScale.magnitude * aff < init_scale.magnitude * 3f)
+		    ) {
+		//	Debug.Log("Sizing " + aff + " " + (this.transform.localScale.magnitude * aff) + " > " + (init_scale.magnitude * 0.15f));
+						this.transform.localScale = this.transform.localScale * aff;
+
+				}
+				MassMe (aff * 0.8f);
+	
+		}
+
+		public void ForceMe (float aff)
+		{
+				GetComponent<AI> ().Stun (aff * 0.05f / 12000);
+		}
+
+		public void ForceMe (Vector3 aff)
+		{
+				//				Debug.Log (this.name + " affected by force " + aff + "\n");
+				GetComponent<Rigidbody> ().AddForce (aff, ForceMode.Acceleration);
+				GetComponent<AI> ().Stun (aff.magnitude * 0.05f / 12000);
+		}
+
+		public void SpeedMe (float aff)
+		{
+				//	Debug.Log ("speeded");
+				if (GetComponent<AI> ().speed * aff > init_speed * 0.5f) {
+						//	Debug.Log("Changing speed for " + this.name + " from " + GetComponent<AI> ().speed + " to " + GetComponent<AI> ().speed * aff);
+						GetComponent<AI> ().speed = GetComponent<AI> ().speed * aff;
+				}
+		}
+
+		void CalcAimPosition (Vector3 targetPos)
+		{
+				Vector2 aimPoint = new Vector3 (targetPos.x + aimError - transform.position.x, 
+		                                targetPos.z + aimError - transform.position.z);
+				aimPoint = Vector2.ClampMagnitude (aimPoint, 1);
+				Vector2 lerp = Vector2.Lerp (myAngle, aimPoint, turnSpeed);
+
+				float angle = Vector2.Angle (new Vector2 (0, 1), lerp);
+
+				Vector3 cross = Vector3.Cross (new Vector2 (0, 1), lerp);
+				if (cross.z > 0) {
+						angle = 360 - angle;
+				}
+
+				myAngle = lerp;
+				Quaternion turn2 = Quaternion.AngleAxis (angle, new Vector3 (0, 1, 0));
+	
+				turn = turn2;
+		}
+
+		public void StopFiring ()
+		{
+				myTarget = null;
+		}
+
+		public void OnCollisionEnter (Collision c)
+		{
+				if (c.gameObject.tag == "Ground") {
+						GetComponent<Rigidbody> ().AddForce (0, 400, 0);
+				}
+		}
+	
+		public void OnCollisionStay (Collision col)
+		{
+		
+				//	Debug.Log("There is something in front of the object!");
+		}
+
+}

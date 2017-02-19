@@ -1,0 +1,26 @@
+using UnityEngine;
+using System.Collections;
+using System.Text;
+using System.IO;
+using System.Collections.Generic;
+using UnityEditor;
+
+
+
+public class CreateEnemyStore{
+    
+
+    [MenuItem("Assets/Create/Enemy Store")]
+    public static EnemyStore Create()
+    {
+        EnemyStore asset = ScriptableObject.CreateInstance<EnemyStore>();
+
+        AssetDatabase.CreateAsset(asset, "Assets/EnemyStore.asset");
+        AssetDatabase.SaveAssets();
+        return asset;
+    }
+
+
+
+}
+
