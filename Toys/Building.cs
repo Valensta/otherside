@@ -5,6 +5,8 @@ using System.IO;
 using System.Collections.Generic;
 
 
+
+
 public class Building : Toy {
 
 	public SpriteRenderer construction_sprite;
@@ -18,7 +20,7 @@ public class Building : Toy {
 	public float current_construction_time;
 	public bool construction_in_progress;
 	
-	public override void initStats(actorStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune)
+	public override void initStats(unitStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune)
 	{
 	//	Debug.Log("Initializing " + _name + "\n");
 		
@@ -78,18 +80,13 @@ public class Building : Toy {
 		if (my_name.Equals("castle")) return;
 	//	Debug.Log("Construction finished for " + my_name + "\n");
 		Show.SetAlpha(building_sprite, 1f);
-		Show.SetAlpha(construction_sprite, 0f);
-
-        foreach (string toy in target_toys)
-        {
-            Peripheral.Instance.ActivateToy(toy);
-
-        }
-
+		Show.SetAlpha(construction_sprite, 0f);       
 
 		if (construction_indicator != null) construction_indicator.ammo.gameObject.SetActive(false);
 
         if (runetype == RuneType.Modulator) DoModulatorStuff();
+
+        if (runetype == RuneType.SensibleCity)Peripheral.Instance.addedCity(true, this);
 	}
 
     public bool isToyATarget(string s)

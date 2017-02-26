@@ -80,7 +80,9 @@ public class FadeMe : MonoBehaviour{
 	}
 */
 	public void OnClick(){
-		_FadeOut();
+        Tracker.Log("FadeMe OnClick " + this.gameObject.name);
+
+        _FadeOut();
 	}
 
 	void OnEnable (){	

@@ -23,7 +23,7 @@ public class HitMe : MonoBehaviour
     public float timer = 0f;
     public GameObject parent;
     public GameObject actor;
-    public actorStats stats;
+    public unitStats stats;
     bool dying; // if true, hitme is dead, dying, don't hit with arrow
     public EffectVisuals aura;
     public Vector3 status_bar_location = new Vector3(0, 0, 0.5f);
@@ -127,7 +127,7 @@ public class HitMe : MonoBehaviour
 
     }
 
-    public void initStats(actorStats s)
+    public void initStats(unitStats s)
     {
         //	if (tween == null) {tween = this.gameObject.AddComponent<Tweener>();}	
         if (my_ai == null)        my_ai = GetComponent<AI>(); 

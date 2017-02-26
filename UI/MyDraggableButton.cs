@@ -116,15 +116,16 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
     
 
 	public void OnInput(){
-        Debug.Log("on input " + type + "\n");
+      //  Tracker.Log("MyDraggableButton OnInput ");
 
 
         //setSelected(true);
-	}
+    }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (!interactable) return;
+        Tracker.Log("Island_Button OnBeginDrag");
     //    Debug.Log("mydraggablebutton onBEGINdrag\n");
         //  start_position = transform.localPosition;
         //  Central.Instance.my_spyglass.Enable(false);
@@ -171,6 +172,7 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
      //if (!interactable) return;
      //transform.localPosition = start_position;
      //   Debug.Log("On drag button end");
+        //Tracker.Log("Island_Button OnEndDrag");
         Reset();
     }
 

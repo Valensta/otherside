@@ -9,7 +9,7 @@ public abstract class Toy : MonoBehaviour {
     public bool active;
     public float TIME = 0;
     public string my_name;
-    public actorStats stats;
+    public unitStats stats;
     public GameObject death_effect_object;
 
     public Transform center;
@@ -37,7 +37,7 @@ public abstract class Toy : MonoBehaviour {
         rune_buttons.UpdateMe();
     }
 
-    abstract public void initStats(actorStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune);
+    abstract public void initStats(unitStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune);
 
 
     public void SetBonus(float bonus) {
@@ -48,7 +48,7 @@ public abstract class Toy : MonoBehaviour {
 
     protected abstract void onUpgrade(EffectType type, int ID);    
 
-    public void ToyInit(actorStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune)
+    public void ToyInit(unitStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune)
     {
         tilesize = i.getPeripheral().tileSize;
 
@@ -168,7 +168,9 @@ public abstract class Toy : MonoBehaviour {
 		StopAllCoroutines ();
 		
 		if (toy_type == ToyType.Temporary) island.MakeDeadIsland(-1);
-      //  island.blocked = false;
+        
+        if (runetype == RuneType.SensibleCity) Peripheral.Instance.addedCity(false, this);
+
         Peripheral.Instance.zoo.returnObject (this.gameObject);
 
 		//Peripheral.Instance.zoo.returnObject (island.parent, true);

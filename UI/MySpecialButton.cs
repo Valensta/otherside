@@ -100,14 +100,14 @@ public class MySpecialButton : UIButton
             Noisemaker.Instance.Click(ClickType.Error);
             return;
         }
-
+        
         
         Peripheral.Instance.ClearAll(SelectedType.InteractiveSkill, this.name);
         //if (!selected) { SetSelected(true); Debug.Log("Selecting inventory slot " + this.name + "\n"); }
         if (selected) Noisemaker.Instance.Click(ClickType.Cancel); else Noisemaker.Instance.Click(ClickType.Success);
         SetSelectedToy(!selected);
-        
 
+        Tracker.Log("MySpecialButton " + this.name + " selected " + selected);
 
         if (onButtonClicked != null) {
 			onButtonClicked (my_special.Skill.effect_type.ToString(), my_special.Skill.getDetailStats()[0].ToString());

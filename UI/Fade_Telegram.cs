@@ -14,6 +14,8 @@ public class Fade_Telegram : MonoBehaviour
 
     public void OnClick()
     {
+
+        Tracker.Log("Fade_Telegram " + this.gameObject.name);
         from.OnClick();
         to.FadeIn();
         if (pause)

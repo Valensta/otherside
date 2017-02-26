@@ -115,7 +115,7 @@ public class Zoo : MonoBehaviour {
 		if (p != null) {
 			o = GetFromPool (ref p, active);
 		} else {
-			Debug.Log("Zoo does not contain a " + name + "!! Making a new pool with " + default_add + " items.\n");
+	//		Debug.Log("Zoo does not contain a " + name + "!! Making a new pool with " + default_add + " items.\n");
 			p = new Pool();
             p.non_refundable = false;
 			p.name = name;

@@ -51,6 +51,8 @@ public class Moon : MonoBehaviour {
 	public Transform monsters_transform;
 	
 	public void SetWave(int w){
+        Debug.Log("SETTING WAVE " + w + "\n");
+        
 		current_wave = w;
 		Sun.Instance.SetWave(w);
 
@@ -79,7 +81,8 @@ public class Moon : MonoBehaviour {
 		return current_wave;
 	}
 	
-	void onWaveStart(int i){
+	void onWaveStart(int i){ //i is always current_wave but we need this for eventoverseers
+     
 		InitWave(i);
         Noisemaker.Instance.Play("wave_start");
         if (my_sun == null) my_sun = Sun.Instance;
@@ -87,7 +90,7 @@ public class Moon : MonoBehaviour {
 
 	public void InitEmpty(){
 		waves = new List<wave>();
-		
+        current_wave = 0;
 	}
 
 	public void AddWave(wave w){
@@ -104,7 +107,8 @@ public class Moon : MonoBehaviour {
 
 
 	public void InitWave(int i){
-		wait = -1;
+        Debug.Log("INITIALIZING WAVE " + i + "\n");
+        wait = -1;
 		my_wave = waves [i];
 		my_wavelet = null;
 		point_factor = my_wave.point_factor();
@@ -297,8 +301,7 @@ public class Moon : MonoBehaviour {
             Noisemaker.Instance.Play("wave_end");
             if (onWaveEnd !=  null) onWaveEnd(current_wave);
 			current_wave++;
-            //current_wavelet = 0;
-			Peripheral.Instance.current_wave = current_wave;
+            //current_wavelet = 0;			
 			WaveInProgress = false;
 			Peripheral.Instance.level_state = LState.WaveEnded;
             

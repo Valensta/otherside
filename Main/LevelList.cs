@@ -92,8 +92,8 @@ public class LevelList : MonoBehaviour {
     void Start()
     {
 
-        test_mode = (Application.isEditor);
-     //   test_mode = false;
+       // test_mode = (Application.isEditor);
+        test_mode = false;
               test_mode_toggle.isOn = test_mode;
         
 

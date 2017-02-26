@@ -31,9 +31,10 @@ using System;
 
    
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%              LOAD FILE
-    public void LoadLevel()
+    public void oldLoadLevel()
     {
-
+        Debug.LogError("!!!!!!USING DEPRICATED LOADLEVEL. STOP!!!!!");
+        return;
         string line;
         //	Debug.Break ();
         line = file.Dequeue();
@@ -50,19 +51,19 @@ using System;
             {
 
                 case ":toys":
-                    line = LoadActors("Toys");
+                    line = oldLoadActors("Toys");
                     break;
                 case ":monsters":
-                    line = LoadActors("Monsters");
+                    line = oldLoadActors("Monsters");
                     break;
                 case ":waves":
-                    line = LoadWaves();
+                    line = oldLoadWaves();
                     break;
                 case ":wishes":
-                    line = LoadWishes();
+                    line = oldLoadWishes();
                     break;
                 case ":init_stats":
-                    line = LoadStats(false);
+                    line = oldLoadStats(false);
                     break;
                 case ":":
                     break;
@@ -80,7 +81,7 @@ using System;
 	
 
 
-	public string LoadStats(bool init){
+	public string oldLoadStats(bool init){
 		string line = file.Dequeue();
 	//	Debug.Log("Loading init stats\n");
 		while (line != null && !line[0].Equals (':')) {		
@@ -134,7 +135,7 @@ using System;
 	}
 
 
-    public string LoadWishes()
+    public string oldLoadWishes()
     {
         string line = file.Dequeue();
         WishDial[] dials = new WishDial[Enum.GetValues(typeof(WishType)).Length];
@@ -167,7 +168,7 @@ using System;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        	LOAD WAVES
 
-public string LoadWaves()
+public string oldLoadWaves()
     {
         Debug.LogError("USE THE NEW FANCY LOADER FOR WAVES\n");
         return "";/*
@@ -315,7 +316,7 @@ public string LoadWaves()
     
 
 
-	public void loadRunes(JSONObject e, ref actorStats stats){
+	public void loadRunes(JSONObject e, ref unitStats stats){
 		
 		string[] efs;
 		efs = (e.dict["type"].value).Split (',');
@@ -382,7 +383,7 @@ public string LoadWaves()
                     line = LoadAllActors("Monsters");
                     break;
                 case ":init_stats":
-                    line = LoadStats(true);
+                    line = oldLoadStats(true);
                     break;
                 case ":":
                     break;
@@ -396,7 +397,7 @@ public string LoadWaves()
     }
 
 
-	public actorStats LoadActor(string line, string what){
+	public unitStats LoadActor(string line, string what){
       //  Debug.Log("Loading actor\n");
 		JSONObject pname = new JSONObject ();
 		JSONObject pcost = new JSONObject ();
@@ -410,7 +411,7 @@ public string LoadWaves()
 		JSONObject prunes = new JSONObject ();
         JSONObject ppermanent = new JSONObject();
         JSONObject pammo = new JSONObject ();		
-		JSONObject pactive = new JSONObject ();
+		JSONObject punlock_now= new JSONObject ();
 		JSONObject inv = new JSONObject ();
 		JSONObject pmax_lvl = new JSONObject ();
         JSONObject exclude_skills = new JSONObject();
@@ -426,7 +427,7 @@ public string LoadWaves()
         p.root.TryGetValue("cost_wishtype", out pcost_wishtype);
         p.root.TryGetValue ("scale", out pscale);
 		p.root.TryGetValue ("max_lvl", out pmax_lvl);
-		p.root.TryGetValue ("active", out pactive);
+		p.root.TryGetValue ("unlock_now", out punlock_now);
 	
 		p.root.TryGetValue ("arrow", out parrow);
 		p.root.TryGetValue ("ammo", out pammo);
@@ -435,7 +436,7 @@ public string LoadWaves()
         p.root.TryGetValue("islandtype", out ppermanent);
         p.root.TryGetValue("exclude_skills", out exclude_skills);
         p.root.TryGetValue("required_building", out required_building);
-        actorStats test = Central.Instance.getToy(pname.value);
+        unitStats test = Central.Instance.getToy(pname.value);
 
 
         if (exclude_skills != null)
@@ -461,8 +462,8 @@ public string LoadWaves()
                 
                 test.setMaxLvl(int.Parse(pmax_lvl.value));
             }
-			if (pactive != null){
-				if (pactive.value == "false") {test.setActive(false);} else {test.setActive(true);}
+			if (punlock_now != null){
+				if (punlock_now.value == "false") {test.isUnlocked = false;} else {test.isUnlocked = true;}
 			}
         //    Debug.Log("Loading actor again\n");
 			//thing has already been defined in a previous level. do not load most stats again
@@ -477,10 +478,10 @@ public string LoadWaves()
 
 			bool friendly = false;
 			if (what.Equals("Toys")){friendly = true;}
-			actorStats stats = new actorStats (pname.value, scaleV, friendly);
+			unitStats stats = new unitStats (pname.value, scaleV, friendly);
 
 			if (pmax_lvl != null) stats.setMaxLvl(int.Parse(pmax_lvl.value));
-			if (pactive != null && pactive.value == "false") stats.setActive(false);
+            stats.isUnlocked = false;
             RuneType rune_type = (prune_type != null) ? Get.RuneTypeFromString(prune_type.value) : RuneType.Null;
             ToyType toy_type = (ptoytype != null) ? Get.ToyTypeFromString(ptoytype.value) : ToyType.Null;
             WishType wish_type = WishType.Null;
@@ -510,25 +511,25 @@ public string LoadWaves()
 			//	Debug.Log("Got an effect toy " + pname.value + ", adding " + Get.RuneTypeFromString(parrow.value) + "\n");
 			//	Central.Instance.effect_toys.Add(Get.RuneTypeFromString(parrow.value),pname.value);
 			}
-			Central.Instance.setToy (stats, false);	
+			Central.Instance.setUnitStats (stats, false);	
 			return stats;
 		}
 		
 	}
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        			LOAD ACTORS
-	public string LoadActors(string what){
+	public string oldLoadActors(string what){
 		string line = file.Dequeue();
 		
 		while (line != null && !line[0].Equals (':')) {							
-			actorStats actor =  LoadActor (line, what);	
+			unitStats actor =  LoadActor (line, what);	
 			line = file.Dequeue();
 	        
 			if (what.Equals("Toys")){
                 //	Debug.Log("Got a toy\n");
                 //if (actor.toy_type == ToyType.Hero)
-                    Central.Instance.setToy(actor, true);
-                Peripheral.Instance.haveToys.Add(actor.name, true);
+                    Central.Instance.setUnitStats(actor, true);
+             
 			}else{
 				Peripheral.Instance.haveMonsters.Add(actor.name, true);
 			}	

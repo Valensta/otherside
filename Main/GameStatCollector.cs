@@ -64,7 +64,7 @@ public class GameStatCollector : MonoBehaviour {
 	}
 	
 	string LogHeader(){
-		return "Level: " + Central.Instance.current_lvl + " Wave: " + Peripheral.Instance.current_wave + "\n";
+		return "Level: " + Central.Instance.current_lvl + " Wave: " + Moon.Instance.GetCurrentWave() + "\n";
 	}
 	
 	public void CastleInvaded(string what)

@@ -116,7 +116,7 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
             }    
             
                     
-            actorStats stats = Central.Instance.getToy(label.content);
+            unitStats stats = Central.Instance.getToy(label.content);
             if (stats != null)
             {                 
                 if (stats.island_type != IslandType.Either && stats.island_type != selected_island.island_type)

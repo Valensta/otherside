@@ -43,9 +43,8 @@ public class InitStats
 public class InitToy
 {    
     public string name;
-    public int max_lvl = 0;
-    public bool active = true;
-
+    public int max_lvl = 0;    
+    public bool unlock_now = false;
     //these are for the init file
     public string toy_type = null;
     public int cost;
@@ -65,11 +64,10 @@ public class InitToy
         return rt;
     }
 
-    public InitToy(string name, int max_lvl, bool active)
+    public InitToy(string name, int max_lvl)
     {
         this.name = name;
-        this.max_lvl = max_lvl;
-        this.active = active;
+        this.max_lvl = max_lvl;        
     }
 
     public bool hasMaxLvl() { return max_lvl > 0; }

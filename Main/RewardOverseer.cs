@@ -10,7 +10,9 @@ public class RewardOverseer : EventOverseer
     private static RewardOverseer rewardinstance;
     // Use this for initialization
     public static RewardOverseer RewardInstance { get; private set; }
+    
 
+    
     public delegate void onRewardEnabledHandler(RewardType reward_type, EffectType effect_type);
     public static event onRewardEnabledHandler onRewardEnabled;
 
@@ -21,6 +23,8 @@ public class RewardOverseer : EventOverseer
     {
         return rewards;
     }
+
+  
 
     void Awake()
     {
@@ -42,6 +46,18 @@ public class RewardOverseer : EventOverseer
             r.unlocked = false;
             r.current_number = 0;
         }
+
+        if (current_event < events.Count)
+        {
+            //      Debug.Log("Running event " + current_event + "\n");
+           
+            toRun = events[current_event];
+            toRun.gameObject.SetActive(true);
+            toRun.RunEvent();
+        }
+
+
+        return;
     }
 
     public void EnableReward(RewardType type)
@@ -55,7 +71,9 @@ public class RewardOverseer : EventOverseer
         switch (type)
         {
             case RewardType.Modulator:
-                Peripheral.Instance.ActivateToy("modulator");
+                //Peripheral.Instance.UnlockToy("modulator");
+                //ListUtil.Add<string>(ref Peripheral.Instance.haveToys, "modulator");
+                Central.Instance.getToy("modulator").isUnlocked = true;
                 break;
             case RewardType.LaserFinisher:                
                 break;
@@ -83,6 +101,8 @@ public class RewardOverseer : EventOverseer
 
         base.StartMe(_ingame);
     }
+
+
 
     public bool getRewardStatus(RewardType type)
     {

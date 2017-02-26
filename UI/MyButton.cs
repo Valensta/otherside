@@ -110,6 +110,7 @@ public class MyButton : UIButton {
 
     public void OnInput()
     {
+        Tracker.Log("MyButton type " + type + " content " + content);
         //Debug.Log ("button on click " + this.name + " type " + type + " content " + content + "\n");
         if (!enabled)
         {
@@ -288,22 +289,22 @@ public class MyButton : UIButton {
                     {
                         click_outcome = ClickType.Action;
                         //Rune srune = new Rune();
-                        actorStats sstats = Central.Instance.getToy("sensible_tower_hero");
-                        sstats.setActive(true);
+                        unitStats sstats = Central.Instance.getToy("sensible_tower_hero");
+                        
                         //srune.initStats(RuneType.Sensible, sstats.getMaxLvl(), ToyType.Hero, sstats.exclude_skills);
                         //ToySaver s = new ToySaver("sensible_tower_hero", -1, srune, ToyType.Hero);
                         //Central.Instance.setHeroStats(s);
 
                         //Rune arune = new Rune();
-                        actorStats astats = Central.Instance.getToy("airy_tower_hero");
-                        astats.setActive(true);
+                        unitStats astats = Central.Instance.getToy("airy_tower_hero");
+                        
                         //arune.initStats(RuneType.Airy, astats.getMaxLvl(), ToyType.Hero, astats.exclude_skills);
                         //ToySaver a = new ToySaver("airy_tower_hero", -1, arune, ToyType.Hero);
                         //Central.Instance.setHeroStats(a);
 
                         Rune vrune = new Rune();
-                        actorStats vstats = Central.Instance.getToy("vexing_tower_hero");
-                        vstats.setActive(true);
+                        unitStats vstats = Central.Instance.getToy("vexing_tower_hero");
+                        
                       //  vrune.initStats(RuneType.Vexing, vstats.getMaxLvl(), ToyType.Hero, vstats.exclude_skills);
                         //ToySaver v = new ToySaver("vexing_tower_hero", -1, vrune, ToyType.Hero);
                         //Central.Instance.setHeroStats(v);

@@ -32,7 +32,40 @@ public class CloneUtil
 }
 
  
+public class ListUtil
+{
+    public static bool ContainsKey<T>(List<T> list, T try_me) where T : IComparable
+    {
+        bool is_string = (typeof(T) == typeof(string));
 
+        for(int i = 0; i < list.Count; i++)
+        {
+            if (is_string && list[i].Equals(try_me)) return true;
+            if (!is_string && list[i].CompareTo(try_me) == 0) return true;
+        }
+        return false;
+    }
+
+    public static void Add<T>(ref List<T> list, T add_me) where T : IComparable
+    {
+        if (ContainsKey(list, add_me)) return;
+
+        list.Add(add_me);
+    }
+
+    public static bool Remove<T>(ref List<T> list, T remove_me) where T : IComparable
+    {
+        bool is_string = (typeof(T) == typeof(string));
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (is_string && list[i].Equals(remove_me)) { list.RemoveAt(i); return true; }
+            if (!is_string && list[i].CompareTo(remove_me) == 0) { list.RemoveAt(i); return true; }
+        }
+        return false;
+    }
+
+}
 
 public class EnumUtil { 
 
@@ -60,7 +93,7 @@ public class EnumUtil {
         }
         catch
         {
-            Debug.Log("Could not parse ArrowType " + s + "\n");
+            Debug.Log("Could not parse enum " + typeof(TEnum) + " of type " + s + "\n");
         }
 
         return my_enum;

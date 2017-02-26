@@ -16,8 +16,19 @@ public class SkillMaster : MonoBehaviour {
 
     public void Init()
     {
-        Debug.Log("initializing inventory\n");
+    //    Debug.Log("initializing inventory\n");
         in_inventory = new List<SpecialSkillSaver>();
+    }
+
+    public void resetInventory()
+    {
+    //    Debug.Log("Resetting inventory\n");
+        foreach (SpecialSkill sk in skills)
+        {
+            setInventory(sk.type, false);
+        }
+       
+     
     }
 
     public List<SpecialSkillSaver> getInventory()
@@ -39,6 +50,8 @@ public class SkillMaster : MonoBehaviour {
 
     public void setInventory(SpecialSkillSaver skillsaver, bool set)
     {
+     //   Debug.Log("Setting inventory " + skillsaver.type + " to " + set + "\n");
+     
         bool already_added = CheckSkill(skillsaver.type);
         SpecialSkill sk = _getSkill(skillsaver.type);
         if (sk == null) return;
@@ -52,12 +65,14 @@ public class SkillMaster : MonoBehaviour {
 
         if (already_added && !set)
         {
-            in_inventory.Remove(skillsaver);
+       //     Debug.Log("Removing skill " + sk.type + "\n");
+            removeFromIntentory(skillsaver.type);
             sk.in_inventory = set;            
             return;
         }
         if (!already_added && set && !inventoryFull())
         {
+        //    Debug.Log("Adding skill " + sk.type + "\n");
             in_inventory.Add(skillsaver);
             sk.in_inventory = set;
             
@@ -67,6 +82,16 @@ public class SkillMaster : MonoBehaviour {
 
     }
 
+
+    void removeFromIntentory(EffectType type)
+    {
+        List<SpecialSkillSaver> new_list = new List<SpecialSkillSaver>();
+        foreach (SpecialSkillSaver s in in_inventory)
+        {
+            if (s.type != type) new_list.Add(s);
+        }
+        in_inventory = new_list;
+    }
 
     public bool CheckSkill(EffectType type)
     {

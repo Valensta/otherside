@@ -6,7 +6,7 @@ public class MultiLevelStateSaver : MonoBehaviour {
 
     public delegate void onSaveCompleteStartWaveHandler();
     public static event onSaveCompleteStartWaveHandler onSaveCompleteStartWave;
-
+    public string savegame_version = "1.45";
     private int current_savegame_id = -1;
     public SaveStateType current_state;
    // public int selected_savegame_id = -1;
@@ -36,18 +36,50 @@ public class MultiLevelStateSaver : MonoBehaviour {
         }
     }
 
-    public void DeleteSaveGame(int id)
+    public bool DeleteSaveGame(int id)
     {
-        games[id].DeleteFile();
-        InitButton(id);
+        if (games[id].DeleteFile())
+        {
+            InitButton(id);
+            return true;
+        }
+        else
+        {
+
+            Debug.Log("Found no file to delete for id " + id + "\n");
+            return false;
+        }
+
+        
+    }
+
+    public bool CopyPremadeSaveGame(int id, int lvl)
+    {
+        string copy_from = Get.preloadgame_location + "preload_lvl_" + lvl + ".uml";
+        if (!System.IO.File.Exists(copy_from))
+        {
+            Debug.Log("Cound not find " + copy_from + "\n");
+            return false;
+        }
+        
+
+        
+        
+        
+        games[id].ReloadFile(copy_from);
+        savegame_buttons[id].level.text = games[id].getDescription();
+        savegame_buttons[id].score.text = games[id].getScoreText();
+        return true;
     }
 
     public void InitButton(int id)
     {
-        
-        games[id].CheckFile();
+        bool check_ok = games[id].CheckFile();
+
         savegame_buttons[id].level.text = games[id].getDescription();
-        savegame_buttons[id].score.text = games[id].getScoreText();
+        if (check_ok)
+            savegame_buttons[id].score.text = games[id].getScoreText();
+
     }
 
     public SaveGame getCurrentGame()
@@ -60,12 +92,15 @@ public class MultiLevelStateSaver : MonoBehaviour {
         if (current_savegame_id > 0) games[current_savegame_id].Unload();
         current_savegame_id = id;
 
-        games[current_savegame_id].LoadFile();
+        games[current_savegame_id].LoadFile("");
 
         savegame_buttons[current_savegame_id].SetSelectedToy(false);
         
           
         savegame_panel.SetActive(false);
+
+        int lvl = games[current_savegame_id].getCurrentLevel();
+        if (lvl > 0) Central.Instance.level_list.setMaxLvl(lvl);
 
         if (games[current_savegame_id].getSaveState(SaveStateType.MidLevel) != null && games[current_savegame_id].getSaveState(SaveStateType.MidLevel).current_level > 0)
         {
@@ -131,9 +166,9 @@ public class MultiLevelStateSaver : MonoBehaviour {
             return false;
         }
 
-        Debug.Log("Loading game " + type + "\n");
+        Debug.Log("!!!LOADING GAME " + type + "\n");
 
-        games[Current_savegame_id].LoadFile();
+        games[Current_savegame_id].LoadFile("");
         
         bool ok = true;
 
@@ -142,11 +177,11 @@ public class MultiLevelStateSaver : MonoBehaviour {
 
         switch (type)
         {
-            case SaveWhen.MidLevel:
+            case SaveWhen.MidLevel:                    //load
 
                 Peripheral.Instance.LoadBasicMidLevelShit(midlevel);
 
-                foreach (actorStats a in midlevel.actor_stats) { Central.Instance.setToy(a, a.toy_type == ToyType.Hero); }
+               // foreach (unitStats a in midlevel.actor_stats) { Central.Instance.setUnitStats(a, a.toy_type == ToyType.Hero); }
                 midlevel.LoadWishes();
                 persistent.LoadScore();                
                 midlevel.LoadHeroStats();                
@@ -166,16 +201,24 @@ public class MultiLevelStateSaver : MonoBehaviour {
 
                 break;
 
-            case SaveWhen.BetweenLevels:
+            case SaveWhen.BetweenLevels:                    //load
 
                 
                 persistent.LoadScore();
                 persistent.LoadHeroStats();
-                persistent.LoadSkillsInventory(true);                
+                //persistent.LoadToyStats();
+                persistent.LoadSkillsInventory(true);
+
+                if (midlevel != null)
+                {
+                    midlevel.resetMidLevelStuff(); //lose all progress. yes, forever.
+                    games[current_savegame_id].SaveFile();
+                    games[current_savegame_id].LoadFile("");
+                }
                 break;
                 
-            case SaveWhen.BeginningOfLevel:               
-                Debug.Log("Loading Beginning Of Level\n");
+            case SaveWhen.BeginningOfLevel:                    //load
+         //       Debug.Log("Loading Beginning Of Level\n");
                 if (midlevel == null) midlevel = new SaveState();
                 midlevel.type = SaveStateType.MidLevel;
                 midlevel.current_level = persistent.current_level;
@@ -184,13 +227,12 @@ public class MultiLevelStateSaver : MonoBehaviour {
                 midlevel.actor_stats = persistent.actor_stats;
                 midlevel.wishes = persistent.wishes;
                 midlevel.rewards = persistent.rewards;
+                midlevel.skills_in_inventory = persistent.skills_in_inventory;
 
                 games[current_savegame_id].setSaveState(midlevel);
+
+                games[current_savegame_id].SaveAndReload(); // deep copy
                 
-
-
-                games[current_savegame_id].SaveFile();
-                games[current_savegame_id].LoadFile();
 
                 persistent.LoadToyStats();
                 persistent.LoadHeroStats();
@@ -198,7 +240,9 @@ public class MultiLevelStateSaver : MonoBehaviour {
                 persistent.LoadRewards();
                 persistent.LoadWishes();
                 persistent.LoadScore();
-
+                persistent.LoadEvents(); //still need to reset this
+                
+                Central.Instance.updateCost(0);
                 Central.Instance.changeState(GameState.InGame);
 
                 break;
@@ -222,14 +266,14 @@ public class MultiLevelStateSaver : MonoBehaviour {
         }
         EagleEyes.Instance.RunSavingGameVisual();
 
-        Debug.Log("Saving game " + type + "\n");
+        Debug.Log("!!!SAVING GAME " + type + "\n");
 
         SaveState midlevel = games[current_savegame_id].getSaveState(SaveStateType.MidLevel);
         SaveState persistent = games[current_savegame_id].getSaveState(SaveStateType.Persistent);
 
         switch (type)
         {
-            case SaveWhen.MidLevel:
+            case SaveWhen.MidLevel: //save
 
                 
                 midlevel.SaveBasicMidLevelShit();
@@ -244,13 +288,13 @@ public class MultiLevelStateSaver : MonoBehaviour {
                 //saver.hero_stats = Central.Instance.getAllHeroStats();
 
                 break;
-            case SaveWhen.EndOfLevel:
+            case SaveWhen.EndOfLevel:   //save
 
                 persistent.SaveWishes();
                 persistent.SaveToyStats();
                 persistent.SaveHeroStats();
                 persistent.SaveRewards();
-                persistent.SaveEvents();
+              //  persistent.SaveEvents();
                 persistent.SaveSkillInventory();
                 persistent.SaveScore();
                 persistent.current_level = Central.Instance.getCurrentLevel();
@@ -261,9 +305,10 @@ public class MultiLevelStateSaver : MonoBehaviour {
 
                 //INCREMENT LEVEL SOMEWHERE
                 break;
-            case SaveWhen.BetweenLevels:
-
-             
+            case SaveWhen.BetweenLevels:   //save
+                
+                
+                persistent.SaveToyStats();                
                 persistent.SaveScore();
                 persistent.SaveHeroStats();
                 persistent.SaveSkillInventory();
@@ -272,7 +317,7 @@ public class MultiLevelStateSaver : MonoBehaviour {
         }
 
         games[current_savegame_id].SaveFile();
-        games[current_savegame_id].LoadFile();
+        games[current_savegame_id].LoadFile("");
         if (onSaveCompleteStartWave != null) onSaveCompleteStartWave();
     }
 

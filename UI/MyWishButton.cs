@@ -137,16 +137,19 @@ public class MyWishButton : UIButton
             Noisemaker.Instance.Click(ClickType.Error);
             return;
         }
+        
 
         Peripheral.Instance.ClearAll(SelectedType.Wish, this.name);
         if (!selected) { SetSelectedToy(true); //Debug.Log("Selecting inventory slot " + this.name + "\n");
             Noisemaker.Instance.Click(ClickType.Success);
+            Tracker.Log("MyWishButton " + this.name + " selected " + selected);
         }
         else
         {
             SetSelectedToy(false);
             Noisemaker.Instance.Click(ClickType.Action);
             DoStuff();
+            Tracker.Log("MyWishButton " + this.name + " doing stuff");
         }
 
 		if (onButtonClicked != null) {

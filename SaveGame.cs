@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -10,13 +11,27 @@ public class SaveGameSummary : System.Object
     SaveWhen current_state;
     public string name;
     public string savegame_filename; //filename
-
+    public string savegame_version;
     
-    public int id;    
+    public int id;
+
+    public string Savegame_filename
+    {
+        get
+        {
+            return savegame_filename;
+        }
+
+        set
+        {
+        //    Debug.Log("Setting savegame filename from " + savegame_filename + " to " + value + "\n");
+            savegame_filename = value;
+        }
+    }
 
     public string getFileName()
     {
-        return savegame_filename;
+        return Savegame_filename;
     }
 }
 
@@ -71,7 +86,7 @@ public class SaveGame
 
     public SaveState getSaveState(SaveStateType type)
     {
-        if (save_states.Length < 2) InitNewGame();
+        if (save_states.Length < 2) InitNewGame(summary.id, summary.name);
 
         if (type == SaveStateType.MidLevel) return save_states[midlevel_id];
         else return save_states[persistent_id];
@@ -81,7 +96,7 @@ public class SaveGame
 
     public void setSaveState(SaveState state)
     {
-        if (save_states.Length < 2) InitNewGame();
+        if (save_states.Length < 2) InitNewGame(summary.id, summary.name);
 
         if (state.type == SaveStateType.MidLevel) save_states[midlevel_id] = state;
         else save_states[persistent_id] = state;
@@ -89,53 +104,117 @@ public class SaveGame
 
     }
 
-    public void LoadFile()
+    public bool LoadFile(string alt_filename)
     {
-        if (isLoaded()) { return; }
-        
-        SaveData save_data = SaveData.Load(summary.getFileName());
-        save_states = save_data.GetValue<SaveState[]>("save_states");
-        summary = save_data.GetValue<SaveGameSummary>("summary");
+        if (alt_filename.Equals("") && isLoaded()) { return true; }
+        string filename = (alt_filename.Equals("")) ? summary.getFileName() : alt_filename;
+
+        try
+        {
+            SaveData save_data = SaveData.Load(filename);
+            summary = save_data.GetValue<SaveGameSummary>("summary");
+            if (!summary.savegame_version.Equals(Central.Instance.game_saver.savegame_version))
+            {
+                // DeleteFile();
+                description = "file savegame version " + summary.savegame_version + " does not match game version " + Central.Instance.game_saver.savegame_version + ". Start over:(";
+                Debug.Log("Found Savegame version mismatch " + summary.savegame_version + " does not match game version " + Central.Instance.game_saver.savegame_version + "\n");
+                return false;
+            }
+
+            save_states = save_data.GetValue<SaveState[]>("save_states");
+        }catch(Exception e)
+        {
+            description = "Error: " + e.Message + " Start Over:(";
+            Debug.LogError("Could not load savegame " + filename + ": "  + e.Message);
+            return false;
+        }
+
+
         isLoaded(true);
+        return true;
     }
     
     public void Unload()
     {
 
         save_states = null;
-        summary = null;
+       // summary = null;
         isLoaded(false);
     }
 
-    public void DeleteFile()
+    public bool DeleteFile()
     {
-        if (System.IO.File.Exists(summary.getFileName())) System.IO.File.Delete(summary.getFileName());
+        Debug.Log("Gonna delete " + summary.getFileName() + "\n");
+        if (System.IO.File.Exists(summary.getFileName()))
+        {
+            System.IO.File.Delete(summary.getFileName());
+            description = "New Game";
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+        
+    }
+
+    public void SaveAndReload()// the only point of this is to avoid doing a deep copy manually
+    {
+        string junk_file = Get.savegame_location + "junk.uml";
+
+        if (System.IO.File.Exists(junk_file)) System.IO.File.Delete(junk_file);
+    
+        SaveData save_data = new SaveData(junk_file);
+        save_data["summary"] = summary;
+        save_data["save_states"] = save_states;        
+        save_data.Save(junk_file);
+        LoadFile(junk_file);
+
+        if (System.IO.File.Exists(junk_file)) System.IO.File.Delete(junk_file);
     }
 
     public void SaveFile()
-    {       
-        SaveData save_data = new SaveData(summary.savegame_filename);
+    {
+        Debug.Log("SAVING FILE!!!!\n");
+        SaveData save_data = new SaveData(summary.Savegame_filename);
         save_data["summary"] = summary;
         save_data["save_states"] = save_states;
 
         DeleteFile();
         save_data.Save(summary.getFileName());
+
     }
 
-    public void CheckFile()
+    public void ReloadFile(string copy_from)
     {
-        summary.savegame_filename = Application.persistentDataPath + "/" + summary.name + ".uml";
-        Debug.Log("Checking file " + summary.savegame_filename + "\n");
-        if (System.IO.File.Exists(summary.savegame_filename))
+        Debug.Log("Copying from " + copy_from + " to " + summary.Savegame_filename + "\n");
+
+        
+        SaveData save_data = SaveData.Load(copy_from);        
+
+        save_states = save_data.GetValue<SaveState[]>("save_states");
+
+        SaveFile();
+        UpdateDescription();
+    }
+
+
+    public bool CheckFile()
+    {
+        summary.Savegame_filename = Get.savegame_location + summary.name + ".uml";
+    //    Debug.Log("Checking file " + summary.Savegame_filename + "\n");
+        if (System.IO.File.Exists(summary.Savegame_filename))
         {
-            LoadFile();
-            UpdateDescription();
+            if (LoadFile("")) UpdateDescription();
+            else return false;
         }
         else
         {
-            InitNewGame();
+            InitNewGame(summary.id, summary.name);
             UpdateDescription();
         }
+        return true;
     }
 
     public void InitMidLevel()
@@ -152,11 +231,10 @@ public class SaveGame
         midlevel.rewards = persistent.rewards;
 
         save_states[midlevel_id] = midlevel;
-        SaveFile();
-        LoadFile();
+        SaveAndReload();
     }
 
-    public void InitNewGame()
+    public void InitNewGame(int id, string name)
     {
         Debug.Log("Initializing new game\n");
         save_states = new SaveState[2];
@@ -165,6 +243,9 @@ public class SaveGame
         persistent.current_level = -1;
         save_states[persistent_id] = persistent;
         save_states[midlevel_id] = null;
+        summary.savegame_version = Central.Instance.game_saver.savegame_version;
+        summary.name = name;
+        summary.id = id;
         UpdateDescription();
         SaveFile();
     }
@@ -173,6 +254,7 @@ public class SaveGame
     public void UpdateDescription()
     {
 
+        if (!_isLoaded) return;
         if (save_states == null || save_states.Length == 0 || getCurrentLevel() < 0)
         {
             description = "New Game";

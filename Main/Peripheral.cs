@@ -7,7 +7,7 @@ public class Peripheral : MonoBehaviour {
     public float dreams;
     public string title;
     public int max_dreams;
-    public float nightmares;
+
     private int toys;
     //	public int monsters;
     float health;
@@ -30,11 +30,8 @@ public class Peripheral : MonoBehaviour {
     public Dictionary<RuneType, int> hero_points;
     public List<Building> buildings;
     public List<Firearm> firearms;
-    public Dictionary<string, bool> haveToys;
     public Dictionary<string, bool> haveMonsters;
 
-
-    public int current_wave;
     public float next_monster_time;
     bool level_active = false;
     public bool ok_next_wave = true;
@@ -64,7 +61,8 @@ public class Peripheral : MonoBehaviour {
     GameObject pathfinder;
     public float tileSize;
     public float diagonal;
-
+    private List<int> cities;
+    public bool have_cities;
     public float TIME;
     public GameObject island_selected;
     public EventOverseer overseer;
@@ -112,6 +110,7 @@ public class Peripheral : MonoBehaviour {
             wave_interval = value;
         }
     }
+   
 
     void Init() {
         //	Debug.Log("Peripheral Initializing\n");	
@@ -121,22 +120,20 @@ public class Peripheral : MonoBehaviour {
         level_state = LState.WaveButton;
         wave_button_visible = false;
         my_inventory.InitWishes();
-        //	meters = new Dictionary<RuneType, GameObject> (); //meter gui objects
-        nightmares = 0f;
+        cities = new List<int>();
+        have_cities = false;
         default_wave_interval = 0.1f;           // waves are spaced at least X seconds apart
         next_wave_time = 0.5f;                  // first wave time
         timeScale = 1f;
         previous_timeScale = 1f;
         buildings = new List<Building>();
         firearms = new List<Firearm>();
-        haveToys = new Dictionary<string, bool>();
+       // haveToys = new List<string>();
         haveMonsters = new Dictionary<string, bool>();
         toy_selected = null;
         rune_selected = RuneType.Null;
         //	monsters = 0;
-
-
-        current_wave = 0;
+        Wave_interval = 0;
         next_monster_time = 0;
         level_active = false;
         if (Moon.Instance != null) Moon.Instance.InitEmpty();
@@ -210,14 +207,6 @@ public class Peripheral : MonoBehaviour {
     {
         if (!toy.Equals(""))
         {
-            /* wrong place for this
-            actorStats stats = Central.Instance.getToy(toy);            
-            Cost toy_cost = null;
-            if (stats != null) toy_cost = stats.cost_type;
-            if (toy_cost == null) return;            
-            if (!HaveResource(toy_cost)) return;
-            */
-
             string required = Central.Instance.getToy(toy).required_building;
             if (!required.Equals(""))
             {
@@ -273,7 +262,7 @@ public class Peripheral : MonoBehaviour {
         }
         else {
             rune_selected = rune;            
-            actorStats stats = Central.Instance.getToy(toy);
+            unitStats stats = Central.Instance.getToy(toy);
             if (stats == null) return false;            
 
             toy_selected = new SelectedToy(toy, stats.island_type);
@@ -308,7 +297,7 @@ public class Peripheral : MonoBehaviour {
 
         
         
-            Debug.Log("using FancyLoader to load " + level + "\n");
+       //     Debug.Log("using FancyLoader to load " + level + "\n");
         if (level.fancy)
             FancyLoader.Instance.LoadLevel(level.name);
         else         
@@ -317,7 +306,7 @@ public class Peripheral : MonoBehaviour {
             file = new Queue<string>(((TextAsset)Resources.Load("Levels/" + level.name)).text.Split('\n'));
             Debug.Log("Loading file " + level.name + "\n");
             Loader.Instance.setFile(file);
-            Loader.Instance.LoadLevel();
+            Loader.Instance.oldLoadLevel();
         }
         SetDiagonal(Vector3.Distance(WaypointMultiPathfinder.Instance.paths[0].finish.transform.position, WaypointMultiPathfinder.Instance.paths[0].start.transform.position) * 2);
 
@@ -350,10 +339,6 @@ public class Peripheral : MonoBehaviour {
 		return toy;
 	}
 	
-	public int getCurrentWave(){
-		return current_wave;
-	}
-
 
 
 
@@ -476,10 +461,10 @@ public class Peripheral : MonoBehaviour {
         Wave_interval = 0f;
         TIME = 0f;
         Moon.Instance.WaveInProgress = false;      
-		foreach (actorStats a in saver.actor_stats)	{          
-            bool is_active = a.isActive();                       
-           a.setActive(is_active);           
-            Central.Instance.setToy(a, a.toy_type == ToyType.Hero);
+		foreach (unitStatsSaver a in saver.actor_stats)	{          
+            //bool is_active = a.isActive();                       
+           //a.setActive(is_active);           
+            Central.Instance.setUnitStats(a, a.toy_type == ToyType.Hero);
 		}
 
         foreach (Island_Button i in Monitor.Instance.islands.Values) { i.ResetIslandType(); }
@@ -506,11 +491,10 @@ public class Peripheral : MonoBehaviour {
 
 
 
-            foreach (actorStats a in saver.actor_stats) { Central.Instance.setToy(a, true); }
+            foreach (unitStatsSaver a in saver.actor_stats) { Central.Instance.setUnitStats(a, true); }
 
-            Moon.Instance.WaveInProgress = false;
-            current_wave = saver.current_wave;
-            Moon.Instance.SetWave(current_wave);
+            Moon.Instance.WaveInProgress = false;            
+            Moon.Instance.SetWave(saver.current_wave);
             TIME = next_wave_time;
             Debug.Log("Loading snapshot\n");
             Sun.Instance.SetTime(saver.time_of_day);
@@ -576,26 +560,15 @@ public class Peripheral : MonoBehaviour {
         else
         {
             Debug.LogError("Loading midlevel shit on a non midlevel savegame!\n");
-            Debug.Log("Peripheral loaded start level snapshot, current wave is " + current_wave + "\n");
-            Moon.Instance.SetWave(current_wave);
+            Debug.Log("Peripheral loaded start level snapshot, current wave is " + 0 + "\n");
+            Moon.Instance.SetWave(0);
             Sun.Instance.SetTime(0);
             Sun.Instance.Init();
 
             PlaceCastle();
 
         }// end loading snapshot specific stuff
-
-
-        List<Building> buildings = Peripheral.Instance.buildings;
-        foreach (actorStats a in Central.Instance.actors)
-        {
-            if (a.required_building.Equals("")) continue;
-            a.setActive(false);
-            foreach (Building b in buildings)
-            {
-                if (b.name.Equals(a.required_building)) a.setActive(true);
-            }
-        }
+      
         EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Normal, false);
         level_active = true;
         ResumeNormalSpeed();
@@ -663,7 +636,7 @@ public class Peripheral : MonoBehaviour {
 
         if (level_state == LState.WaveEnded)// || (level_state == LState.OnLastWavelet))
         {           
-            if (current_wave < Moon.Instance.GetWaveCount())
+            if (Moon.Instance.GetCurrentWave() < Moon.Instance.GetWaveCount())
             {
                 if (Wave_interval > 0)
                 {
@@ -701,6 +674,7 @@ public class Peripheral : MonoBehaviour {
 
         if (level_state == LState.WaitingToStartNextWave)
         {
+        //    Debug.Log("wave_interval " + Wave_interval + " TIME " + TIME + " next_wave_time " + next_wave_time + "\n");
             if (Wave_interval > 0 && Mathf.Floor(TIME) > next_wave_time) {
                 StartWave();
                 
@@ -711,7 +685,7 @@ public class Peripheral : MonoBehaviour {
             }
         }       
 
-		if (make_wave){if (onWaveStart != null)onWaveStart (current_wave);make_wave = false;}
+		if (make_wave){if (onWaveStart != null)onWaveStart (Moon.Instance.GetCurrentWave());make_wave = false;}
 		
         if (health <= 0)
         {
@@ -759,8 +733,45 @@ public class Peripheral : MonoBehaviour {
 
         
     }
-	
-	public void SetHealth(float i){		
+
+    public bool canBuildToy(unitStats toy)
+    {
+        if (toy.required_building.Equals("")) return true;
+        return have_cities;
+    }
+
+    public bool canBuildToy(string required_building)
+    {
+        if (required_building.Equals("")) return true;
+        return have_cities;
+    }
+
+    public bool addedCity(bool added, Toy added_tower)
+    {        
+        if (added_tower.runetype != RuneType.SensibleCity) return have_cities;
+
+        if (added)
+        {
+            ListUtil.Add<int>(ref cities, added_tower.gameObject.GetInstanceID());
+            bool need_to_update_buttons = !have_cities;
+
+            have_cities = true;
+
+            if (need_to_update_buttons) EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Temporary, false);
+        }
+        else
+        { 
+            ListUtil.Remove<int>(ref cities, added_tower.gameObject.GetInstanceID());
+            bool need_to_update_buttons = have_cities;
+
+            have_cities = (cities.Count > 0);
+
+            if (need_to_update_buttons) EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Temporary, false);
+        }
+        return have_cities;
+    }
+
+    public void SetHealth(float i){		
 		health = i;
 		if (onHealthChanged != null) onHealthChanged(health);
 	}
@@ -814,7 +825,7 @@ public class Peripheral : MonoBehaviour {
         targets.addByID(hitme);
 		
        
-		nightmares -= Central.Instance.getToy(name).cost_type.Amount;
+	
         AI ai = hitme.my_ai;
 		
 		ai.path = path;
@@ -902,7 +913,7 @@ public class Peripheral : MonoBehaviour {
         float range_multiplier = island_b.getSize();
         Vector3 posv;
         GameObject parent = island_b.gameObject;
-        actorStats my_stats = Central.Instance.getToy(name);
+        unitStats my_stats = Central.Instance.getToy(name);
 
         Cost my_cost_type = my_stats.cost_type;
     //    Debug.Log("Cost type for " + name + " is " + my_cost_type.toytype + "\n");
@@ -964,11 +975,8 @@ public class Peripheral : MonoBehaviour {
             if (toysaver != null) { rune = toysaver.rune; }else { new_hero = true; }
         }
 
-        if (_toy != null)
-        {
-            _toy.initStats(my_stats, scaleV, island_b, name, rune);
-        }
-
+        if (_toy != null) _toy.initStats(my_stats, scaleV, island_b, name, rune);
+       
 
         if (b != null) b.StartConstruction(b.init_construction_time);
 
@@ -1002,15 +1010,15 @@ public class Peripheral : MonoBehaviour {
 
     }
 
-
+    /*
 	public void ActivateToy(string _text){
-        if (!haveToys.ContainsKey(_text))
+        if (Central.Instance.getToy(_text).isUnlocked)
         {
             Debug.Log("Cannot activate toy " + _text + ", it is not in haveToys\n");
             return;
         }
 
-		actorStats toy = Central.Instance.getToy(_text);
+		unitStats toy = Central.Instance.getToy(_text);
 		//Central.Instance.actors.TryGetValue(_text,out toy);
 		
 
@@ -1020,7 +1028,7 @@ public class Peripheral : MonoBehaviour {
 		EagleEyes.Instance.UpdateToyButtons("blah",ToyType.Null, false);
 		
 	}
-
+    */
     public void SetDreams(float _dreams)
     {
         dreams = _dreams;

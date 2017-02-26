@@ -170,55 +170,60 @@ public class EagleEyes : MonoBehaviour {
 
 
 
-	void PlaceButtons(string state, bool bg, List<MenuButton> buttons){
-		int i = buttons.Count;
+    void PlaceButtons(string state, bool bg, List<MenuButton> buttons)
+    {
+        int i = buttons.Count;
 
-		if (bg) {
-			PlaceElement ("mainmenu_bg");//, state, 0, 0, 0f, 1, 1,true);
-		}
+        if (bg)
+        {
+            PlaceElement("mainmenu_bg");//, state, 0, 0, 0f, 1, 1,true);
+        }
 
         PlaceElement("mainmenu_button_bg");//, state, 0, 0, 0f, 1, 1,true);
-        foreach (MenuButton b in buttons){
-			switch (b){
-			case MenuButton.Start:
-				PlaceElement ("mainmenu_play");//, state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
-				//PlaceElement ("mainmenu_confirm_start_game");
-				//DisplayConfirmPanel(MenuButton.Start, false);
-				i--;
-				break;
-			case MenuButton.Continue:			
-				PlaceElement ("mainmenu_continue");
-				i--;
-				break;
-			case MenuButton.LoadSnapshot:			
-				switch (Central.Instance.state){
-				case GameState.InGame:					
-					PlaceElement ("mainmenu_restartwave");
-					break;
-				case GameState.MainMenu:					
-					PlaceElement ("mainmenu_play");				
-					break;
-				default:
-					Debug.Log("Trying to place MenuButton LoadSnapshot during an invalid GameState " + Central.Instance.state + "\n");
-					break;
-				}
-				i--;
-				break;
-			case MenuButton.LoadStartLevelSnapshot:			
-				PlaceElement ("mainmenu_restartlevel");
-				i--;
-				break;
-			
-			case MenuButton.Quit:
-				PlaceElement ("mainmenu_quit");//, state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
-				i--;
-				break;
-			case MenuButton.Settings:
-				PlaceElement ("mainmenu_settings");
-				PlaceElement ("mainmenu_settings_panel");
-				my_settings_panel.DisablePanel();
-				i--;
-				break;
+        foreach (MenuButton b in buttons)
+        {
+            switch (b)
+            {
+                case MenuButton.Start:
+                    PlaceElement("mainmenu_play");//, state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
+                                                  //PlaceElement ("mainmenu_confirm_start_game");
+                                                  //DisplayConfirmPanel(MenuButton.Start, false);
+                    i--;
+                    break;
+                case MenuButton.Continue:
+                    PlaceElement("mainmenu_continue");
+                    i--;
+                    break;
+                case MenuButton.LoadSnapshot:
+                    switch (Central.Instance.state)
+                    {
+                        case GameState.InGame:
+                            PlaceElement("mainmenu_restartwave");
+                            break;
+                        case GameState.MainMenu:
+                            PlaceElement("mainmenu_play");
+                            break;
+                        default:
+                            Debug.Log("Trying to place MenuButton LoadSnapshot during an invalid GameState " + Central.Instance.state + "\n");
+                            break;
+                    }
+                    i--;
+                    break;
+                case MenuButton.LoadStartLevelSnapshot:
+                    PlaceElement("mainmenu_restartlevel");
+                    i--;
+                    break;
+
+                case MenuButton.Quit:
+                    PlaceElement("mainmenu_quit");//, state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
+                    i--;
+                    break;
+                case MenuButton.Settings:
+                    PlaceElement("mainmenu_settings");
+                    PlaceElement("mainmenu_settings_panel");
+                    my_settings_panel.DisablePanel();
+                    i--;
+                    break;
                 case MenuButton.Rewards:
                     PlaceElement("mainmenu_rewards");
                     PlaceElement("mainmenu_rewards_panel");
@@ -226,21 +231,21 @@ public class EagleEyes : MonoBehaviour {
                     i--;
                     break;
                 case MenuButton.ToMap:
-				PlaceElement ("mainmenu_to_map");//, state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
-				PlaceElement ("mainmenu_confirm_to_map");
-				DisplayConfirmPanel(MenuButton.ToMap, false);
-				i--;
-				break;
-			case MenuButton.ToMainMenu:
-				//PlaceElement ("GUI/mainmenu_to_mainmenu", state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
-				PlaceElement ("mainmenu_to_mainmenu");
-				i--;
-				break;	
-			}
+                    PlaceElement("mainmenu_to_map");//, state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
+                    PlaceElement("mainmenu_confirm_to_map");
+                    DisplayConfirmPanel(MenuButton.ToMap, false);
+                    i--;
+                    break;
+                case MenuButton.ToMainMenu:
+                    //PlaceElement ("GUI/mainmenu_to_mainmenu", state, 0, start_pos + i *segment_height, 1f, button_height*4, button_height, false);
+                    PlaceElement("mainmenu_to_mainmenu");
+                    i--;
+                    break;
+            }
 
-		}
+        }
 
-	}
+    }
 
 
 	void PlaceInGameButtons(){
@@ -492,20 +497,19 @@ public class EagleEyes : MonoBehaviour {
 		}
 	}
 
-    public ErrorType canBuildToy(string name, Cost toy_cost, actorStats toy)
+    public ErrorType canBuildToy(string name, Cost toy_cost, unitStats toy)
     {
         
 
         bool vocal = false;
-        if (!peripheral.haveToys.ContainsKey(name))
+        if (!Central.Instance.getToy(name).isUnlocked)
         {
-           
             if (vocal) Debug.Log("Peripeheral does not have toy " + name + "\n");
             return ErrorType.No;
         }
-        else if (!toy.isActive())
+        else if (!Peripheral.Instance.canBuildToy(toy))        
         {
-           
+
             if (vocal) Debug.Log(name + "toy is not active\n");
             return ErrorType.No;
         }
@@ -523,7 +527,10 @@ public class EagleEyes : MonoBehaviour {
         bool vocal = false;
         string selected_toy = peripheral.getSelectedToy();
 
-        if (current_GUIState.state != GameState.InGame) { Debug.Log("UpdateToyButtons is in " + current_GUIState.state + ", not in game state!\n"); return; }
+        if (current_GUIState.state != GameState.InGame) {
+            //Debug.Log("UpdateToyButtons is in " + current_GUIState.state + ", not in game state!\n");
+            return;
+        }
         if (vocal) Debug.Log("UpdateToyButtons running " + kind + "\n");
 
        // Debug.Log("Beep\n");
@@ -535,7 +542,7 @@ public class EagleEyes : MonoBehaviour {
             string name = l.content;
 
             float cost = 9999;
-            actorStats toy = central.getToy(name);
+            unitStats toy = central.getToy(name);
             Cost toy_cost = null;
             if (toy != null) toy_cost = toy.cost_type;
 

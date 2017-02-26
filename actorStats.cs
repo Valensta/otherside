@@ -2,9 +2,46 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[System.Serializable]
+public class unitStatsSaver
+{
+    public string name;
+    public bool is_unlocked;
+    public ToyType toy_type;
+    public int max_lvl;
+
+    public bool isUnlocked
+    {
+        get
+        {
+            return is_unlocked;
+        }
+
+        set
+        {
+            is_unlocked = value;
+        }
+    }
+
+    public unitStatsSaver()
+    {
+    }
+
+    public int getMaxLvl()
+    {
+        return max_lvl;
+    }
+
+    public void setMaxLvl(int d)
+    {
+        //   Debug.Log("ACTORSTATS Setting max lvl to " + d + " for " + name + "\n");
+        max_lvl = d;
+    }
+}
+
 //I hate this class
 [System.Serializable]
-public class actorStats : IDeepCloneable<actorStats>
+public class unitStats : IDeepCloneable<unitStats>
 {
     public RuneType runetype = RuneType.Null;
     public ToyType toy_type;
@@ -17,7 +54,8 @@ public class actorStats : IDeepCloneable<actorStats>
     public List<Wish> inventory = new List<Wish>();
     public bool friendly;
     public int max_lvl;
-    public bool is_active = true;
+  //  public bool is_active = true;
+    public bool is_unlocked = false;
     public Cost cost_type;
     public float remaining_xp;
     public float init_xp;
@@ -31,6 +69,19 @@ public class actorStats : IDeepCloneable<actorStats>
 
 
     public int basic_cost = 20;
+
+    public bool isUnlocked
+    {
+        get
+        {
+            return is_unlocked;
+        }
+
+        set
+        {
+            is_unlocked = value;
+        }
+    }
 
     public Vector3 getScale()
     {
@@ -66,14 +117,28 @@ public class actorStats : IDeepCloneable<actorStats>
         }
     }
 
-    public actorStats(string n, Vector3 sc, bool _friendly)
+    public void loadSaver(unitStatsSaver  load_me)
+    {
+        //if (load_me.name.Equals(this.name)
+        this.isUnlocked = load_me.isUnlocked;        
+    }
+
+    public unitStatsSaver getSaver()
+    {
+        unitStatsSaver saver = new unitStatsSaver();
+        saver.name = this.name;
+        saver.isUnlocked = this.isUnlocked;
+        return saver;
+    }
+
+    public unitStats(string n, Vector3 sc, bool _friendly)
     {
         name = n;
         scale = sc;
         friendly = _friendly;
-        setActive(true);
+       // setActive(true);
     }
-
+    /*
     public bool isActive()
     {
         return is_active;
@@ -81,10 +146,10 @@ public class actorStats : IDeepCloneable<actorStats>
 
     public void setActive(bool a)
     {
-    //    Debug.Log("Setting toy active " + a + " " + name  + "\n");
+        Debug.Log("Setting toy active " + a + " " + name  + "\n");
         is_active = a;
     }
-
+    */
     public void setCost(CostType _cost_type, int _cost)
     {
         //   Debug.Log("Setting initian cost " + toy_type + " " + rune_type + " " + wish_type + " " + cost);
@@ -108,7 +173,7 @@ public class actorStats : IDeepCloneable<actorStats>
 
   //  public void setRange(float r) { range = r; }
 
-    public actorStats GetActorStats()
+    public unitStats GetActorStats()
     {
         return this;
     }
@@ -137,7 +202,7 @@ public class actorStats : IDeepCloneable<actorStats>
 
     }
 
-    public actorStats()
+    public unitStats()
     {
     }
 
@@ -146,9 +211,9 @@ public class actorStats : IDeepCloneable<actorStats>
         return this.DeepClone();
     }
 
-    public actorStats DeepClone()
+    public unitStats DeepClone()
     {
-        actorStats my_clone = new actorStats();
+        unitStats my_clone = new unitStats();
         my_clone.runetype = this.runetype;
         my_clone.toy_type = this.toy_type;
         my_clone.name = string.Copy(this.name);
@@ -158,7 +223,7 @@ public class actorStats : IDeepCloneable<actorStats>
         my_clone.ammo = this.ammo;
         my_clone.friendly = this.friendly;
         my_clone.max_lvl = this.max_lvl;
-        my_clone.is_active = this.is_active;
+    //    my_clone.is_active = this.is_active;
         my_clone.remaining_xp = this.remaining_xp;
         my_clone.init_xp = this.init_xp;
         my_clone.required_building = string.Copy(this.required_building);

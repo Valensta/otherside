@@ -71,6 +71,7 @@ public class GameAction  : MonoBehaviour {
 	*/
     public void Do()
     {
+     //   Debug.Log("Doing gameaction " + this._type + " " + this.name + " " + _text + "\n");
         switch (_type)
         {
             case ActionType.Panel:
@@ -84,6 +85,7 @@ public class GameAction  : MonoBehaviour {
                 else {
                     panel.transform.SetParent(EagleEyes.Instance.world_space_events.transform);
                 }
+                panel.gameObject.transform.GetChild(0).gameObject.SetActive(true);
                 panel.transform.localPosition = Vector3.zero;
                 panel.transform.localScale = Vector3.one;
                 panel.transform.localRotation = Quaternion.identity;
@@ -98,6 +100,14 @@ public class GameAction  : MonoBehaviour {
                 WishType w = Get.WishTypeFromString(_text);
                 Debug.Log("We should add a wish " + _text + " " + w + "\n");
                 Peripheral.Instance.my_inventory.AddWish(w, _number, 1);
+                break;
+            case ActionType.GiveSpecialSkill:
+                EffectType effect_type = EnumUtil.EnumFromString<EffectType>(_name, EffectType.Null);
+                RuneType rune_type = EnumUtil.EnumFromString<RuneType>(_text, RuneType.Null);
+                Rune r = Central.Instance.getHeroRune(rune_type);
+                
+                if (r == null) { Debug.LogError("Cannot find a rune for hero of type " + rune_type + ", cannot give skill " + effect_type + "\n"); }
+                r.GiveSpecialSkill(effect_type);
                 break;
             case ActionType.MakeWish:
                 List<Wish> inv = new List<Wish>();
@@ -135,9 +145,12 @@ public class GameAction  : MonoBehaviour {
             case ActionType.RemoveEventObjects:
                 RemoveEventObjects();
                 break;
-            case ActionType.ActivateToy:
-                Debug.Log("Activating toy " + _text + "\n");
-                Peripheral.Instance.ActivateToy(_text);
+            case ActionType.UnlockToy:
+                Debug.Log("Unlocking toy " + _text + "\n");
+                //Peripheral.Instance.ActivateToy(_text);
+                unitStats toy = Central.Instance.getToy(_text);
+                toy.isUnlocked = true;
+                EagleEyes.Instance.UpdateToyButtons("blah", toy.toy_type, false);
                 break;
             case ActionType.PointSpyGlass:
                 if (Monitor.Instance != null) Monitor.Instance.my_spyglass.PointSpyglass(_vector);

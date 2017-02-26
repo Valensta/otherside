@@ -34,7 +34,8 @@ public class ClearBackground : MonoBehaviour, IPointerClickHandler {
     }
 
     void OnInput(){
-   //     Debug.Log("Yes\n");
+        //     Debug.Log("Yes\n");
+        Tracker.Log("ClearBackground");
         if (Central.Instance.state != GameState.InGame) return;
         if (onSelected != null) { onSelected(SelectedType.Null, "");  }
       //  if (onInteractiveSkillClick != null) { onInteractiveSkillClick(interactive_wish, interactive_skill); }

@@ -63,7 +63,7 @@ public class wave{
 	}
 
 	float calc_cheapest_monster(List<string> haveMonsters){
-		actorStats max_monster = new actorStats();
+		unitStats max_monster = new unitStats();
 		max_monster.cost_type.Amount = 9999;		
 		
 		//find the cheapest monster
@@ -181,7 +181,7 @@ public class wavelet
                 if (count == -1) { Debug.LogError("Failed to parse line: " + c + "\n"); }
                 if (!monster.Equals(""))
                 {
-                    actorStats stats = Central.Instance.getToy(monster);
+                    unitStats stats = Central.Instance.getToy(monster);
                     if (stats != null)
                     {
                         while (count > 0)

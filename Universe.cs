@@ -8,7 +8,7 @@ using System.Collections.Generic;
 [CreateAssetMenu()]
 public class Actor : ScriptableObject
 {
-    public actorStats stats;
+    public unitStats stats;
     public string actorName;
 }
 

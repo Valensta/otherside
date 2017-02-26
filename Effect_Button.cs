@@ -104,6 +104,7 @@ public class Effect_Button : MonoBehaviour,IPointerClickHandler {
 	}
 	
 	public void OnPointerClick(PointerEventData eventData){
+        
 		OnInput();
 	}
 	
@@ -113,6 +114,7 @@ public class Effect_Button : MonoBehaviour,IPointerClickHandler {
 
         if (Noisemaker.Instance != null) Noisemaker.Instance.Play("collected_wish");
         //  Debug.Log("effectbutton adding wish " + stats.type + " " + stats.strength + "\n");
+        Tracker.Log("Effect_Button addWish " + stats.type + " " + stats.Strength + " 1");
         my_peripheral.my_inventory.AddWish (stats.type, stats.Strength, 1);
         my_peripheral.zoo.returnObject (parent.gameObject,true);
 

@@ -46,7 +46,7 @@ public class SpecialSkill : MonoBehaviour
         {
       //      Debug.Log("Setting skill " + type + "\n");
             skill = value;
-            initialized = true;
+            initialized = (value != null);
             remaining_time = 0;
         }
     }
@@ -56,6 +56,13 @@ public class SpecialSkill : MonoBehaviour
     void Update()
     {
         if (!initialized) return;
+        if (initialized && !in_inventory)
+        {
+            SetInteractable(false);
+            initialized = false;
+            skill = null;
+        }
+
         if (!in_inventory) return;
         if (interactable) return;
 

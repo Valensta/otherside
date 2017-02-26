@@ -20,8 +20,8 @@ using System;
         
 
         test.toys = new InitToy[2];
-        test.toys[0] = new InitToy("sensible_tower", 1, true);
-        test.toys[1] = new InitToy("airy_tower", 1, true);
+        test.toys[0] = new InitToy("sensible_tower", 1);
+        test.toys[1] = new InitToy("airy_tower", 1);
         
 
         test.waves = new InitWave[2];
@@ -181,14 +181,16 @@ using System;
         Moon.Instance.SetWishDials(dials);
     }
 
-    public actorStats LoadToy(InitToy toy)
+    public unitStats LoadToy(InitToy toy)
     {
-        actorStats test = Central.Instance.getToy(toy.name);
+        unitStats test = Central.Instance.getToy(toy.name);
 
         if (test != null)
         {
             if (toy.hasMaxLvl()) test.setMaxLvl(toy.max_lvl);
-            test.setActive(toy.active);
+        //    test.setActive(test.toy_type != ToyType.Temporary);
+            test.isUnlocked = (toy.unlock_now) ? toy.unlock_now : test.isUnlocked;
+
             return test;
         }
         else
@@ -203,10 +205,9 @@ using System;
     {
         for (int i = 0; i < level.toys.Length; i++)
         {
-            actorStats actor = LoadToy(level.toys[i]);
-            Central.Instance.setToy(actor, true);
-            Peripheral.Instance.haveToys.Add(actor.name, true);
-
+            unitStats actor = LoadToy(level.toys[i]);
+            Central.Instance.setUnitStats(actor, true);
+            
         }
     }
 	

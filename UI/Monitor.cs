@@ -65,7 +65,7 @@ public class Monitor : MonoBehaviour {
         IslandType show_me = IslandType.Either;
         if (show)
         {
-            actorStats stats = Central.Instance.getToy(toy).GetActorStats();
+            unitStats stats = Central.Instance.getToy(toy).GetActorStats();
             show_me = (stats.runetype == RuneType.SensibleCity)? IslandType.Either : stats.island_type; //show both for sensible city cuz it might be nice to see blue islands           
         }
 
@@ -333,7 +333,7 @@ public class Monitor : MonoBehaviour {
     public float getSignalSize(string selected)
     {
         float size = 0.5f;
-        actorStats s = Central.Instance.getToy(selected);
+        unitStats s = Central.Instance.getToy(selected);
         float distance_bonus = 0f;
         if (s.toy_type == ToyType.Temporary)
         {

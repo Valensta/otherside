@@ -10,14 +10,16 @@ public class SaveState: System.Object {
     public float total_score;
     public float possible_wishes;
     public float possible_dreams;
-    public float difficulty;    
+    public float difficulty;
     //public int sensible_hero_point;
     //public int airy_hero_point;
     //public int vexing_hero_point;
+    
     public int current_wave;
-    public int current_event;
-    public bool current_event_is_ingame;
-	public List<actorStats> actor_stats = new List<actorStats> ();
+    public int current_event;        //level-specific eventoverseer
+    public int current_global_event; //rewardoverseer
+    //public bool current_event_is_ingame;
+	public List<unitStatsSaver> actor_stats = new List<unitStatsSaver> ();
 	public List<ToySaver> hero_stats = new List<ToySaver>();
     public List<SpecialSkillSaver> skills_in_inventory = new List<SpecialSkillSaver>();
 //	public bool snapshot;
@@ -25,6 +27,7 @@ public class SaveState: System.Object {
     public List<string> concurrent_events = new List<string>();
     public List<Wish> wishes = new List<Wish>();
     public List<Reward> rewards = new List<Reward>();
+    
     public int current_level;
     public List<TemporarySaver> temporary_effects = new List<TemporarySaver>();
 
@@ -49,7 +52,7 @@ public void resetMidLevelStuff()
         current_level = -1;
         current_wave = 0;
         current_event = 0;
-        current_event_is_ingame = false;
+        //current_event_is_ingame = false;
         concurrent_events = null;
         temporary_effects = null;
 
@@ -84,21 +87,7 @@ public void resetMidLevelStuff()
 
     }
 
-    public void SaveRewards()
-    {
-        rewards = RewardOverseer.RewardInstance.getRewards();
-    }
-
-    public virtual void LoadRewards()
-    {
-        foreach (Reward r in rewards)
-        {
-            Reward overseer_reward = RewardOverseer.RewardInstance.getReward(r.reward_type);
-            overseer_reward.current_number = r.current_number;
-            overseer_reward.unlocked = r.unlocked;
-        }
-        Debug.Log("Rewards snapshot loaded\n");
-    }
+  
 
     public void SaveHeroStats()
     {
@@ -131,7 +120,8 @@ public void resetMidLevelStuff()
 
     public void LoadHeroStats()
     {
-        List<ToySaver> hero_toy_stats = Central.Instance.hero_toy_stats;
+        //List<ToySaver> hero_toy_stats = Central.Instance.hero_toy_stats;
+        List<ToySaver> hero_toy_stats = new List<ToySaver>();
         foreach (ToySaver saveme in hero_stats)
         {
             //   Debug.Log("SETTING HERO STATS FOR " + saveme.rune.runetype);
@@ -148,29 +138,31 @@ public void resetMidLevelStuff()
             hero_toy_stats[hero_toy_stats.Count - 1].rune.LoadSpecialSkills();
 
         }
+        Central.Instance.hero_toy_stats = hero_toy_stats;
     }
 
     public void SaveToyStats(){
 
-        actor_stats = new List<actorStats>();
-		foreach (actorStats a in Central.Instance.actors){
-			if (a.friendly) //monsters never change
-				actor_stats.Add (a);
-		}			
+        actor_stats = new List<unitStatsSaver>();
+		foreach (unitStats a in Central.Instance.actors) if (a.friendly)  actor_stats.Add (a.getSaver());
 
-	}
-
-    public void LoadToyStats()
-    {
-        foreach (actorStats a in actor_stats)
-        {
-
-            Central.Instance.getToy(a.name).setActive(a.isActive());
-        }
+        
     }
 
-    public void SaveBasicMidLevelShit()
-    {
+    public void LoadToyStats(){
+        if (actor_stats.Count == 0) return; //new game
+
+        Central.Instance.LockAllToys();
+        foreach (unitStatsSaver a in actor_stats) Central.Instance.getToy(a.name).loadSaver(a);
+        
+
+    }
+
+
+
+
+    public void SaveBasicMidLevelShit(){
+
         Debug.Log("Savig basic midlevel shit\n");
         time_of_day = Sun.Instance.current_time_of_day;
 
@@ -181,7 +173,7 @@ public void resetMidLevelStuff()
 
         dreams = Peripheral.Instance.dreams;
         health = Peripheral.Instance.GetHealth();
-        current_wave = Peripheral.Instance.current_wave;
+        current_wave = Moon.Instance.GetCurrentWave();
         difficulty = Peripheral.Instance.difficulty;
         //SaveState saver = new SaveState(dreams, health, current_wave, 0, 0, 0, sens_h, airy_h, vex_h, difficulty);
         current_level = Central.Instance.current_lvl;
@@ -218,11 +210,37 @@ public void resetMidLevelStuff()
 
     public void LoadSkillsInventory(bool reset_remaining_time)
     {
+
+        Peripheral.Instance.my_skillmaster.resetInventory();
+
         foreach (SpecialSkillSaver t in skills_in_inventory)
         {
+            Debug.Log("Loading skill " + t.type + "\n");
             if (reset_remaining_time) t.remaining_time = 0;
             Peripheral.Instance.my_skillmaster.setInventory(t, true);
-        }       
+        }
+    }
+
+    public void SaveRewards()
+    {
+        rewards = RewardOverseer.RewardInstance.getRewards();
+
+
+        current_event = RewardOverseer.RewardInstance.current_event;
+
+    }
+
+    public virtual void LoadRewards()
+    {
+        foreach (Reward r in rewards)
+        {
+            Reward overseer_reward = RewardOverseer.RewardInstance.getReward(r.reward_type);
+            overseer_reward.current_number = r.current_number;
+            overseer_reward.unlocked = r.unlocked;
+        }
+      //  Debug.Log("Rewards snapshot loaded\n");
+
+        RewardOverseer.RewardInstance.SetEvent(current_global_event, true);
     }
 
     public virtual void LoadEvents()
@@ -233,8 +251,10 @@ public void resetMidLevelStuff()
         {
             overseer_event.is_waiting = false;
         }
-        Debug.Log("Overseer loading snapshot\n");
-        EventOverseer.Instance.SetEvent(current_event, current_event_is_ingame);
+  //      Debug.Log("Overseer loading snapshot\n");
+        EventOverseer.Instance.SetEvent(current_event, true);
+
+
         foreach (string saver_event in concurrent_events)
         {
             foreach (GameEvent overseer_event in EventOverseer.Instance.concurrent_events)
@@ -251,7 +271,7 @@ public void resetMidLevelStuff()
         if (EventOverseer.Instance == null) return;
 
         current_event = EventOverseer.Instance.current_event;
-        current_event_is_ingame = EventOverseer.Instance.ingame;
+       // current_event_is_ingame = EventOverseer.Instance.ingame;
         List<string> active_concurrent_events = new List<string>();
         foreach (GameEvent ge in EventOverseer.Instance.concurrent_events)
         {

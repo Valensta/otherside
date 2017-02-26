@@ -157,7 +157,7 @@ public class Island_Button : MonoBehaviour, IPointerClickHandler, IDropHandler,I
 
 	public void OnPointerClick(PointerEventData eventData){
 		OnInput(true);
-        
+ 
     }
 
 
@@ -237,6 +237,7 @@ public void OnPointerEnter(PointerEventData eventData)
 
     void OnInput(bool is_click)
     {
+        Tracker.Log("Island_Button OnInput is_click " + is_click);
         if (Central.Instance.getState() != GameState.InGame) return;
         bool drag_mode = EagleEyes.Instance.floating_tower_scroll_driver.DragMode();
 
@@ -260,7 +261,7 @@ public void OnPointerEnter(PointerEventData eventData)
         }
       //  if (is_click && !blocked && selected != null) Noisemaker.Instance.Click(ClickType.Success);
 
-        actorStats stats = Central.Instance.getToy(selected);
+        unitStats stats = Central.Instance.getToy(selected);
         if (stats == null)
         {            
             //I DON'T KNOW

@@ -77,10 +77,10 @@ public class ScoreKeeper : MonoBehaviour {  // THIS IS INTRA LEVEL
 
     public void SetLevel(int level, float difficulty)
     {
-        Debug.Log("Setting level for ScoreKeeper " + level + " difficulty " + difficulty + "\n");
+ //       Debug.Log("Setting level for ScoreKeeper " + level + " difficulty " + difficulty + "\n");
         if (checkIfAlreadyHaveScore(level, difficulty))
         {
-            Debug.Log("Already found a score for level " + level + " difficulty " + difficulty + "\n");
+      //      Debug.Log("Already found a score for level " + level + " difficulty " + difficulty + "\n");
             Inventory.onWishChanged -= onWishChanged;
             Peripheral.onDreamsAdded -= onDreamsAdded;
         }

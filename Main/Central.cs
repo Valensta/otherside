@@ -27,7 +27,7 @@ public enum CostType { Dreams, Wishes, SensibleHeroPoint, AiryHeroPoint, VexingH
 
 
 public enum Condition { TIME, Click, Selected, PlacedToy, WaveStarted, WaveEnded, GotWish, TIMEInterval, ClickedOnToy, GameTimeReached, LevelUp,
-                        Lavaburn, OnLastWavelet, LevelWon, WishAppears, LevelWonOrLost, WishUsed, TowerSold, UpgradeSkill, Killer};
+                        Lavaburn, OnLastWavelet, LevelWon, WishAppears, LevelWonOrLost, WishUsed, TowerSold, UpgradeSkill, Killer, MaxLvlReached, Null};
 
 //lucid dreamer
 public enum WishType { Sensible, Null, MoreXP, MoreDamage, MoreDreams, MoreHealth, GlobalForceAttack, PanicAttack };
@@ -87,7 +87,7 @@ public class Central : MonoBehaviour {
     public GameState state = GameState.MainMenu;
     
     public Dictionary<RuneType, string> effect_toys = new Dictionary<RuneType, string>();
-    public List<actorStats> actors = new List<actorStats>();
+    public List<unitStats> actors = new List<unitStats>();
    
     public LevelList level_list;
     public MultiLevelStateSaver game_saver;
@@ -165,7 +165,7 @@ public class Central : MonoBehaviour {
 
 	public bool setCurrentLevel(int c){
 		if (c > level_list.getMaxLvl()) {
-			Debug.Log ("TRYING TO SET CURRENT LEVEL TO BE ABOVE ALLOWED MAXIMUM " + level_list.getMaxLvl() + " OR BELOW 0 WTF ARE YOU DOING\n");
+			Debug.Log ("TRYING TO SET CURRENT LEVEL TO " + c + " TO BE ABOVE ALLOWED MAXIMUM " + level_list.getMaxLvl() + "\n");
 			return false;
 		}
         
@@ -214,14 +214,14 @@ public class Central : MonoBehaviour {
         return effect_toy;
 
     }
-
+    /*
 	public bool HaveActiveToy(string name){
-		actorStats a = null;
+		unitStats a = null;
 		a = getToy(name);
 		if (a == null || !a.isActive()) return false;
 		return true;
 	}
-
+    */
 	public void changeState(GameState s){
 		changeState (s, "junk");
 	}
@@ -231,7 +231,7 @@ public class Central : MonoBehaviour {
         Noisemaker.Instance.Stop();
         GameState oldstate = state;
         state = s;
-     //   Debug.Log("Changing state " + oldstate + " to " + s + "\n");
+     //  Debug.Log("Changing state " + oldstate + " to " + s + "\n");
 
         if (oldstate != GameState.InGame && s == GameState.InGame)
         {
@@ -242,26 +242,22 @@ public class Central : MonoBehaviour {
         {
             //my_spyglass.Enable(false);
             if (Monitor.Instance != null) Monitor.Instance.my_spyglass.DisableByGameState(true);
-            softClearLevel();//clear towers
+          //  softClearLevel();//clear towers
             Moon.Instance.WaveInProgress = false;
         }
 
         switch (state)
         {
-            case GameState.WonGame:
-                //SaveGame(true,current_lvl.ToString());
+            case GameState.WonGame:                
                 game_saver.SaveGame(SaveWhen.EndOfLevel);
                 current_lvl = -1;
-                //Application.Quit();//for now
+                
                 System.Diagnostics.Process.GetCurrentProcess().Kill();
                 break;
-            case GameState.Quit:
-                //SaveGame(true, current_lvl.ToString());
-                //SaveGame(false, current_lvl.ToString());
+            case GameState.Quit:                
                 Application.Quit();//for now
                 break;
             case GameState.MainMenu:
-
                 
                 EagleEyes.Instance.PlaceState(state);
                 if (oldstate == GameState.InGame) clearLevel();
@@ -272,7 +268,7 @@ public class Central : MonoBehaviour {
 
                 if (oldstate == GameState.InGame)
                 {
-                    Debug.Log("Switched from InGame to InGame, clearing level\n");
+          //          Debug.Log("Switched from InGame to InGame, clearing level\n");
                     clearLevel();
                 }
 
@@ -281,8 +277,7 @@ public class Central : MonoBehaviour {
                 if (EventOverseer.Instance != null) EventOverseer.Instance.StartMe(true); else { Debug.Log("No overseer to start:("); }
                 if (RewardOverseer.RewardInstance != null) RewardOverseer.RewardInstance.StartMe(true); else { Debug.Log("No overseer to start:("); }
                 break;
-            case GameState.Won:
-                // SaveGame(false, "-1");
+            case GameState.Won:                
                 game_saver.SaveGame(SaveWhen.EndOfLevel);
                 clearLevel();
                 incrementLevel();
@@ -293,13 +288,7 @@ public class Central : MonoBehaviour {
                 break;
 
             case GameState.LevelList:
-                /*
-                    if (content == "WonLevelContinue"){
-                    Debug.Log("I don't know what this is\n");
-                        EagleEyes.Instance.PlaceState(state);
-                    }
-                    */
-                softClearLevel();
+// softClearLevel();
                 if (saved_level == -1 && content == "AskConfirm") content = "Start";
 
                 switch (content)
@@ -317,21 +306,17 @@ public class Central : MonoBehaviour {
                         EagleEyes.Instance.DisplayConfirmPanel(MenuButton.ToMap, false);
                         break;
                     case "ToMap": //lose progress
+                        softClearLevel();
                         clearLevel(); //does this need to be here?		
-                        
-                        if (loaded_level > -1) {// Debug.Log("Saving -1 snapshot before going to map\n");
-                 //           game_saver.SaveGame(false, "-1"); }
-                        //game_saver.SaveGame(SaveGameType.BeginningOfLevel);
-                }
-               // ClearOldSnapshot();
+
+                        Central.Instance.game_saver.LoadGame(SaveWhen.BetweenLevels);
+                        if (EventOverseer.Instance != null) { EventOverseer.Instance.StopMe(); }
                         EagleEyes.Instance.PlaceState(state);
-                        if (EventOverseer.Instance != null) EventOverseer.Instance.StartMe(false);
+                        //if (EventOverseer.Instance != null) EventOverseer.Instance.StartMe(false);
                         if (RewardOverseer.RewardInstance != null) RewardOverseer.RewardInstance.StartMe(false);
                         break;
                     case "Start":
-                        Debug.Log("Start...\n");
-              //          Central.Instance.ClearOldSnapshot();
-                //        Central.Instance.ClearOldStartLevelSnapshot();
+                        Debug.Log("Start...\n");              
                         RewardOverseer.RewardInstance.StartMe(false);
                         EagleEyes.Instance.PlaceState(state);
                         break;
@@ -349,32 +334,28 @@ public class Central : MonoBehaviour {
                 GameStatCollector.Instance.SaveStatFile();
                 break;
             case GameState.Loading:
+                softClearLevel();//clear towers
                 switch (content)
                 {
 
                     case "LoadSnapshot": //restart wave button
                         EagleEyes.Instance.PlaceState(state);
-                        if (oldstate == GameState.InGame) softClearLevel();
-                        //StartCoroutine("LoadWave");				
-                        //LoadSnapshot(snapshot_file);
-                        //  from_snapshot = true;
+                        if (oldstate == GameState.InGame) softClearLevel();                        
                         levelchange = true;
                         levelmakers = SaveWhen.MidLevel;
                         break;
                     case "NewLevel":
-                        EagleEyes.Instance.PlaceState(state);
-                        // from_snapshot = false;
+                        EagleEyes.Instance.PlaceState(state);                        
                         levelchange = true;
                         levelmakers = SaveWhen.BeginningOfLevel;
 
                         break;
                     case "LoadStartLevelSnapshot": //restart level button
                         EagleEyes.Instance.PlaceState(state);
+                        if (EventOverseer.Instance != null) { EventOverseer.Instance.StopMe(); }
                         if (oldstate == GameState.InGame) softClearLevel();
-                        levelchange = true;
-                        //levelmakers = SaveWhen.EndOfLevel;
-                        levelmakers = SaveWhen.BeginningOfLevel;
-                        //LoadSnapshot(start_level_snapshot_file);				
+                        levelchange = true;                        
+                        levelmakers = SaveWhen.BeginningOfLevel;                        
                         break;
                     default:
                         EagleEyes.Instance.PlaceState(state);                        
@@ -386,10 +367,7 @@ public class Central : MonoBehaviour {
             case GameState.LoadingWave:
                 Debug.Log("When does this happen?\n");
                 EagleEyes.Instance.PlaceState(state);
-                if (oldstate == GameState.InGame) softClearLevel();
-                //StartCoroutine("LoadWave");
-                //LoadSnapshot(snapshot_file);
-                // from_snapshot = true;
+                if (oldstate == GameState.InGame) softClearLevel();                
                 levelchange = true;
                 levelmakers = SaveWhen.MidLevel;
                 break;
@@ -413,60 +391,87 @@ public class Central : MonoBehaviour {
 	//	}
 	}
 	
-	public actorStats getToy(string name){
-		foreach (actorStats actor in actors){
+
+
+	public unitStats getToy(string name){
+		foreach (unitStats actor in actors){
 			if (actor.name.Equals(name)) return actor;
 		}
 		return null;
 	}
 
-    public void setToy(actorStats toy, bool set_max_lvl)
+    public void setUnitStats(unitStats toy, bool set_max_lvl)
     {
-        actorStats current_toy = getToy(toy.name);
+        unitStats current_toy = getToy(toy.name);
+     //   toy.setActive(toy.toy_type != ToyType.Temporary);            
+
         if (current_toy != null)
-        {
-         //   if (set_max_lvl) Debug.Log("Setting actor " + toy.name + " set max level " + set_max_lvl + " to " + toy.getMaxLvl() + "\n");
-            int old_max_lvl = current_toy.getMaxLvl();
+        {         
             current_toy = toy;
-
-            if (set_max_lvl)
-            {// I HATE THIS SHIT
-                if (toy.toy_type == ToyType.Hero)
-                {
-                    int new_max_lvl = Mathf.Max(toy.getMaxLvl(), old_max_lvl);
-
-                    foreach (ToySaver h in hero_toy_stats)
-                    {
-                        if (h.toy_name.Equals(toy.name))
-                        {
-                            new_max_lvl = Mathf.Max(toy.getMaxLvl(), (int)h.rune.getMaxLevel());
-                            h.rune.setMaxLevel(new_max_lvl);
-                        }
-                    }
-                    current_toy.setMaxLvl(new_max_lvl);
-
-                }
-                else
-                {
-                    current_toy.setMaxLvl(toy.getMaxLvl());
-                }
-            }
-            else current_toy.setMaxLvl(old_max_lvl);
-            
-     
+            setUnitStatsSaver(ref current_toy, toy.getSaver(), set_max_lvl);                 
             return;
         }
         actors.Add(toy);
-
     }
 
+    public void setUnitStats(unitStatsSaver toy, bool set_max_lvl)
+    {
+        unitStats current_toy = getToy(toy.name);
+       
 
-	public void updateCost(int toys){
+        if (current_toy != null)
+        {
+            
+            setUnitStatsSaver(ref current_toy, toy, set_max_lvl);
+            return;
+        }else
+        {
+            Debug.LogError("Could not set actor stats from actorStatsSaver for toy " + toy.name + "\n");
+        }
+        
+    }
+
+    //only for use by the above 2
+    void setUnitStatsSaver(ref unitStats current_toy, unitStatsSaver toy, bool set_max_lvl)
+    {
+        int old_max_lvl = current_toy.getMaxLvl();
+        if (set_max_lvl)
+        {// I HATE THIS SHIT
+            if (toy.toy_type == ToyType.Hero)
+            {
+                int new_max_lvl = Mathf.Max(toy.getMaxLvl(), old_max_lvl);
+
+                foreach (ToySaver h in hero_toy_stats)
+                {
+                    if (h.toy_name.Equals(toy.name))
+                    {
+                        new_max_lvl = Mathf.Max(toy.getMaxLvl(), (int)h.rune.getMaxLevel());
+                        h.rune.setMaxLevel(new_max_lvl);
+                    }
+                }
+                current_toy.setMaxLvl(new_max_lvl);
+
+            }
+            else
+            {
+                current_toy.setMaxLvl(toy.getMaxLvl());
+            }
+        }
+        else current_toy.setMaxLvl(old_max_lvl);
+    }
+
+    public void LockAllToys()
+    {
+        foreach (unitStats a in actors) if (a.friendly) a.isUnlocked = false;
+        
+    }
+
+    public void updateCost(int toys){
 	//	Debug.Log("UPDATING COST " + toys + "\n");	
 		
 		if (base_toy_cost_mult <= 0) base_toy_cost_mult = 1f;
 		
-		foreach (actorStats actor in actors) {
+		foreach (unitStats actor in actors) {
 			if (actor.friendly == true && actor.ammo == -1 && !actor.cost_type.isHero()){
                 float diff = actor.cost_type.Amount;
                 //Debug.Log("From " + actor.cost_type.cost + " to " + (actor.init_cost + (toys * 2) * base_toy_cost_increase) * base_toy_cost_mult);
@@ -556,10 +561,10 @@ public class Central : MonoBehaviour {
 
                     if (levelmakers == SaveWhen.BeginningOfLevel)
                     {//redo all of the level initialization
-                        OnLevelWasLoaded(1);
+                        OnLevelWasLoaded();
                     }
                     else
-                    {
+                    {                     
                         game_saver.LoadGame(levelmakers);
                     }
                 }
@@ -576,7 +581,7 @@ public class Central : MonoBehaviour {
 
 
 
-	void OnLevelWasLoaded(int ignoreme){
+	void OnLevelWasLoaded(){
         //event triggered by Application.LoadLevelAsync succcess
 	//	Debug.Log("ONLEVELWAS LOADED CURRENT LEVEL IS " + current_lvl + "\n");
 
@@ -588,11 +593,10 @@ public class Central : MonoBehaviour {
 
             if (levelmakers == SaveWhen.BeginningOfLevel)
             { 
-				Debug.Log("Loaded not from file\n");
+			//	Debug.Log("Loaded not from file\n");
 				Sun.Instance.SetTime(0);
 				Sun.Instance.Init();
-              
-				Peripheral.Instance.PlaceCastle();                
+                Peripheral.Instance.PlaceCastle();                
 				changeState(GameState.InGame);      
     //            game_saver.SaveGame(SaveWhen.BeginningOfLevel);
                 Peripheral.Instance.Pause(false);
@@ -649,7 +653,8 @@ public class Central : MonoBehaviour {
 		Loader.Instance.setFile (file);
 		Loader.Instance.LoadInitFile ();
 	}
-
+    
+    //hero has to be placed on the map at least once before its stats are added to hero_toy_stats
     public ToySaver getHeroStats(RuneType type)
     {
         ToySaver me = null;

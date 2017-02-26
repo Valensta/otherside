@@ -70,7 +70,7 @@ public class MySelectedSkillButton : MonoBehaviour
         string what = (b == null) ? "null" : b.effect_type.ToString();
    //     Debug.Log("Setting special skill button " + what + " " + check_inventory);
 
-        if (b == null) // turn it off
+        if (b == null || b.toy_rune == null) // turn it off
         {
             
             _setSprite(null);
@@ -117,6 +117,7 @@ public class MySelectedSkillButton : MonoBehaviour
 	}
         		
 	public void OnClick(){
+        Tracker.Log("MySelectedSkillButton " + this.gameObject.name);
         SetSkill(true);
 	}
 

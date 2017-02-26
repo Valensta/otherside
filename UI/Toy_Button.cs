@@ -20,8 +20,7 @@ public class Toy_Button : MyButton
 
     public void OnClick()
     {
-       // Debug.Log("HEY\n");
-        //	Debug.Log ("Toy button clicked! " + type + "\n");
+        Tracker.Log("Toy_Button type " + this.gameObject.name + " type " + type);
         int c;
         //ToyButton is generally only used ingame. it is also used midlevel by the special skill global rune panel, which not THE global_rune_panel but the levellist panel
         //midlevel use - "upgrade_select"

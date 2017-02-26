@@ -82,6 +82,9 @@ public class RegularTrigger : Trigger {
     }
 	
 	public override void  Init(){
+   //     Debug.Log("Initializing trigger " + this.text + " " + this.condition + "\n");
+        clicked = false;
+        selected = false;
 		MyButton.onButtonClicked += onButtonClicked;
 		Button_Event.onButtonClicked += onButtonClicked;
         Validate();
@@ -97,6 +100,10 @@ public class RegularTrigger : Trigger {
 	
     public override void DisableMe()
     {
+
+      //  Debug.Log("Disabling trigger " + this.text + " " + this.condition + "\n");
+        MyButton.onButtonClicked -= onButtonClicked;
+        Button_Event.onButtonClicked -= onButtonClicked;
         if (condition == Condition.Selected) Peripheral.onSelected -= onSelected;
         if (condition == Condition.PlacedToy) Peripheral.onPlacedToy -= onPlacedToy;
         if (condition == Condition.WaveStarted) Peripheral.onWaveStart -= onWaveStart;
@@ -118,17 +125,20 @@ public class RegularTrigger : Trigger {
             case Condition.TIME:
                 if (Peripheral.Instance != null)
                 {
+             //       Debug.Log("checking TIME\n");
                     return Peripheral.Instance.TIME > number;
                 }
                 else {
                     return false;
                 }
             case Condition.TIMEInterval:
+            //    Debug.Log("checking TIME\n");
                 if (Peripheral.Instance != null)
                 {
                     float t = Peripheral.Instance.TIME;
                     if (init_number == -1) { init_number = t; }
                     if (init_number == 0) { init_number = default_delay; }
+                    
                     return Peripheral.Instance.TIME > init_number + number;
                 }
                 else { Debug.Log("Cannot find peripheral\n"); return false; }
@@ -150,14 +160,14 @@ public class RegularTrigger : Trigger {
             case Condition.WaveStarted:
            //     Debug.Log("number " + number + " current wave " + Peripheral.Instance.current_wave + " astate " + Peripheral.Instance.level_state + "\n");
            
-                if (Peripheral.Instance.current_wave == number && Peripheral.Instance.level_state == LState.WaveStarted) return true;// respect the start wave event which is triggered by clicking on the wave start button
+                if (Moon.Instance.GetCurrentWave() == number && Peripheral.Instance.level_state == LState.WaveStarted) return true;// respect the start wave event which is triggered by clicking on the wave start button
                 return false;
                 //return selected;
             case Condition.WaveEnded:
-                if (Peripheral.Instance.current_wave > number && Peripheral.Instance.monsters_transform.childCount <= 0) return true;
+                if (Moon.Instance.GetCurrentWave() > number && Peripheral.Instance.monsters_transform.childCount <= 0) return true;
                 return selected;
             case Condition.LevelWon: //this will never work for regular events, because peripheral waits for overseer.ingame_finished == true before declaring that the level is won
-                if (Peripheral.Instance.level_state == LState.Won) return true;
+                if (Peripheral.Instance.level_state == LState.Won && (Central.Instance.current_lvl - 1) == number) return true;
           //      Debug.Log("Ok you won\n");
                 return false;
             case Condition.OnLastWavelet:
@@ -267,10 +277,10 @@ public class RegularTrigger : Trigger {
 		}
 	}
 
-	void onWaveEnd(int content){	
-		int current_wave = Peripheral.Instance.current_wave;
-	//	Debug.Log ("wave end got " + current_wave + " and looking for " + number + "\n");
-		if (number == current_wave)
+	void onWaveEnd(int content){
+        //int current_wave = Peripheral.Instance.Current_wave;
+        //	Debug.Log ("wave end got " + current_wave + " and looking for " + number + "\n");
+        if (number == Moon.Instance.GetCurrentWave())
 			selected = true;
 	}
 
@@ -285,7 +295,7 @@ public class RegularTrigger : Trigger {
 
 
     void onPlacedToy(string content){
-  //      Debug.Log("trigger Got onplacedtoy " + content + ", need " + text + "\n");
+   //     Debug.Log("trigger Got onplacedtoy " + content + ", need " + text + "\n");
 		if (text == "" || content.Contains(text))
 				selected = true;
 	}

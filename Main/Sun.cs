@@ -91,7 +91,7 @@ public class Sun : MonoBehaviour {
     }
 	
 	public void Init(){
-		Debug.Log("Sun initializing\n");
+	//	Debug.Log("Sun initializing\n");
 		//needs current time change and one_day
 		glowy =  Monitor.Instance.glowy_image;
 		light_source =  Monitor.Instance.light;
@@ -168,7 +168,7 @@ public class Sun : MonoBehaviour {
             return; }
 
         if (fast){
-			Debug.Log("Setting fast visuals for Sun for " + times[current_wave].time_name_start.name + "\n");
+		//	Debug.Log("Setting fast visuals for Sun for " + times[current_wave].time_name_start.name + "\n");
 			if (light_source != null){
 				light_source.color = times[current_wave].time_name_start.light_color;			
 			//	Debug.Log("Doing fast light\n");
@@ -180,11 +180,11 @@ public class Sun : MonoBehaviour {
 			
 			if (background_image != null) {
 				background_image.color = times[current_wave].time_name_start.bg_color;
-				Debug.Log("Doing fast background image\n");
+			//	Debug.Log("Doing fast background image\n");
 			}
 			if (glowy != null){
 				Show.SetAlpha(glowy, times[current_wave].time_name_start.glowy_intensity);
-				Debug.Log("Doing fast glowy " + current_wave + " intensity " + times[current_wave].time_name_start.glowy_intensity + "\n");
+		//		Debug.Log("Doing fast glowy " + current_wave + " intensity " + times[current_wave].time_name_start.glowy_intensity + "\n");
 			}
 			return;
 		

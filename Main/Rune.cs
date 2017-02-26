@@ -146,9 +146,10 @@ public class Rune
     public void InitHero(int level)
     {
         if (xp > 0) return;
-        if (runetype == RuneType.Sensible) level = level-1;
+        if (runetype == RuneType.Sensible) level = level - 1;
         if (runetype == RuneType.Airy) level = level - 2;
-        if (runetype == RuneType.Vexing) level = level - 3;
+        if (runetype == RuneType.Vexing) level = level - 3;        
+
         if (level > 0) Debug.Log("Initializing Hero " + runetype + " to toy level " + level + "\n");
         else return;
         float dreams = 15f;
@@ -183,13 +184,17 @@ public class Rune
         }        
         if (me == EffectType.Null) return;
 
-     //   Debug.Log("Special skill: " + me + "\n");
-        Upgrade(me, false, true);
-        Peripheral.Instance.my_skillmaster.SetSkill(getStatBit(me));        
-        Peripheral.Instance.my_skillmaster.setInventory(me, true);
+        GiveSpecialSkill(me);
     }
 
-    
+    public void GiveSpecialSkill(EffectType type)
+    {
+        if (!Get.isSpecial(type)) { Debug.LogError("Trying to give a special skill of type " + type + ", INVALID.\n"); }
+        Upgrade(type, false, true);
+        Peripheral.Instance.my_skillmaster.SetSkill(getStatBit(type));
+        Peripheral.Instance.my_skillmaster.setInventory(type, true);
+    }
+
 
     void initSensible()
     {
@@ -632,10 +637,11 @@ public class Rune
 
     public bool CheckStatReqs(EffectType type, RuneType runetype)
     {
+        bool is_vocal = false;
 
         if (!Get.isSpecial(type) && isMaxLevel())
         {
-          //  Debug.Log("Reached max level " + max_level + "\n");
+            if (is_vocal) Debug.Log("Reached max level " + max_level + "\n");
             return false;
         }
         int s = getStatID(type);
@@ -648,7 +654,8 @@ public class Rune
             {
                 StatReq statreq = statreqs[i];
 
-                if (statreq.required_toy != "" && !Central.Instance.HaveActiveToy(statreq.required_toy)) return false;
+                if (!Peripheral.Instance.canBuildToy(statreq.required_toy)) return false;
+                //if (statreq.required_toy != "" && !Central.Instance.HaveActiveToy(statreq.required_toy)) return false;
 
 
                 if (statreq.type == EffectType.Null)
@@ -659,24 +666,24 @@ public class Rune
                 float stat_level = this.getLevel(statreq.type);
                 if (statreq.min_level > 0 && stat_level < statreq.min_level)
                 {
-                  //  Debug.Log("Rune below required level to upgrade " + type + "\n");
+                    if (is_vocal) Debug.Log("Rune below required level to upgrade " + type + "\n");
                     return false;
                 }
                 if (statreq.min_level < 0 && stat_level > 0)
                {
-                 //   Debug.Log("Rune below required level to upgrade " + type + "\n");
+                    if (is_vocal) Debug.Log("Rune below required level to upgrade " + type + "\n");
                     return false;
                 }
                 if (xp < statreq.xp)
                 {
-                 //   Debug.Log("Below required xp to upgrade " + type + "\n");
+                    if (is_vocal) Debug.Log("Below required xp to upgrade " + type + "\n");
                     return false;
                 }
 
             }
         }
         else {
-            Debug.Log("Invalid statreq\n");
+            if (is_vocal) Debug.Log("Invalid statreq\n");
             return false;
         }
 

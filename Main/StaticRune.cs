@@ -37,6 +37,7 @@ public static class StaticRune
     }
 
 
+    
 
     public static float GetDistanceBonus(string toy_name, Vector3 position, Toy _toy) // Toy t is only for setting parent toy, meh
     {

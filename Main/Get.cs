@@ -25,9 +25,12 @@ public class Float
 
 
 public static class Get {
-//	static int iTweenNumber = 0;
+    //	static int iTweenNumber = 0;
+    public static String savegame_location = Application.persistentDataPath + "/";
+    public static String preloadgame_location = Application.persistentDataPath + "/";
 
-	public static float RandomNormal(){
+
+    public static float RandomNormal(){
 		float mean = 0;
 		float stdDev = 1;
 		
@@ -59,6 +62,8 @@ public static class Get {
 
         return copy;
     }*/
+
+        
 
 
     public static Sprite getSprite(string name)

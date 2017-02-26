@@ -140,7 +140,7 @@ public class Firearm : Toy {
 
 
 
-    public override void initStats(actorStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune)
+    public override void initStats(unitStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune)
     {
       //  Debug.Log("initializing " + this.name + "\n");
         ToyInit(s,scaleV, i, _name, _rune);
@@ -179,7 +179,8 @@ public class Firearm : Toy {
 
         if (toy_type == ToyType.Hero)
         {
-            rune.InitHero(Central.Instance.current_lvl);//for testing, gives hero some xp based on current level, if xp is 0   
+            rune.InitHero(Central.Instance.current_lvl);//for testing, gives hero some xp based on current level, if xp is 0  
+            // also sensible hero comes with airattack for free 
             rune.setMaxLevel((int)Mathf.Max(Central.Instance.getToy(my_name).getMaxLvl(), rune.getMaxLevel()));
         }
 

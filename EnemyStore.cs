@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class Store: MonoBehaviour
 {
     
-    public List<actorStats> EnemyList;
+    public List<unitStats> EnemyList;
     
 
 }

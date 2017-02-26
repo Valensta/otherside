@@ -31,6 +31,12 @@ public class MySaveGameButton : UIButton
      //   throw new NotImplementedException();
     }
 
+    public void OnInputSetSelectedToy(bool set)
+    {
+        Tracker.Log("MySaveGameButton SetSelected set " + set + " id " + id);
+        SetSelectedToy(set);
+    }
+
     public override void SetSelectedToy(bool set)
     {
 
@@ -43,8 +49,19 @@ public class MySaveGameButton : UIButton
      //   throw new NotImplementedException();
     }
 
-    public void DeleteSaveGame()
+    public void OnInputDeleteSaveGame()
     {
-        game_saver.DeleteSaveGame(id);
+        Tracker.Log("MySaveGameButton DeleteSaveGame id " + id);
+
+        ClickType click = (game_saver.DeleteSaveGame(id)) ? ClickType.Action : ClickType.Error;
+        Noisemaker.Instance.Click(click);
     }
+
+    public void OnInputCopyPreMadeSaveGame(int lvl)        
+    {
+        Tracker.Log("MySaveGameButton CopyPreMadeSaveGame lvl " + lvl);
+        ClickType click = (game_saver.CopyPremadeSaveGame(id, lvl)) ? ClickType.Action : ClickType.Error;
+        Noisemaker.Instance.Click(click);
+    }
+
 }
