@@ -14,8 +14,8 @@ public class Fade_Telegram : MonoBehaviour
 
     public void OnClick()
     {
+        if (EagleEyes.Instance.UIBlocked("Fade_Telegram","")) return;
 
-        Tracker.Log("Fade_Telegram " + this.gameObject.name);
         from.OnClick();
         to.FadeIn();
         if (pause)

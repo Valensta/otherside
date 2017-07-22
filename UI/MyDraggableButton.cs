@@ -29,27 +29,23 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
     }
 
     public override void InitMe()
-    {
-     //   Debug.Log("Initialized " + content + "\n");
-        if (am_initialized) return;
-        //start_position = transform.localPosition;
-        InitStartConditions();
-        //start_position = my_image.rectTransform.anchoredPosition;
+    {     
+        if (am_initialized) return;        
+        InitStartConditions();        
         if (Monitor.Instance != null) my_spyglass = Monitor.Instance.my_spyglass;
-        //my_spyglass = Central.Instance.my_spyglass;
+        
         Peripheral.onCreatePeripheral += onCreatePeripheral;
-        Firearm.onPriceUpdate += onPriceUpdate;
+        Toy.onPriceUpdate += onPriceUpdate;
         EagleEyes.onPriceUpdate += onPriceUpdate;
         Central.onPriceUpdate += onPriceUpdate;
+
         am_initialized = true;
         image_color = my_image.color;
-        interactable = true;
-       // Debug.Log(this.name + " lossy scale " + my_image.rectTransform.lossyScale + " sizeDelta " + my_image.rectTransform.sizeDelta + " " + my_image.transform.lossyScale + "\n");
+        interactable = true;       
     }
     
     public override void InitStartConditions()
-    {
-     //   Debug.Log("Draggable button initializing start conditions\n");
+    {     
         start_position = my_image.rectTransform.anchoredPosition;
         Reset();
     }
@@ -97,7 +93,7 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
         if (peripheral == null) peripheral = Peripheral.Instance;
         if (peripheral == null) { Debug.Log("Peripheral is not present yet, why are you trying to do stuff with MyDraggableButton?\n"); return; }
 
-        if ((type == "toy_selected" || type == "hero_selected" || type == "building_selected" || type == "meter_selected"))
+        if (type.EndsWith("selected"))
         {
             if (s)
             {
@@ -115,29 +111,18 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
     }
     
 
-	public void OnInput(){
-      //  Tracker.Log("MyDraggableButton OnInput ");
-
-
-        //setSelected(true);
-    }
-
+	
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (!interactable) return;
-        Tracker.Log("Island_Button OnBeginDrag");
-    //    Debug.Log("mydraggablebutton onBEGINdrag\n");
-        //  start_position = transform.localPosition;
-        //  Central.Instance.my_spyglass.Enable(false);
-        //  Debug.Log("Draggging " + name + "\n");
-        //OnInput();
+        
         SetSelectedToy(true);
         my_image.raycastTarget = false;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         float dist;
         plane.Raycast(ray, out dist);
         v3OrgMouse = ray.GetPoint(dist);
-        //        time = Time.deltaTime;
+        
         if (Monitor.Instance != null) my_spyglass = Monitor.Instance.my_spyglass;
         my_spyglass.DisableByDragButton(true);
         Monitor.Instance.ShowIslandSprites(true, content);
@@ -146,8 +131,10 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
     }
 
     public void OnDrag(PointerEventData eventData)
-    {     
+    {
+    //    Debug.Log("ON DRAG BEGIN\n");
         if (!interactable) return;
+
         EagleEyes.Instance.floating_tower_scroll_driver.UpdatePanel(null);
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -168,18 +155,15 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
     
 
     public void OnEndDrag(PointerEventData eventData)
-    {// this does not happen for heroes? why?, island_button OnDrop does
-     //if (!interactable) return;
-     //transform.localPosition = start_position;
-     //   Debug.Log("On drag button end");
-        //Tracker.Log("Island_Button OnEndDrag");
+    {
+     //   Debug.Log("ON DRAG END\n");
         Reset();
     }
 
     public override void Reset()
     {
 
-   //     Debug.Log("Resetting draggable button\n");
+    //    Debug.Log("Resetting draggable button\n");
         if (Central.Instance.state != GameState.InGame) return;
         my_image.rectTransform.anchoredPosition = start_position;
         SetSelectedToy(false);
@@ -193,14 +177,14 @@ public class MyDraggableButton : UIButton, IBeginDragHandler, IDragHandler, IEnd
     {
 
         //if (name == "sensible_tower")	Debug.Log("On price update " + name + " is? " + content + " or " + content_detail + " " + price + "\n");
-        if (content == name || content_detail == name)
+        if (content.Equals(name) || content_detail.Equals(name))
         {
             if (text == null)
             {
                 //Debug.Log ("toy_selected button " + name + " does not have text assigned, cannot update price!\n");
                 return;
             }
-            //Debug.Log ("toy_selected button " + name  + " setting price to " + price + "\n");
+       //     Debug.Log ("toy_selected button " + name  + " setting price to " + price + "\n");
 
             text.text = price.ToString();
         }

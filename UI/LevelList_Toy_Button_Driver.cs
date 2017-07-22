@@ -14,6 +14,7 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
     //public List_Panel selected_skill_panel;
     public List<MySelectedSkillButton> chosen_skills;
     public MyButton upgrade_button;
+    public MyButton reset_button;
     
     public Sprite empty_button_sprite;
 
@@ -34,20 +35,36 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
     }
 
 
+
     void UpdatePassiveLabels()
     {
         foreach (MyLabel l in drivers[current_driver].labels)
         {
             if (!l.type.Equals("info")) continue;
+
+            
             MyText level_text = l.getText(LabelName.Level);
             MyText cost_text = l.getText(LabelName.UpgradeCost);
+            if (level_text == null && cost_text == null) return;
 
             Rune r = ((Toy_Button)l.ui_button).toy_rune;
-            if (r == null) continue;
+            setInfoLabel(l, r);
+            if (r == null)
+            {
+                if (level_text != null) level_text.setText("");
+                if (cost_text != null) cost_text.setText("");
+                continue;
+            }       
+
             StatBit s = r.getStat(l.effect_type);
-            if (s == null) continue;
-            level_text.setText(s.Level.ToString());
-            cost_text.setText(s.cost.Amount.ToString());
+            if (s == null)
+            {
+                if (level_text != null) level_text.setText("");
+                if (cost_text != null) cost_text.setText("");
+                continue;
+            }
+            if (level_text != null) level_text.setText((s.Level > 0)? s.Level.ToString(): "");
+            if (cost_text != null) cost_text.setText(s.cost.Amount.ToString());
         }
     }
 
@@ -103,11 +120,11 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
             //Debug.Log("no selected button\n");
             return false;
         }
+        /*
         if (selected_button.rune_type == RuneType.Castle)
-        {
-            //    Debug.Log("castle, no good\n"); 
+        {         
             return false;
-        }
+        }*/
         if (selected_button.effect_type == EffectType.Null)
         {
             //Debug.Log("selected button effect type is null, no good\n");
@@ -123,13 +140,34 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
             //Debug.Log("skill has already been turned on, no good\n");
             return false;
         } //skill has already been turned on
-        if (selected_button.toy_rune.getStatBit(selected_button.effect_type) == null)
+        StatBit statbit = selected_button.toy_rune.getStatBit(selected_button.effect_type);
+        if (statbit == null || statbit.level == 0)
         {
             //Debug.Log("skill has not been upgraded yet, no good\n");
             return false;
         } // skill has not been upgraded yet
 
         return true;
+    }
+
+    public void resetSkills(EffectType effectType)
+    {
+        selected_button.toy_rune.resetSkills(selected_button.effect_type, true);
+       
+        UpdatePassiveLabels();
+        foreach (MySelectedSkillButton chosen in chosen_skills)
+        {
+            
+            EffectType type = chosen.getEffectType();
+            if (effectType != EffectType.Null && type != effectType) continue;
+
+                if (type != EffectType.Null && selected_button.toy_rune.HasUpgrade(type))
+            {            
+                Peripheral.Instance.my_skillmaster.DisableSkill(type);
+                chosen.ShowEmpty();
+            }
+        }
+        setSelectedButton(null);
     }
 
     public void showEmptyButton()
@@ -160,26 +198,35 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
         if (selected_button.toy_rune.Upgrade(selected_button.effect_type, true) > 0)//upgrade successful
         {
             showEmptyButton();
-        }
 
+        }
+        selected_button.setButtonImage(StateType.Yes);
         setText(verbose_label, selected_button.effect_type, selected_button.toy_rune, true);
         UpdatePassiveLabels();
         setSelectedButton(selected_button);
     }
         
+    
     public override void setSelectedButton(Toy_Button b)        
     {
         base.setSelectedButton(b);
 
         selected_button = b;
         if (b == null || b.toy_rune == null || b.toy_rune.runetype == RuneType.Null)
+        {
             setText(verbose_label, EffectType.Null, null, true);
+            upgrade_button.gameObject.SetActive(false);
+            reset_button.gameObject.SetActive(false);
+        }
         else
         {
             setText(verbose_label, b.effect_type, b.toy_rune, true);
-            bool yes_please = b.toy_rune.CanUpgrade(b.effect_type, RuneType.Sensible, true);
-            Debug.Log("Can we upgrade " + b.effect_type + "? " + yes_please + "\n");
+            bool yes_please = b.toy_rune.CanUpgrade(b.effect_type, RuneType.Sensible, true) == StateType.Yes;       
             upgrade_button.gameObject.SetActive(yes_please);
+
+            bool can_reset = b.toy_rune.getLevel(b.effect_type) > 0;
+            reset_button.gameObject.SetActive(can_reset);
+            if (can_reset) ((Toy_Button)reset_button).effect_type = b.effect_type;
         }
 
         showEmptyButton();

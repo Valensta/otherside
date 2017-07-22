@@ -8,7 +8,7 @@ public class Toy_Button_Driver : MonoBehaviour {
 	public Dictionary<RuneType, Sub_Toy_Button_Driver> drivers;
 	public List<Toy_Button> buttons;
 	public List<MyLabel> labels;
-	public Firearm parent;	
+	public Toy parent;	
 	public bool drill_down;
 	public bool scroll;
 	public bool info;
@@ -50,7 +50,7 @@ public class Toy_Button_Driver : MonoBehaviour {
 		else {
 			info_panel.SetActive(false);
 			foreach (Toy_Button button  in buttons) {
-				if (button.type == "drilldown" && button.gameObject.activeSelf == true){
+				if (button.type.Equals("drilldown") && button.gameObject.activeSelf == true){
 				//button.ren
 					button.gameObject.SetActive (false);
 				}
@@ -69,12 +69,12 @@ public class Toy_Button_Driver : MonoBehaviour {
 	void CheckUpgrades(){		
 	//Debug.Log("Checking upgrades\n");
 		foreach (Toy_Button button  in buttons) {
-			if ((button.type == "upgrade"  && button.toy_parent.rune.CanUpgrade(button.effect_type, button.toy_parent.rune.runetype)))
+			if ((button.type.Equals("upgrade")  && button.toy_parent.rune.CanUpgrade(button.effect_type, button.toy_parent.rune.runetype) == StateType.Yes))
 			{										
 				button.gameObject.SetActive (true);
 	//			Debug.Log("Can upgrade " + button.name + "\n");
 				scroll = true;
-			}else if (button.type != "upgrade") {				
+			}else if (button.type.Equals("upgrade")) {				
 				button.gameObject.SetActive (true);
 			}else{
 				button.gameObject.SetActive (false);
@@ -94,7 +94,7 @@ public class Toy_Button_Driver : MonoBehaviour {
 				
 
 				if (Get.isGeneric(statbit.effect_type) && statbit.hasStat()){
-					if (labels[i].type == "info"){
+					if (labels[i].type.Equals("info")){
 						labels[i].text.text = statbit.getDetailStats()[0].toString();
 						info = true;
 					//	Debug.Log("updating text for " + labels[i].effect_type + "\n");
@@ -105,7 +105,7 @@ public class Toy_Button_Driver : MonoBehaviour {
 					}
 				}else
 				if (statbit.hasStat()){
-					if (labels[i].type == "info"){
+					if (labels[i].type.Equals("info")){
 						labels[i].text.text = statbit.getDetailStats()[0].toString();
                         info = true;
 						labels[i].gameObject.SetActive(true);

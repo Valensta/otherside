@@ -36,7 +36,9 @@ public class RewardButton : UIButton {
         this.selected = selected;
 	}
 
-	public void OnClick(){
+	public void OnClick()
+	{
+	    if (EagleEyes.Instance.UIBlocked("RewardButton","")) return;
 		OnInput();
 	}
 
@@ -44,7 +46,7 @@ public class RewardButton : UIButton {
 		if (driver == null) { Debug.LogError(this.name + " has no driver assigned!\n"); return; }
 
         selected = !selected;
-        Tracker.Log("RewardButton " + this.name + " selected " + selected);
+        
 
         if (selected)
             driver.setSelectedButton(this);

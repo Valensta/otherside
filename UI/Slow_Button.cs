@@ -21,6 +21,7 @@ public class Slow_Button : MonoBehaviour, IPointerClickHandler, IPointerDownHand
 
     public void Update()
     {
+        if (Time.timeScale == 0) return;
         if (!am_pressed) return;
 
         current_time += Time.deltaTime;

@@ -7,6 +7,8 @@ public class MyFastForwardButton : MonoBehaviour, IPointerDownHandler, IPointerU
 	public Peripheral peripheral;
     public Image image;
     public bool interactable;
+    public FFButton my_ffbutton;
+    
 
     public delegate void OnSelectedHandler(SelectedType type, string n);
     public static event OnSelectedHandler onSelected;
@@ -14,7 +16,8 @@ public class MyFastForwardButton : MonoBehaviour, IPointerDownHandler, IPointerU
     void Start(){
 		peripheral = Peripheral.Instance;
 		enabled = true;
-	}
+        my_ffbutton.ShowSelectedAccent(false);
+    }    
 
     public void SetActiveState(bool set)
     {
@@ -28,17 +31,17 @@ public class MyFastForwardButton : MonoBehaviour, IPointerDownHandler, IPointerU
 		if (!enabled)
 			return;
 
+        //my_ffbutton.ShowSelectedAccent(true);
         if (onSelected != null) onSelected(SelectedType.Null, "");
-
-        peripheral.ChangeTime(6);
-	}
+        peripheral.ChangeTime(TimeScale.SuperFastPress);
+    }
 
 	public void OnPointerUp(PointerEventData eventData){
 		if (!enabled)
 			return;
-		
-		peripheral.ChangeTime(6);
-	}
+      //  my_ffbutton.ShowSelectedAccent(false);
+        peripheral.ChangeTime(TimeScale.Normal);
+    }
 
 
 

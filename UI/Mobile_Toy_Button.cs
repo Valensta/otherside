@@ -10,10 +10,17 @@ public class Mobile_Toy_Button : MyButton
     public Island_Floating_Button_Driver driver;
     public Toy toy_parent; //firearm assigned here. buttons talk directly to the firearm	
 
+    public void Awake()
+    {
+        content = TowerStore.getBasicName(label.runetype, label.toytype);
+        label.content = content;
+    }
+
+
     public override void InitMe()
     {
     
-        Firearm.onPriceUpdate += onPriceUpdate;
+        Toy.onPriceUpdate += onPriceUpdate;
         EagleEyes.onPriceUpdate += onPriceUpdate;
         Central.onPriceUpdate += onPriceUpdate;
     
@@ -21,7 +28,9 @@ public class Mobile_Toy_Button : MyButton
 
     public void OnMyOwnClick()
     {
-    //    Debug.Log("on my own click already have " + driver.selected_button + " selecting " + content + "\n");
+
+        if (EagleEyes.Instance.UIBlocked("Mobile_Toy_Button", content)) return;
+        //    Debug.Log("on my own click already have " + driver.selected_button + " selecting " + content + "\n");
         if (driver.selected_button != null && driver.selected_button.content.Equals(content))
         {
          //   Debug.Log("placing selected " + Peripheral.Instance.getSelectedToy() + "\n");

@@ -33,7 +33,7 @@ public class MySaveGameButton : UIButton
 
     public void OnInputSetSelectedToy(bool set)
     {
-        Tracker.Log("MySaveGameButton SetSelected set " + set + " id " + id);
+        
         SetSelectedToy(set);
     }
 
@@ -51,16 +51,22 @@ public class MySaveGameButton : UIButton
 
     public void OnInputDeleteSaveGame()
     {
-        Tracker.Log("MySaveGameButton DeleteSaveGame id " + id);
+        
 
         ClickType click = (game_saver.DeleteSaveGame(id)) ? ClickType.Action : ClickType.Error;
         Noisemaker.Instance.Click(click);
     }
 
-    public void OnInputCopyPreMadeSaveGame(int lvl)        
+    public void OnInputCopyPreMadeSaveGame(int preload)        
     {
-        Tracker.Log("MySaveGameButton CopyPreMadeSaveGame lvl " + lvl);
-        ClickType click = (game_saver.CopyPremadeSaveGame(id, lvl)) ? ClickType.Action : ClickType.Error;
+        if (preload >= game_saver.preloaded_games.Count)
+        {
+            Noisemaker.Instance.Click(ClickType.Error);
+            return;
+        }
+        
+        
+        ClickType click = (game_saver.CopyPremadeSaveGame(id, game_saver.preloaded_games[preload])) ? ClickType.Action : ClickType.Error;
         Noisemaker.Instance.Click(click);
     }
 

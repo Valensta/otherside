@@ -7,20 +7,20 @@ using System.Collections.Generic;
 
 public class Island_Floating_Button_Driver : MonoBehaviour {
 
-    public List_Panel my_panel;
+    public GenericPanel my_panel;
     public Island_Button selected_island = null;
     public Mobile_Toy_Button selected_button;
     public RectTransform selected_button_image = null;
-    public GameObject selected_island_image = null;
+    public Image selected_island_image = null;
 
 
     List<RectTransform> transforms = new List<RectTransform>();
-
+/*
     public bool DragMode()
     {
         return selected_island == null;
     }
-
+    */
     public void Start()
     {
 
@@ -46,13 +46,14 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
     //    Debug.Log("Resetting selected\n");
         selected_button = null;
         Peripheral.Instance.SelectToy("", RuneType.Null, false);
-        Monitor.Instance.InitMainSignal("");
+        Monitor.Instance.InitMainSignal(RuneType.Null, ToyType.Null);
         foreach (MyLabel l in my_panel.list)
         {
             l.ui_button.SetSelectedToy(false);
             l.SetHidden(false);
         }
         selected_button_image.gameObject.SetActive(false);
+        selected_island_image.sprite = TowerStore.getImage(RuneType.Null, ToyType.Null);
     }
 
     public void SelectButton(Mobile_Toy_Button button, bool set)
@@ -62,20 +63,48 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
         if (set)
         {
             selected_button = button;
-            Monitor.Instance.InitMainSignal(selected_button.content);
-            selected_button_image.gameObject.SetActive(true);
-            selected_button_image.parent = selected_button.transform;
-            RectTransform set_me_to = selected_button.my_button.image.GetComponent<RectTransform>();
+            Monitor.Instance.InitMainSignal(button.label.runetype, button.label.toytype);
 
+            selected_button_image.gameObject.SetActive(true);
+            selected_button_image.SetParent(selected_button.transform);
+            RectTransform set_me_to = selected_button.my_button.image.GetComponent<RectTransform>();
+            
+
+            
             selected_button_image.anchoredPosition = set_me_to.anchoredPosition;
-            selected_button_image.localScale = set_me_to.localScale;
+
+            selected_button_image.localScale = set_me_to.localScale;            
+            setSelectedIslandImage(button.label.runetype, button.label.toytype);
+
             Noisemaker.Instance.Click(ClickType.Success);
         }
         else
         {
             selected_button_image.gameObject.SetActive(false);
-           
+            setSelectedIslandImage(RuneType.Null, ToyType.Null);            
+
         }
+    }
+
+    void ShowNoResourcesPopup(Vector3 pos)
+    {
+        GameObject popup = Peripheral.Instance.zoo.getObject("GUI/no_resources_popup", false);
+        RectTransform rt = popup.GetComponent<RectTransform>();
+                
+        popup.GetComponent<Floaty>().Init(pos);
+        
+    }
+
+    public void setSelectedIslandImage(RuneType runeType, ToyType toyType)
+    {
+        selected_island_image.sprite = TowerStore.getImage(runeType, toyType);
+
+        if (selected_island == null) return;
+
+        Vector3 set_to = selected_island.transform.position;
+        //if (runeType != RuneType.Null && toyType != ToyType.Null) set_to.y += 0.17f;            
+        
+        selected_island_image.GetComponent<RectTransform>().position = set_to;
     }
 
     public void UpdatePanel(Island_Button button)
@@ -116,7 +145,7 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
             }    
             
                     
-            unitStats stats = Central.Instance.getToy(label.content);
+            unitStats stats = Central.Instance.getToy(label.runetype, label.toytype);
             if (stats != null)
             {                 
                 if (stats.island_type != IslandType.Either && stats.island_type != selected_island.island_type)
@@ -142,23 +171,21 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
                     }
                 }
 
-                if (label.button.IsInteractable())
-                {
+                //if (label.button.IsInteractable()){
                     label.SetHidden(false);
                     label.ShowButtons(true);
                     ok_buttons++;
-                }
-                else
-                {
+                    /*
+                }else{                    
                     label.SetHidden(true);
                     label.ShowButtons(false);
-                }
+                }*/
             }            
         }
-
+        Vector3 set_to = button.transform.position;
         if (ok_buttons > 0)
         {
-            Vector3 set_to = button.transform.position;
+            
             my_panel.transform.position = set_to;
             my_panel.gameObject.SetActive(true);
 
@@ -169,13 +196,14 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
             my_panel.UpdatePanel();
            // if (Monitor.Instance != null) Monitor.Instance.my_spyglass.PointSpyglass(button.transform.position,.20f);
 
-            selected_island_image.gameObject.SetActive(true);
+            selected_island_image.gameObject.SetActive(true);            
             selected_island_image.transform.position = set_to;
         }
         else
         {
             selected_island_image.gameObject.SetActive(false);
             Noisemaker.Instance.Play("island_too_far");
+            ShowNoResourcesPopup(set_to);
         }
 
     }

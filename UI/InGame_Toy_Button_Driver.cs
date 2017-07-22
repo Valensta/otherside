@@ -13,7 +13,7 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
     public GameObject update_group;
     public MyLabel upgrade_cost_label;
     public GameObject sell_panel;
-    public GameObject move_panel;
+    
     public MyLabel sell_cost_label;
 
     void Start(){
@@ -33,8 +33,17 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
 		CheckUpgrades();
 	}
 
+    void HideOtherPanels(bool hide)//tower panel and inventory panel
+    {
+        //Debug.Log("Hide other panels " + hide + "\n");
+        EagleEyes.Instance.wish_scroll_driver.Hide(hide);
+        //EagleEyes.Instance.toy_scroll_driver.Hide(hide);
+    }
+
     public override void setSelectedButton(Toy_Button select_me)
     {
+        if (sell_panel.activeSelf) return;
+
         selected_button = select_me;
 
         EffectType selected_type = getSelectedEffectType();
@@ -67,14 +76,14 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
         {
          //   Debug.Log("non\n");
             upgrade_cost_label.text.text = "";
-            update_group.SetActive(false);
+          //  update_group.SetActive(false);
             return;
         }
         Rune check_rune = parent.rune;
         if (check_rune == null)
         {
           //  Debug.Log("non\n");
-            update_group.SetActive(false);
+        //    update_group.SetActive(false);
             upgrade_cost_label.text.text = "";
             return;
         }
@@ -83,13 +92,13 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
         if (upgrade_cost == null)
         {
           //  Debug.Log("non\n");
-            update_group.SetActive(false);
+         //   update_group.SetActive(false);
             upgrade_cost_label.text.text = "";
             return;
         }
 
        // Debug.Log("Upgrade cost " + upgrade_cost.cost + " " + upgrade_cost.type + "\n");
-        update_group.SetActive(true);
+   //     update_group.SetActive(true);
         
         upgrade_cost_label.text.text = upgrade_cost.Amount.ToString();
 
@@ -97,10 +106,11 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
 
     public void SetParent(Toy p)
     {
-        
+        if (!SetDriver(p.runetype)) return;
         if (drivers[current_driver].button_map.Count == 0) { Init(); }
+        
         parent = p;
-        SetDriver(p.runetype);
+        
 
 
         for (int i = 0; i < drivers[current_driver].buttons.Count; i++)
@@ -109,9 +119,9 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
         }
         base.SetParent(p);
         setPrimaryLabel();
-        move_panel.SetActive(false);
+      //  move_panel.SetActive(false);
         sell_panel.SetActive(false);
-
+        HideOtherPanels(true);
     }
 
 
@@ -119,6 +129,7 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
     public override void DisableMe()
     {
         primary_label.gameObject.SetActive(false);
+        HideOtherPanels(false);
         base.DisableMe();
     }
 
@@ -130,6 +141,8 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
         MyText primary_desc = primary_label.getText(LabelName.Null);
 
         string text = StaticRune.getPrimaryDescription(parent.rune);
+
+        setVerboseImageLabels(primary_label, StaticRune.getPrimaryDamageType(parent.rune));
 
         if (text.Equals(""))
         {
@@ -160,7 +173,7 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
 
     public void moveToy()
     {
-        toggleMovePanel();
+      //  toggleMovePanel();
         Peripheral.Instance.sellToy(parent, parent.getSellCost());
         
     }
@@ -171,7 +184,7 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
         Peripheral.Instance.Pause (!isactive);
         
     }
-
+    /*
     public void toggleMovePanel()
     {
         if (!(parent.toy_type == ToyType.Hero && RewardOverseer.RewardInstance.getReward(RewardType.HeroMobility).unlocked)) return;
@@ -181,7 +194,7 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
         move_panel.SetActive(!isactive);
         Peripheral.Instance.Pause(!isactive);
     }
-
+    */
     public void toggleSell(){                    
         if (parent.toy_type == ToyType.Hero || parent.runetype == RuneType.Castle) return;
 
@@ -189,7 +202,8 @@ public class InGame_Toy_Button_Driver : Global_Toy_Button_Driver
         
 		if (!isactive){            
             float cost = parent.getSellCost();
-            sell_cost_label.text.text = cost.ToString(); 
+            sell_cost_label.text.text = cost.ToString();
+            setSelectedButton(null);
         }
         
         sell_panel.SetActive(!isactive);

@@ -20,7 +20,7 @@ public class TweenCounter: MonoBehaviour {
             
         /*
         count += LeanTween.tweensRunning;
-        deltaTime += Time.deltaTime;
+        deltaTime += Duration.deltaTime;
 
         if (deltaTime < 1f) return;
 
