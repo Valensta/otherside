@@ -22,8 +22,8 @@ public class MyWishButton : UIButton
 	public static event ButtonClickedHandler onButtonClicked; 
 
 	
-    public Text strength;
-    public Text time;
+   // public Text strength;
+  //  public Text time;
     public Text count_text;
 
 
@@ -64,10 +64,7 @@ public class MyWishButton : UIButton
         else {
             my_wish = w;
             SetSprite("GUI/Inventory/" + w.type.ToString() + "_button_image");
-            //if (strength != null && strength.text != null)
-                //strength.text = w.getEffect().ToString(); 
-            //else Debug.Log(this.name + " has no text label!\n");
-            time.text = w.getTime().ToString();
+                        
             info_box = Zoo.Instance.getObject("GUI/tiny_info/" + w.type.ToString() + "_tiny_info", false);
             info_box.transform.parent = this.transform;
             info_box.transform.localScale = Vector3.one;
@@ -82,7 +79,7 @@ public class MyWishButton : UIButton
     public void updateInfoBoxLabel()
     {
         if (info_box == null) return;
-        String str = (!my_wish.absolute) ? Show.ToPercent(my_wish.getEffect()) : my_wish.getEffect().ToString();
+        String str = (!my_wish.absolute ) ? Show.ToPercent(my_wish.getEffect()) : my_wish.getEffect().ToString();
         String[] hey = { str, Mathf.CeilToInt(my_wish.getTime()).ToString() };
         MyLabel l = info_box.GetComponent<MyLabel>();
         l.text.text = Show.FixText(l.content, hey);
@@ -126,7 +123,8 @@ public class MyWishButton : UIButton
 	}
         		
 	public void OnClick(){
-		OnInput();
+	    if (EagleEyes.Instance.UIBlocked("MyWishButton","")) return;
+        OnInput();
 	}
 
     public void OnInput() {
@@ -142,14 +140,14 @@ public class MyWishButton : UIButton
         Peripheral.Instance.ClearAll(SelectedType.Wish, this.name);
         if (!selected) { SetSelectedToy(true); //Debug.Log("Selecting inventory slot " + this.name + "\n");
             Noisemaker.Instance.Click(ClickType.Success);
-            Tracker.Log("MyWishButton " + this.name + " selected " + selected);
+        
         }
         else
         {
             SetSelectedToy(false);
             Noisemaker.Instance.Click(ClickType.Action);
             DoStuff();
-            Tracker.Log("MyWishButton " + this.name + " doing stuff");
+            
         }
 
 		if (onButtonClicked != null) {

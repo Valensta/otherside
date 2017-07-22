@@ -14,7 +14,8 @@ public class MyButton : UIButton {
     public bool make_a_toy = false;
     public GameObject parent;
     Sprite default_sprite;
-    public Image selected_accent;
+    public MyLabel label;
+   // public Image selected_accent;
 
     bool am_initialized = false;
     public Peripheral peripheral;
@@ -30,12 +31,16 @@ public class MyButton : UIButton {
     public override void Reset()
     { }
 
+    public override void InitButton()
+    {
+
+    }
 
     public override void InitMe() {
         if (am_initialized) return;
         if (make_a_toy == true) {
             Peripheral.onCreatePeripheral += onCreatePeripheral;
-            Firearm.onPriceUpdate += onPriceUpdate;
+            Toy.onPriceUpdate += onPriceUpdate;
             EagleEyes.onPriceUpdate += onPriceUpdate;
             Central.onPriceUpdate += onPriceUpdate;
             am_initialized = true;
@@ -43,12 +48,7 @@ public class MyButton : UIButton {
 
     }
 
-    public void ShowSelectedAccent(bool show)
-    {
-        if (selected_accent == null) return;
 
-        Show.SetAlpha(selected_accent, (show)? 1f: 0f);
-    }
 
     public void onPriceUpdate(string name, float price) {
 
@@ -74,7 +74,7 @@ public class MyButton : UIButton {
     void Start()
     {
         if (type.Equals("toy_selected") || type.Equals("meter_selected")) { make_a_toy = true; }
-        ShowSelectedAccent(false);
+        if (!type.Equals("Level")) ShowSelectedAccent(false);
         InitMe();
         peripheral = Peripheral.Instance;
 
@@ -105,13 +105,13 @@ public class MyButton : UIButton {
 
 
 	public void OnClick(){
-		OnInput();
+	    if (EagleEyes.Instance.UIBlocked(type, content)) return;
+        OnInput();
 	}
 
     public void OnInput()
     {
-        Tracker.Log("MyButton type " + type + " content " + content);
-        //Debug.Log ("button on click " + this.name + " type " + type + " content " + content + "\n");
+       
         if (!enabled)
         {
             Noisemaker.Instance.Click(ClickType.Error);
@@ -164,21 +164,18 @@ public class MyButton : UIButton {
                     click_outcome = ClickType.Null;
                     break;
                 case "MainMenu":
-                    peripheral.Pause(true);
+                    peripheral.ChangeTime(TimeScale.Pause);
                     EagleEyes.Instance.PlaceMenu(true);                                        
                     break;
-                case "Pause":
-                    //Debug.Log("pressed pause\n");
-                    
-                    selected = !selected;
-                    ShowSelectedAccent(selected);
-                    peripheral.Pause(selected);
+                case "Pause":                    
+                    selected = !selected;                    
+                    peripheral.TogglePause();
                     break;
-                case "FastForward":
-                    peripheral.ChangeTime(1.5f);
+                case "FastForward":                    
+                    peripheral.ToggleFast();
                     break;
                 case "FastForward_SUPERFAST":
-                    peripheral.ChangeTime(16);
+                    peripheral.ChangeTime(TimeScale.SuperFastPress);
                     break;
                 default:
                     break;
@@ -199,15 +196,20 @@ public class MyButton : UIButton {
                     Central.Instance.changeState(GameState.LevelList, content);
                     break;
                 case MenuButton.Continue:
-                    Debug.Log("Continue play from main menu\n");
-                    peripheral.Pause(false);
-                    EagleEyes.Instance.PlaceMenu(false);
+                    Debug.Log("Continue play from main menu\n");                    
+                    EagleEyes.Instance.PlaceMenu(false);                    
                     break;
                 case MenuButton.Quit:
                     Central.Instance.changeState(GameState.Quit);
                     break;
                 case MenuButton.LoadSnapshot:
-                    Central.Instance.changeState(GameState.Loading, content);
+                    Central.Instance.changeState(GameState.Loading, content); //why the hell is this all done via strings
+                    break;
+                case MenuButton.GoBack1:
+                    Central.Instance.changeState(GameState.Loading, menu_button.ToString());
+                    break;
+                case MenuButton.GoBack2:
+                    Central.Instance.changeState(GameState.Loading, menu_button.ToString());
                     break;
                 case MenuButton.LoadLatestGame:
                     Central.Instance.changeState(GameState.Loading, content);
@@ -216,8 +218,16 @@ public class MyButton : UIButton {
                     Central.Instance.changeState(GameState.Loading, content);
                     break;
                 case MenuButton.ToMap:
-                    click_outcome = content.Equals("CancelConfirmToMap") ? ClickType.Cancel : ClickType.Success;
-                    Central.Instance.changeState(GameState.LevelList, content);// why is this levellist?
+                    if (content.Equals("CancelConfirmToMap"))
+                    {
+                        click_outcome = ClickType.Cancel;
+                        Central.Instance.changeState(GameState.InGame, content);
+                    }
+                    else
+                    {
+                        click_outcome = ClickType.Success;
+                        Central.Instance.changeState(GameState.LevelList, content);
+                    }
                     break;
                 case MenuButton.Settings:
                     EagleEyes.Instance.my_settings_panel.TogglePanel();
@@ -230,7 +240,7 @@ public class MyButton : UIButton {
             }
         }
 
-        if (type == "Lost")
+        if (type.Equals("Lost"))
         {
             switch (menu_button)
 
@@ -250,7 +260,7 @@ public class MyButton : UIButton {
         }
         if (type.Equals("Settings"))
         {
-            bool ok = false;
+            //bool ok = false;
             switch (content)
             {
                 case "VolumePlus":
@@ -258,6 +268,16 @@ public class MyButton : UIButton {
                     break;
                 case "VolumeMinus":
                     click_outcome = (EagleEyes.Instance.my_settings_panel.DecreaseVolume()) ? ClickType.Success : ClickType.Error;
+                    break;
+                case "Play":
+                    Noisemaker.Instance.setMute(false);
+                    EagleEyes.Instance.mySoundButtons.updateButtons();
+                    click_outcome = ClickType.Success;
+                    break;
+                case "Mute":
+                    Noisemaker.Instance.setMute(true);
+                    EagleEyes.Instance.mySoundButtons.updateButtons();
+                    click_outcome = ClickType.Success;
                     break;
             }
 
@@ -272,6 +292,7 @@ public class MyButton : UIButton {
 
                     Central.Instance.changeState(GameState.Loading, content);                    
                     break;
+                
                 case MenuButton.Inventory:
                     if (content.Equals("cancel"))
                     {
@@ -283,33 +304,14 @@ public class MyButton : UIButton {
                     {
 
                         click_outcome = ClickType.Action;
-                        Central.Instance.level_list.special_skill_button_driver.upgradeSelected();
+                        Central.Instance.level_list.special_skill_button_driver.upgradeSelected();                        
                     }
                     else if (content.Equals("givemestuff"))
                     {
                         click_outcome = ClickType.Action;
-                        //Rune srune = new Rune();
-                        unitStats sstats = Central.Instance.getToy("sensible_tower_hero");
-                        
-                        //srune.initStats(RuneType.Sensible, sstats.getMaxLvl(), ToyType.Hero, sstats.exclude_skills);
-                        //ToySaver s = new ToySaver("sensible_tower_hero", -1, srune, ToyType.Hero);
-                        //Central.Instance.setHeroStats(s);
 
-                        //Rune arune = new Rune();
-                        unitStats astats = Central.Instance.getToy("airy_tower_hero");
-                        
-                        //arune.initStats(RuneType.Airy, astats.getMaxLvl(), ToyType.Hero, astats.exclude_skills);
-                        //ToySaver a = new ToySaver("airy_tower_hero", -1, arune, ToyType.Hero);
-                        //Central.Instance.setHeroStats(a);
 
-                        Rune vrune = new Rune();
-                        unitStats vstats = Central.Instance.getToy("vexing_tower_hero");
-                        
-                      //  vrune.initStats(RuneType.Vexing, vstats.getMaxLvl(), ToyType.Hero, vstats.exclude_skills);
-                        //ToySaver v = new ToySaver("vexing_tower_hero", -1, vrune, ToyType.Hero);
-                        //Central.Instance.setHeroStats(v);
-
-                        ScoreKeeper.Instance.SetScore(820f);
+                        ScoreKeeper.Instance.SetTotalScore(820);
                         Central.Instance.game_saver.SaveGame(SaveWhen.BetweenLevels);
                     }
                     else
@@ -326,7 +328,7 @@ public class MyButton : UIButton {
             }
         }
 
-        if (type == "Level")
+        if (type.Equals("Level"))
         {
             click_outcome = ClickType.Success;
             int lvl = int.Parse(content);
@@ -336,20 +338,16 @@ public class MyButton : UIButton {
                 click_outcome = ClickType.Cancel;
                 return;
             }
-            Central.Instance.setLevelInfo(lvl);
+            Central.Instance.level_list.setLevelInfo(lvl);
             //Otherwise do onButtonClick below
         }
 
-        if (type == "Won")
+        if (type.Equals("Won"))
         {
             click_outcome = ClickType.Success;
             if (menu_button == MenuButton.ToMap) Central.Instance.changeState(GameState.LevelList, content);            
         }
-        if (onButtonClicked != null)
-        {
-            onButtonClicked(type, content);
-        }
-
+        if (onButtonClicked != null)onButtonClicked(type, content);        
         Noisemaker.Instance.Click(click_outcome);
     }
 

@@ -23,7 +23,10 @@ public class MySelectedSkillButton : MonoBehaviour
     }
 
 
-
+    public EffectType getEffectType()
+    {
+        return type;
+}
     void SetSkill(bool make_noise)
     {
         
@@ -61,13 +64,13 @@ public class MySelectedSkillButton : MonoBehaviour
         _setStuff();
         _setSprite(my_driver.empty_button_sprite);
         type = EffectType.Null;
-    //    Debug.Log("Showing empty button");
+        Debug.Log("Showing empty button");
     }
 
     public void SetSkill(Toy_Button b, bool check_inventory)
     {
         _setStuff();
-        string what = (b == null) ? "null" : b.effect_type.ToString();
+        //string what = (b == null) ? "null" : b.effect_type.ToString();
    //     Debug.Log("Setting special skill button " + what + " " + check_inventory);
 
         if (b == null || b.toy_rune == null) // turn it off
@@ -80,7 +83,7 @@ public class MySelectedSkillButton : MonoBehaviour
 
         }
         else {                                      // turn it on
-            if (b.rune_type == RuneType.Castle) return;
+          //  if (b.rune_type == RuneType.Castle) return;
       //      Debug.Log("SETTING SELECT SKILL BUTTON FOR " + b.effect_type);
             if (check_inventory && peripheral.my_skillmaster.CheckSkill(b.effect_type))
             {
@@ -117,7 +120,7 @@ public class MySelectedSkillButton : MonoBehaviour
 	}
         		
 	public void OnClick(){
-        Tracker.Log("MySelectedSkillButton " + this.gameObject.name);
+	    if (EagleEyes.Instance.UIBlocked("MySelectedSkillButton", type.ToString())) return;
         SetSkill(true);
 	}
 

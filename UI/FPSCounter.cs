@@ -14,7 +14,13 @@ public class FPSCounter : MonoBehaviour {
 
         if (deltaTime < 1f) return;
 
-		float fps = frames / deltaTime;        
+		float fps = frames / deltaTime;
+        /*
+        float corrected_fps = fps * Duration.timeScale;
+        if (corrected_fps < 30)
+        {
+            Debug.LogError("FPS DROP\n");
+        } */     
         if (fps > 999) fps = 999;
 		text.text = string.Format("{0:0.}", fps);
         frames = 0;

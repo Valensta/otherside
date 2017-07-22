@@ -1,0 +1,55 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class Pathfinding2D : MonoBehaviour
+{
+    public List<WaypointNodelet> Path = new List<WaypointNodelet>();
+    public bool JS = false;
+
+    public void FindPath(Vector3 startPosition, Vector3 endPosition)
+    {
+        Pathfinder2D.Instance.InsertInQueue(startPosition, endPosition, SetList);
+    }
+    
+    //A test move function, can easily be replaced
+    public void Move()
+    {
+        if (Path.Count > 0)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, Path[0].position, Time.deltaTime * 30F);
+            if (Vector3.Distance(transform.position, Path[0].position) < 0.4F)
+            {
+                Path.RemoveAt(0);
+            }
+        }
+    }
+
+    protected virtual void SetList(List<WaypointNodelet> path)
+    {
+        if (path == null)
+        {
+            return;
+        }
+
+        if (!JS)
+        {
+            Path.Clear();
+            Path = path;
+            Path[0] = new WaypointNodelet(new Vector3(Path[0].position.x, Path[0].position.y, Path[0].position.z), Path[0].ID);
+            Path[Path.Count - 1] = new WaypointNodelet(new Vector3(Path[Path.Count - 1].position.x, Path[Path.Count - 1].position.y, Path[Path.Count - 1].position.z), Path[Path.Count - 1].ID);
+        }
+        else
+        {           
+            Vector3[] arr = new Vector3[path.Count];
+            for (int i = 0; i < path.Count; i++)
+            {
+                arr[i] = path[i].position;
+            }
+
+            arr[0] = new Vector3(arr[0].x, arr[0].y , arr[0].z);
+            arr[arr.Length - 1] = new Vector3(arr[arr.Length - 1].x, arr[arr.Length - 1].y, arr[arr.Length - 1].z);
+            gameObject.SendMessage("GetJSPath", arr);
+        }
+    }
+}

@@ -7,25 +7,22 @@ public class GuidedRandomWalk : MonoBehaviour {
     Vector2 finish;
     
     Vector2 direction;
-    float init_velocity = 5f;
+    float init_velocity = 3.5f;
     float velocity;
     bool moving_out = true;
-    float life = 0.3f;
+    float life;
     float time;
-    float turn_time = 0.1f;
+    float turn_time = 0.2f;
 
 
     public void StartMe(Vector2 f)
     {
-        Debug.Log(gameObject.name + " started, going to " + f + "\n");
+       // Debug.Log(gameObject.name + " started, going to " + f + "\n");
         finish = f;
         PickDirection();
         velocity = init_velocity;
-        float thing = Random.RandomRange(1f, 2f);
-        thing = Mathf.FloorToInt(thing)/2f;
-        life = 1f * thing;
         
-        
+       life = Random.Range(0.25f, 0.35f);
     }
 
 
@@ -43,14 +40,14 @@ public class GuidedRandomWalk : MonoBehaviour {
 
        // velocity = (life - time*1/3f) * init_velocity;
 
-        time -= Time.fixedDeltaTime;
+        time -= Time.deltaTime;
 
         if (time <= 0)
         {
             velocity = init_velocity;
-
+            
             PickDirection();
-
+         //   Debug.Log("Picking direction " + Duration.realtimeSinceStartup + " " + velocity + " " + direction + "\n");
             time = life;
         }
     }
@@ -72,6 +69,12 @@ public class GuidedRandomWalk : MonoBehaviour {
                                          this.transform.position.y + Time.deltaTime * new_dir.y);
             max--;
         }
+        new_dir = new_dir.normalized;
+        Vector2 fin = finish.normalized;
+        Vector3 perfect_dir = fin - old_pos.normalized;
+        new_dir.x = new_dir.x * 0.2f + perfect_dir.x * 0.8f;
+        new_dir.y = new_dir.y * 0.2f + perfect_dir.y * 0.8f;
+        new_dir = new_dir.normalized;
         StartCoroutine(TurnMe(new_dir));
         //   Debug.Log("picked a direction " + direction + "\n");
     }
@@ -83,7 +86,7 @@ public class GuidedRandomWalk : MonoBehaviour {
         {                       
             direction = Vector2.Lerp(direction, new_dir, 0.4f);
             yield return new WaitForSeconds(0.02f);
-            timer -= Time.fixedDeltaTime;
+            timer -= Time.deltaTime;
         }
         yield return null;
 
