@@ -109,7 +109,7 @@ public class MyButton : UIButton {
         OnInput();
 	}
 
-    public void OnInput()
+    void OnInput()
     {
        
         if (!enabled)
@@ -139,7 +139,7 @@ public class MyButton : UIButton {
         }
         else if (type.Equals("meter_selected"))
         {
-            peripheral.SelectToy(content, Get.RuneTypeFromString(content_detail));
+            peripheral.SelectToy(content, EnumUtil.EnumFromString(content_detail, RuneType.Null));
             click_outcome = ClickType.Success;
             selected = true;
 
@@ -156,7 +156,7 @@ public class MyButton : UIButton {
         if (type.Equals("InGame"))
         {
             click_outcome = ClickType.Success;
-            if (onSelected != null) onSelected(SelectedType.Null, "");
+            onSelected?.Invoke(SelectedType.Null, "");
             switch (content)
             {
                 case "StartWave":
@@ -283,6 +283,10 @@ public class MyButton : UIButton {
 
 
         }
+        if (type.Equals("Marketplace"))
+        {
+            EagleEyes.Instance.marketplace_driver.Init(true);
+        }
         if (type.Equals("LevelList"))
         {
             switch (menu_button)
@@ -294,29 +298,30 @@ public class MyButton : UIButton {
                     break;
                 
                 case MenuButton.Inventory:
-                    if (content.Equals("cancel"))
+                    switch (content)
                     {
-                        Central.Instance.level_list.special_skill_button_driver.DisableMe();
-                        Central.Instance.game_saver.SaveGame(SaveWhen.BetweenLevels);
-                        click_outcome = ClickType.Cancel;
-                    }
-                    else if (content.Equals("upgrade"))
-                    {
+                        case "cancel":
 
-                        click_outcome = ClickType.Action;
-                        Central.Instance.level_list.special_skill_button_driver.upgradeSelected();                        
-                    }
-                    else if (content.Equals("givemestuff"))
-                    {
-                        click_outcome = ClickType.Action;
+                            Central.Instance.level_list.special_skill_button_driver.DisableMe();
+                            Central.Instance.game_saver.SaveGame(SaveWhen.BetweenLevels);
+                            click_outcome = ClickType.Cancel;
+                            break;
+                        case "upgrade":
 
-
-                        ScoreKeeper.Instance.SetTotalScore(820);
-                        Central.Instance.game_saver.SaveGame(SaveWhen.BetweenLevels);
-                    }
-                    else
-                    {
-                        Central.Instance.level_list.special_skill_button_driver.SetParent(null);
+                            click_outcome = ClickType.Action;
+                            Central.Instance.level_list.special_skill_button_driver.upgradeSelected();
+                            break;
+                        case "givemestuff":
+                            click_outcome = ClickType.Action;
+                            ScoreKeeper.Instance.SetTotalScore(820);
+                            Central.Instance.game_saver.SaveGame(SaveWhen.BetweenLevels);
+                            break;
+                        case "reset_special_skills":
+                            break;
+                        default:
+                            Debug.Log($"Special skill button set parent {content}\n");
+                            Central.Instance.level_list.special_skill_button_driver.SetParent(null);
+                            break;
                     }
                     break;
                 case MenuButton.ToMainMenu:

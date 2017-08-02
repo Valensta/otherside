@@ -50,13 +50,13 @@ public class Wish : IDeepCloneable<Wish> {
             case WishType.Sensible:
                 return 1f*strength;
             case WishType.MoreXP:
-                return 0.33f * strength;
+                return 0.35f * strength;
             case WishType.MoreHealth:
                 return 1f * strength;
             case WishType.MoreDreams:
                 return 0.25f * strength;
             case WishType.MoreDamage:
-                return 0.25f * strength;
+                return 0.30f * strength;
             default:
                 return 0.25f * strength;
         }
@@ -68,15 +68,15 @@ public class Wish : IDeepCloneable<Wish> {
         switch (type)
         {
             case WishType.MoreXP:
-                return Mathf.Floor(Strength * 60/3f);
+                return Mathf.Floor(Strength * 30f);
             case WishType.MoreHealth:
                 return 0f;
             case WishType.MoreDreams:
-                return Mathf.Floor(Strength * 75/3f);
+                return Mathf.Floor(Strength * 30f);
             case WishType.MoreDamage:
-                return Mathf.Floor(Strength * 66.6664f/4);
+                return Mathf.Floor(Strength * 30f);
             default:
-                return Mathf.Floor(Strength * 50f/3);
+                return Mathf.Floor(Strength * 30f);
         }        
     }
 

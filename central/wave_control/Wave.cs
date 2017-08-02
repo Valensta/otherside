@@ -84,10 +84,10 @@ public class wave : IDeepCloneable<wave> {
         total_run_time -= wavelets[wavelets.Count - 1].lull;
     }
 
-    public void add_wavelet(InitWavelet w){
+    public void add_wavelet(InitWavelet w, bool old_school){
 		wavelets.Add(w);
 		monster_count += w.GetMonsterCount();
-		total_run_time += w.GetTotalRunTime();
+		total_run_time += w.GetTotalRunTime(old_school);
 	}
 
 	float calc_cheapest_monster(List<string> haveMonsters){

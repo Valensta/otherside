@@ -117,22 +117,17 @@ ENABLED = true;
                 Debug.Log("Device " + SystemInfo.deviceType + " " + SystemInfo.deviceName + " " + SystemInfo.deviceUniqueIdentifier + " " + SystemInfo.deviceModel + "\n");
 
                 MobileAnalyticsManagerConfig config = new MobileAnalyticsManagerConfig();
-                config.AllowUseDataNetwork = false;
+                config.AllowUseDataNetwork = true;
                 config.DBWarningThreshold = 0.9f;
                 config.MaxDBSize = 5242880;
                 config.MaxRequestSize = 102400;
                 config.SessionTimeout = 5;
                     
+                
                 analyticsManager = MobileAnalyticsManager.GetOrCreateInstance(MobileAnaylticsAppId, 
                             new CognitoAWSCredentials("us-east-1:c7528789-2aa8-49db-b8b6-f87320fa8a5a", RegionEndpoint.USEast1),
                             Amazon.RegionEndpoint.USEast1, config);
                 ApplicationInfo info = new ApplicationInfo();
-                
-
-                //analyticsManager.AddCustomAttributeToClientContext("app_version_code", "111");
-                //analyticsManager.AddCustomAttributeToClientContext("application_version_code", "222");
-                //analyticsManager.AddCustomAttributeToClientContext("CLIENT_APP_VERSION_CODE_KEY", "333");
-                //analyticsManager.AddCustomAttributeToClientContext("attribute_2", "test");
                 
                 
             }

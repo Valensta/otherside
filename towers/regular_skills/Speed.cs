@@ -93,7 +93,7 @@ public class Speed : Modifier
         
 
         
-        return xp / 10f;
+        return xp / 5f;
         //return 0;
     }
 

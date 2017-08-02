@@ -363,26 +363,19 @@ public class MoonOld : MonoBehaviour {
 			}
 			if(!done){
 
-
                 if (m_count >= my_wavelet.enemies[e_count].c) { m_count = 0; e_count++; }
                 
                 if (e_count < my_wavelet.enemies.Length && m_count < my_wavelet.enemies[e_count].c) { 
                     string m = my_wavelet.enemies[e_count].name;
-                    int p = my_wavelet.enemies[e_count].p;
-              //      Debug.Log("Making monster " + Time.time + "\n");
+                    int p = my_wavelet.enemies[e_count].p;              
                        StartCoroutine(makeMonster(m, p));
                     m_count++;
-                    wait += my_wavelet.interval;
-				//	TIME = 0f;
+                    wait += my_wavelet.interval;				
                     
 				}else{
 
-                    if (my_wave.wavelets.Count != current_wavelet) wait += my_wavelet.lull;
-                    //wait += my_wavelet.lull;
-                    //if (my_wave.wavelets.Count == current_wavelet) wait = 0f;
-                    my_wavelet = null;
-					//TIME = 0f;
-               //     Debug.Log("Setting wait to " + wait + " Time.time " + Time.time + "\n");
+                    if (my_wave.wavelets.Count != current_wavelet) wait += my_wavelet.lull;                    
+                    my_wavelet = null;					
                 }
 			}
 			return;

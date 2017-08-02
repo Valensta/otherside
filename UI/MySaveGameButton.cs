@@ -33,7 +33,7 @@ public class MySaveGameButton : UIButton
 
     public void OnInputSetSelectedToy(bool set)
     {
-        
+       // Debug.Log("Load!\n");
         SetSelectedToy(set);
     }
 
@@ -52,7 +52,7 @@ public class MySaveGameButton : UIButton
     public void OnInputDeleteSaveGame()
     {
         
-
+//Debug.Log("Delete!\n");
         ClickType click = (game_saver.DeleteSaveGame(id)) ? ClickType.Action : ClickType.Error;
         Noisemaker.Instance.Click(click);
     }

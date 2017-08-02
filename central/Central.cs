@@ -68,7 +68,7 @@ public enum RuneType{Sensible, Airy, Vexing, Null, Castle, Modulator, VexingSpir
 public enum LState{WaveButton, WaveStarted, WaveEnded,WaitingToStartNextWave, Lost, Won,OnLastWavelet}; 
 
 //not used? maybe later?
-public enum AnimationType{Animate_Sprite_4Dir,Animate_Sprite_8Dir, Animate_3D, None};
+public enum AnimationType{Animate_Sprite_4Dir,Animate_Sprite_8Dir, Animate_3D, Animate_Vehicle_4Dir, None};
 
 
 
@@ -141,10 +141,7 @@ public class Central : MonoBehaviour {
         return level_list.levels[current_lvl].difficulty;
     }
 
-    public bool waitForEndofWavelet()
-    {
-        return level_list.levels[current_lvl].wait_for_end_of_wavelet;
-    }
+    
 
     public Rune getHeroRune(RuneType type)
     {

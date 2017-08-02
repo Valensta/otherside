@@ -96,6 +96,8 @@ public class Inventory : MonoBehaviour {
             //    Debug.Log("Using wish " + i + "\n");
                 if (DoTheThing(wishes[i].my_wish))
                 {
+                    return SubtractWish(wishes[i].my_wish.type, 1);
+                    /*
                     MyWishButton b = (MyWishButton)wishes[i].my_label.ui_button;
                     int count = wishes[i].my_wish.Count;
                     if (count > 1)
@@ -109,7 +111,7 @@ public class Inventory : MonoBehaviour {
                         wishes.RemoveAt(i);
                     }
 
-                    return true;
+                    return true;*/
                 }
                 return false;
             }
@@ -153,14 +155,12 @@ public class Inventory : MonoBehaviour {
 
     public bool HaveWish(WishType type, float strength)
     {
-        if (type != WishType.Sensible)
-        {
-            Debug.Log("Using HaveWish on wish type " + type + ", not good\n");
-            return false;
-        }
+        if (type == WishType.Sensible) return (wishes[0].my_wish.Strength >= strength);
+     
+        for (int i = 1; i < wishes.Count; i++)
+            if (wishes[i].my_wish.type == type) return wishes[i].my_wish.count >= strength;        
 
-        return (wishes[0].my_wish.Strength >= strength);
-
+        return false;
     }
 
 
@@ -177,24 +177,35 @@ public class Inventory : MonoBehaviour {
     {
         if (type != WishType.Sensible)
         {
-            Debug.Log("Using SubtractWish on wish type " + type + ", not good\n");
-            return false;
-        }
-
-        if (HaveWish(type, strength))
-        {
-            wishes[0].my_wish.Strength -= strength;
-
-            if (onWishChanged != null) onWishChanged(wishes[0].my_wish, false, true, strength);
-
             
+            for (int i = 1; i < wishes.Count; i++)
+            {
+                if (wishes[i].my_wish.type != type) continue;
+                if (!HaveWish(type, strength)) return false;
+                
+                MyWishButton b = (MyWishButton) wishes[i].my_label.ui_button;
+                wishes[i].my_wish.Count -= Mathf.FloorToInt(strength);
+                int count = wishes[i].my_wish.Count;
+                if (count >= 1)
+                {
+                    //wishes[i].my_wish.Count--;
+                    b.setCount(count, true);
+                }
+                else
+                {
+                    _removeWishLabel(i);
+                    wishes.RemoveAt(i);
+                }
 
-            return true;
-        }
-        else {
+                return true;
+            }
             return false;
         }
 
+        if (!HaveWish(type, strength)) return false;
+        wishes[0].my_wish.Strength -= strength;
+        onWishChanged?.Invoke(wishes[0].my_wish, false, true, strength);
+        return true;
     }
 
 
@@ -251,66 +262,70 @@ public class Inventory : MonoBehaviour {
         return null;
     }
 
-    //I hate this shit why I did do this
+    //I hate this shit why did I do this
     // Sensible - STRENGTH = amount. COUNT = 1.
     // OTHER - STRENGTH = 1. COUNT = amout.
+
 
     
     public float AddWish(WishType type, float strength, int count)
     {
-      //  Debug.Log("Adding wish " + type + " " + strength + " " + count + "\n");
+        Debug.Log($"Adding wish {type} {strength} {count}\n");
 
         if (type == WishType.Sensible)
         {
             wishes[0].my_wish.Strength += strength;
-            if (onWishChanged != null) onWishChanged(wishes[0].my_wish, (strength > 0), true, strength);
-            
+            onWishChanged?.Invoke(wishes[0].my_wish, strength > 0, true, strength);
+
             EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Temporary, false);
             //EagleEyes.Instance.WishUpdate(wishes[0], true);
             return wishes[0].my_wish.Strength;
         }
-        else {
 
-            MyWishButton button = _getWishButton(type, strength);
-            Wish w = null;
-            if (button)
-            {
-                button.setCount(count, false);
-                w = button.my_wish;
-                w.Count += count;
-            }
-            else
-            {
 
-                string w_name = count.ToString();
-                w = new Wish(type, strength, w_name);
-                w.Count = count;
-                Wishlet wlet = new Wishlet(w, _getEmptyLabel());
-                if (wlet.my_label == null) { Debug.Log("Could not add wish because ran out of inventory slots!\n"); return 0; }
-                wlet.my_label.InitWish(w);
-                wlet.my_label.SetActive(true);
-                wlet.my_label.SetInteractable(true);
-                //count++;
-                wishes.Add(wlet);
-                ((MyWishButton)wlet.my_label.ui_button).setCount(count, true);
-            }
-            if (onWishChanged != null) onWishChanged(w, true, true, strength);
-            //EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Temporary);
-
-            return strength;
-        }
-    }
-
-    public void OnEnable()
-    {
-        /*
- last_button = 0;
-        foreach (Wishlet w in wishes)
+        if (count < 0)
         {
-            w.my_label.InitWish(null);
+            SubtractWish(type, -count);
+            return GetWishCount(type);
         }
-       */
+        
+        MyWishButton button = _getWishButton(type, strength);
+        Wish w = null;
+
+        if (button)
+        {
+            button.setCount(count, false);
+            w = button.my_wish;
+            w.Count += count;            
+        }
+        else
+        {
+
+            string w_name = count.ToString();
+            w = new Wish(type, strength, w_name);
+            w.Count = count;
+            Wishlet wlet = new Wishlet(w, _getEmptyLabel());
+            if (wlet.my_label == null)
+            {
+                Debug.Log("Could not add wish because ran out of inventory slots!\n");
+                return 0;
+            }
+            wlet.my_label.InitWish(w);
+            wlet.my_label.SetActive(true);
+            wlet.my_label.SetInteractable(true);
+
+            wishes.Add(wlet);
+            ((MyWishButton) wlet.my_label.ui_button).setCount(count, true);
+        }
+
+        onWishChanged?.Invoke(w, true, true, strength);
+        //EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Temporary);
+
+        return strength;
+
     }
-    
+
+
+
 
 }

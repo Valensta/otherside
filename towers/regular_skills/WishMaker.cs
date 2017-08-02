@@ -83,13 +83,15 @@ public class WishMaker: MonoBehaviour {
             if (w == null) Peripheral.Instance.zoo.returnObject(wish);            
         
 
-            w.Init(e.type, strength); 
+             
             wish.transform.localRotation = Quaternion.identity;
-            wish.transform.parent = Wishes.Instance.transform;
-            Vector3 p = Get.fixPosition(pos);            
+            wish.transform.SetParent(Wishes.Instance.transform);
+            
+            Vector3 p = Get.fixPosition(pos);
+            
             p.z = 5f;
             wish.transform.position = p;
-            
+            w.Init(e.type, strength);
             wish.SetActive(true);
         }
 

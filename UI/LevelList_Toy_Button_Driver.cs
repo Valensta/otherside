@@ -1,24 +1,16 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
 using System.Collections.Generic;
-using System;
-//using UnityEditor;
 
 [System.Serializable]
-
 public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
 {
-
-    
-    //public List_Panel selected_skill_panel;
     public List<MySelectedSkillButton> chosen_skills;
     public MyButton upgrade_button;
     public MyButton reset_button;
     
     public Sprite empty_button_sprite;
 
-    void Start(){
+    private void Start(){
 		
 		show = false;
         selected_button = null;
@@ -80,13 +72,14 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
 
     public override void SetParent(Toy p)
     {
+        
         if (drivers[current_driver].button_map.Count == 0) { Init(); }
         parent = null;
         SetDriver(RuneType.Special);
 
-        for (int i = 0; i < drivers[current_driver].buttons.Count; i++)
+        foreach (var t in drivers[current_driver].buttons)
         {
-            drivers[current_driver].buttons[i].toy_rune = Central.Instance.getHeroRune(drivers[current_driver].buttons[i].rune_type);
+            t.toy_rune = Central.Instance.getHeroRune(t.rune_type);
         }
         base.SetParent(p);
       //  setSelectedButton(null);
@@ -95,20 +88,17 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
         int current_button = 0;
         foreach(Toy_Button b in drivers[current_driver].buttons)
         {
-            
-            if (Peripheral.Instance.my_skillmaster.CheckSkill(b.effect_type))
-            {
-                chosen_skills[current_button].SetSkill(b, false);
-                chosen_skills[current_button].gameObject.SetActive(true);
-                current_button++;
-            }
+            if (!Peripheral.Instance.my_skillmaster.CheckSkill(b.effect_type)) continue;
+            chosen_skills[current_button].SetSkill(b, false);
+            chosen_skills[current_button].gameObject.SetActive(true);
+            current_button++;
         }
 
         setSelectedButton(null);
     }
 
-    
-    bool canSelectSkill()
+
+    private bool canSelectSkill()
     {
         if (selected_button == null || selected_button.toy_rune == null || selected_button.toy_rune.runetype == RuneType.Null)
         {
@@ -141,13 +131,7 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
             return false;
         } //skill has already been turned on
         StatBit statbit = selected_button.toy_rune.getStatBit(selected_button.effect_type);
-        if (statbit == null || statbit.level == 0)
-        {
-            //Debug.Log("skill has not been upgraded yet, no good\n");
-            return false;
-        } // skill has not been upgraded yet
-
-        return true;
+        return statbit != null && statbit.level != 0;
     }
 
     public void resetSkills(EffectType effectType)
@@ -156,16 +140,13 @@ public class LevelList_Toy_Button_Driver : Global_Toy_Button_Driver
        
         UpdatePassiveLabels();
         foreach (MySelectedSkillButton chosen in chosen_skills)
-        {
-            
+        {            
             EffectType type = chosen.getEffectType();
             if (effectType != EffectType.Null && type != effectType) continue;
-
-                if (type != EffectType.Null && selected_button.toy_rune.HasUpgrade(type))
-            {            
-                Peripheral.Instance.my_skillmaster.DisableSkill(type);
-                chosen.ShowEmpty();
-            }
+            if (type == EffectType.Null || !selected_button.toy_rune.HasUpgrade(type)) continue;
+            
+            Peripheral.Instance.my_skillmaster.DisableSkill(type);
+            chosen.ShowEmpty();
         }
         setSelectedButton(null);
     }

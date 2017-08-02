@@ -161,10 +161,11 @@ public class InitWavelet: IDeepCloneable<InitWavelet>
 
     public InitWavelet() { }
 
-    public void Modify(float lull_mult, float interval_mult)
+    public void Modify(float mult)
     {
-        lull = Mathf.FloorToInt(lull * lull_mult);
-        interval *= interval_mult;
+        lull *= mult;
+        interval *= mult;
+        end_wait = Mathf.FloorToInt(end_wait * mult);
     }
     
     public float GetMonsterCount()
@@ -179,9 +180,14 @@ public class InitWavelet: IDeepCloneable<InitWavelet>
         return monster_count;
     }
     
-    public float GetTotalRunTime()
+    public float GetTotalRunTime(bool old_school)
     {
-        run_time = lull + GetMonsterCount() * interval;
+        if (old_school) return lull + GetMonsterCount() * interval;
+
+        float run_time = (enemies.Length - 1) * lull;
+        
+        foreach (InitEnemyCount e in enemies) run_time += (e.c - 1) * interval;
+                
         return run_time;
     }
 

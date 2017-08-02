@@ -35,7 +35,8 @@ public class ScoreKeeper : MonoBehaviour {  // THIS IS INTRA LEVEL
     float prev_sensible_wish = 0;
     Difficulty current_difficulty;
     int current_lvl;
-    float health_factor = 10f;
+    float health_factor = 16f;
+    private float dream_factor = 0.5f;
     float level_time = 0f;
     public GameObject won_visual;         //if ya was keeping score
     public GameObject won_replay_visual;  //if wasn't because already played this combination
@@ -163,7 +164,7 @@ public class ScoreKeeper : MonoBehaviour {  // THIS IS INTRA LEVEL
     public void SetTotalScore(int i)
     {
         total_score = i;
-        Debug.Log("SCORE\n");
+//        Debug.Log("SCORE\n");
         if (onScoreUpdate != null) onScoreUpdate(total_score);
     }
 
@@ -261,7 +262,9 @@ public class ScoreKeeper : MonoBehaviour {  // THIS IS INTRA LEVEL
         return false;
     }
 
-    bool checkIfAlreadyHaveScore(int level, Difficulty difficulty)
+    
+    
+   public bool checkIfAlreadyHaveScore(int level, Difficulty difficulty)
     {
         foreach (ScoreDetails sd in score_details)
         {
@@ -289,7 +292,8 @@ public class ScoreKeeper : MonoBehaviour {  // THIS IS INTRA LEVEL
         }
     }
 
-    public void CalcScore(float remaining_dreams, float remaining_health){
+    public void CalcScore(float remaining_dreams, float remaining_health)
+    {
         /*
                if (!keeping_score)
                {
@@ -311,28 +315,34 @@ public class ScoreKeeper : MonoBehaviour {  // THIS IS INTRA LEVEL
 
         float expected_level_time = 30f; //in seconds, minimum for preparation or whatever
 
-        foreach (wave w in Moon.Instance.waves)        
-        expected_level_time += w.total_run_time;
+        foreach (wave w in Moon.Instance.waves)
+            expected_level_time += w.total_run_time;
         float time_factor = 0.25f;
 
-        //so tiny because we decided to device score by 10
-        float difficulty_mult = (current_difficulty == Difficulty.Normal) ? 0.08f :
-                                (current_difficulty == Difficulty.Hard) ? 0.2f :
-                                0.3f;
+        //so tiny because we decided to device score by 5
+        float difficulty_mult = (current_difficulty == Difficulty.Normal)
+            ? 0.16f
+            : (current_difficulty == Difficulty.Hard)
+                ? 0.4f
+                : 0.6f;
 
-        int dream_score = Mathf.FloorToInt(remaining_dreams*difficulty_mult * penalty_multiplier);
-        int health_score = Mathf.FloorToInt(remaining_health * health_factor * difficulty_mult * penalty_multiplier);        
+        float final_mult = difficulty_mult * penalty_multiplier;
+        int dream_score = Mathf.FloorToInt(remaining_dreams * final_mult * dream_factor);
+        int health_score = Mathf.FloorToInt(remaining_health * health_factor * final_mult);
 
-        int time_score = Mathf.Max(0,Mathf.FloorToInt(difficulty_mult * (expected_level_time - level_time) * time_factor * difficulty_mult * penalty_multiplier));
-        time_score = (time_score > 10) ? 10 : time_score;
+        int time_score = Mathf.Max(0,
+            Mathf.FloorToInt((expected_level_time - level_time) * time_factor * final_mult));
         
+        time_score = (time_score > 10) ? 10 : time_score;
+
         int new_score = Mathf.FloorToInt(dream_score + time_score + health_score);
 
-        string details = (Central.Instance.level_list.test_mode) ?
-                                    "Score: diff_mult " + difficulty_mult +
-                                   "\ndreams " + dream_score + "  health " + health_score + " : " + remaining_health + " * " + health_factor
-                                   + "\ntime " + time_score + " : (" + expected_level_time + " - " + level_time + ") * " + time_factor :
-                             "Health: " + health_score + "\nEfficiency: " + dream_score + "\nTime Score: " + time_score;
+        
+        string details = (Central.Instance.level_list.test_mode) ? 
+                              $"Score: {Get.Round(final_mult,3)}/{current_difficulty}\ndreams {dream_score}: {remaining_dreams} * {dream_factor}" 
+                            + $"\nhealth {health_score}: {remaining_health} * {health_factor}"
+                            + $"\ntime {time_score}: ({expected_level_time} - {level_time}) * {time_factor}" :
+                                     $"Health: {health_score}\nEfficiency: {dream_score}\nTime Score: {time_score}";
 
 
         score_details_text.text = details;

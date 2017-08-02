@@ -20,7 +20,7 @@ public class AI : MultiPathfinding {
     public EnemyAnimator animator;
 	public bool sprite;
     public bool forward_only; //do not go back to previous path, normal mode. false if teleported or feared
-
+	public EffectVisuals visuals;
     public float forward_direction_angle; //used for sparkles
 
     public bool can_be_stunned = true;
@@ -169,9 +169,10 @@ float orient_timer;
     void _OrientMe(Quaternion direction, float amount)
     {        
 		transform.rotation = Quaternion.Lerp(transform.rotation, direction, amount);
-        //transform.rotation = Quaternion.RotateTowards(transform.rotation, direction, amount); 
-	
-	}
+	    if (visuals) visuals.setRotation();
+	    //transform.rotation = Quaternion.RotateTowards(transform.rotation, direction, amount); 
+
+    }
 	
     
 
@@ -337,7 +338,7 @@ float orient_timer;
             if (orient) transform.rotation = GetForwardDirection(false);
             else
             {
-                transform.rotation = Quaternion.AngleAxis(180, Vector3.forward);
+                transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
             }
 			init_orientation = true;
         }

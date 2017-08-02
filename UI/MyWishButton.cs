@@ -38,7 +38,7 @@ public class MyWishButton : UIButton
 
     public void setCount(int by, bool abs)
     {
-   //     Debug.Log("Setting count for " + my_wish.type + " to " + by + " abs " + abs + "\n");
+        Debug.Log($"Setting count for {my_wish.type} to {by} abs {abs}\n");
         if (abs) count = by; else count += by;
         if (count_text) count_text.text = count.ToString();
     }
@@ -50,7 +50,7 @@ public class MyWishButton : UIButton
 
     public void SetWish(Wish w)
     {
-    //    Debug.Log("Setting wish " + w.type + " " + w.strength + "\n");
+        Debug.Log($"Setting wish {w.type} {w.strength}\n");
         interactable = true;
         if (w == null)
         {

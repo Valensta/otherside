@@ -347,34 +347,34 @@ public static class StaticStat {
             switch (effect_type)
             {
                 case EffectType.AirAttack:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
                 case EffectType.Meteor:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
                 case EffectType.Frost:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
                 case EffectType.EMP:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
                 case EffectType.Plague:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
                 case EffectType.Bees:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
                 case EffectType.Teleport:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
                 case EffectType.Architect:
-                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 50 : 60;
+                    cost.Amount = (level == 0) ? 80 : (level == 1) ? 100 : 120;
                     break;
                 case EffectType.Renew:
-                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 50 : 60;
+                    cost.Amount = (level == 0) ? 80 : (level == 1) ? 100 : 120;
                     break;
                 default:
-                    cost.Amount = (level == 0) ? 20 : (level == 1) ? 30 : 40;
+                    cost.Amount = (level == 0) ? 40 : (level == 1) ? 60 : 80;
                     break;
             }
         }
@@ -401,6 +401,7 @@ public static class StaticStat {
 
             
         }
+        
         return cost;
     }
 }

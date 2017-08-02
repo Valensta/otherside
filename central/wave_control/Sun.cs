@@ -127,9 +127,7 @@ public class Sun : MonoBehaviour {
             
             if (my_wave.time_change > 0){				
 				wave_time.time_name_end = GetTimeOfDay(my_wave.time_name_end);				
-				wave_time.end_transition =  my_wave.total_run_time + time;
-          //      Debug.Log("Wave " + i + " Duration change " + my_wave.time_change + " * " + my_wave.total_run_time + " + " + time + "\n");
-				wave_time.start_transition = my_wave.time_change * my_wave.total_run_time + time;			
+				setWaveTimeTransitions(wave_time, my_wave, time);			
 				
 			}
         
@@ -139,7 +137,21 @@ public class Sun : MonoBehaviour {
 		
         
 	}
+
+	void setWaveTimeTransitions(WaveTime wave_time, wave my_wave, float time)
+	{
+		wave_time.end_transition =  my_wave.total_run_time + time;          
+		wave_time.start_transition = my_wave.time_change * my_wave.total_run_time + time;
+	}
 	
+	public void RecalcWaveStartTransition(int wave, float time_of_start)
+	{
+		if (times.Count == 0) return;
+		if (wave == 0) return;
+		WaveTime wave_time = times[wave];
+		wave my_wave = Moon.Instance.waves[wave];
+		setWaveTimeTransitions(wave_time, my_wave, time_of_start);
+	}
 	
 	public void SetTimePassively(float t){	
 		current_time_of_day = t;			
@@ -153,7 +165,10 @@ public class Sun : MonoBehaviour {
         current_time_of_day = t;
 		if (new_wave != my_current_wave){
             //Debug.Log("Sun wave change " + my_current_wave + " to " + current_wave + "\n");
+			if (new_wave != my_current_wave && times[new_wave].start_transition > 0) RecalcWaveStartTransition(new_wave, t);
             my_current_wave = new_wave;
+			
+			
             if (OnDayTimeChange != null) OnDayTimeChange(times[my_current_wave].time_name_start.name);
 			indicator.SetTime(times[my_current_wave].time_name_start.name);            
 		}

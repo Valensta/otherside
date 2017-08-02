@@ -64,7 +64,7 @@ public class Effect_Button : MonoBehaviour,IPointerClickHandler {
 
     float y_direction()
     {
-        return Random.RandomRange(0.2f, .5f);
+        return Random.RandomRange(0.5f, 1f);
     }
 
     void Update(){

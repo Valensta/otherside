@@ -8,7 +8,9 @@ public class EffectVisuals : MonoBehaviour {
     
 	[SerializeField]
 	public AuraType[] auras;
-	public AuraType default_aura;
+	public AuraType default_aura;    
+    public bool auto_stabilize;
+    private bool am_enabled; 
     int auras_count = 0;
     float timer = 0f;
 	// Use this for initialization
@@ -18,12 +20,20 @@ public class EffectVisuals : MonoBehaviour {
 	}
 
 	public void Enable(MonsterType type, float time){
-        AuraType aura = GetAura(type);
+	    am_enabled = true;
+	    setRotation();
+        AuraType aura = GetAura(type);	   
         if (aura == null) { return;  }
 		Set (aura, time, true, false);
         auras_count = auras.Length;
 	}
 
+    public void setRotation()
+    {
+        if (!auto_stabilize || !am_enabled) return;
+        transform.rotation = Quaternion.identity;
+    }
+    
     public void DisableAll()
     {
         foreach (AuraType a in auras)
@@ -102,11 +112,13 @@ public class EffectVisuals : MonoBehaviour {
         timer += Time.deltaTime;
         if (timer <= 0.25f) return;
 
+        am_enabled = false;
         for (int i = 0; i < auras_count; i++)
         {
             AuraType aura = auras[i];
             if (!aura.am_running) continue;
             aura.timer -= timer;
+            am_enabled = true;
             if (aura.timer < 0) Set(aura, 0, false, false);
         }
 

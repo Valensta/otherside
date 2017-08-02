@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using UnityEngine.UI;
 using System.Text.RegularExpressions;
+using System.Timers;
 
 [System.Serializable]
 public class GUIState
@@ -58,7 +59,7 @@ public class EagleEyes : MonoBehaviour {
 	public static event PriceUpdateHandler onPriceUpdate;
     public Island_Floating_Button_Driver floating_tower_scroll_driver;
     public MyButton pause_button;
-    public Text wave_timer;
+    public MyText wave_timer;
     public MyLabel health_label;
     public MarketplaceDriver marketplace_driver;
     public string UIFilterType = "";
@@ -648,8 +649,8 @@ public class EagleEyes : MonoBehaviour {
 
     public bool UIBlocked(string type, string content)
     {
-     //   Debug.Log("UI got " + type + " " + content + "\n");
-        if (UIFilterType.Length != 0 && UIFilterContent.Length != 0)
+       // Debug.Log($"UI got {type} {content}\n");
+        if (UIFilterType.Length != 0 || UIFilterContent.Length != 0)
         {
             //if (type.Equals("MainMenu")) return false;
             //if (type.Equals("InGame") && content.Equals("MainMenu")) return false;
@@ -749,11 +750,9 @@ public class EagleEyes : MonoBehaviour {
             PlaceElement("special_skill_panel_button");
             
         }
-        if (Central.Instance.level_list.getActualMaxLvl() > 0)
-        {
-            PlaceElement("marketplace_panel_button");
-        }
-            if (Central.Instance.level_list.test_mode) PlaceElement("givemestuff_button");
+        if (Central.Instance.level_list.getActualMaxLvl() > 0) PlaceElement("marketplace_panel_button");
+        
+            //if (Central.Instance.level_list.test_mode) PlaceElement("givemestuff_button");
         //PlaceElement("special_skill_panel");
         Central.Instance.level_list.SetStuff();
     }
@@ -763,11 +762,8 @@ public class EagleEyes : MonoBehaviour {
     {
      //   Debug.Log("want to update wave timer, can I? " + (wave_timer != null) + " \n");
         if (wave_timer == null) return;
-
-        if (time <= 0)
-            wave_timer.text = "";
-        else
-            wave_timer.text = Mathf.FloorToInt(time).ToString();
+        
+        wave_timer.setText(time <= 0 ? "" : Mathf.FloorToInt(time).ToString());        
     }
 	
 	
@@ -874,7 +870,7 @@ public class EagleEyes : MonoBehaviour {
         if (on)
         {
             PlaceElement("ingame_wave_start");
-            wave_timer = PlaceElement("ingame_wave_timer").GetComponentInChildren<Text>();
+            wave_timer = PlaceElement("ingame_wave_timer").GetComponentInChildren<MyText>();
             DisableElement("ingame_wave_start", true);
             DisableElement("ingame_wave_timer", true);
         }
@@ -912,66 +908,26 @@ public class EagleEyes : MonoBehaviour {
 					
 	}
 
-        Vector3 GUIPosition(Transform parent, float x, float y, float z, Vector3 mysize)
-    {
-        return GUIPosition(parent, x, y, z, mysize, true);
-    }
 
-	Vector3 GUIPosition(Transform parent, float x, float y, float z, Vector3 mysize, bool fit){
-		Vector2 coord = Coord (parent);
-		Vector2 def = Coord (null);
-
-		if (coord != def) 
-		{ 
-			coord.x = Camera.main.orthographicSize;//*coord.x/def.x;
-			coord.y = coord.x * Screen.height;//*coord.y/def.y;
-		}
-		float x_scale = 50f;
-		float y_scale = 80f;
-		Vector3 position = new Vector3 (x*x_scale, y*y_scale, -z);
-        if (fit){
-
-		    if (Mathf.Abs(position.x) + Mathf.Abs(mysize.x)  > x_scale && x!= 0) 
-				position.x = (x_scale - mysize.x) * x / Mathf.Abs (x);		
-		    if (Mathf.Abs(position.y) + Mathf.Abs(mysize.y) > y_scale && y != 0 )
-		        position.y = (y_scale - mysize.y) * y / Mathf.Abs (y);
-        }
-
-		return position;
-	}
 
 	//TRANSFORM.LOCALSCALE of gui element
-	Vector3 GUIScale(Transform parent, float sizex, float sizey, bool stretch){
+	private Vector3 GUIScale(Transform parent, float sizex, float sizey, bool stretch){
 		Vector2 coord = Coord (parent);
 		float min = Mathf.Min (Screen.width, Screen.height);
 		float default_x = min;
 		float default_y = min;
-		Vector3 scale;
-	//	Debug.Log ("Min is " + min);
-		if (coord != Coord (null)) {
-			//return Vector3.one;
-			return new Vector3(sizex, sizey,0);
-		}
 		
-		if(stretch)
-			scale = new Vector3 (sizex*(coord.x)/(default_x), sizey*(coord.y)/(default_y), 0);
-		else
-			scale = new Vector3 (sizex*(coord.y)/(default_x), sizey*(coord.y)/(default_y), 0);
-	//	Debug.Log ("Parent " + parent.name + " coord is " + coord + " Gui scale from " + sizex + " " + sizey + " to " + scale + "\n");
+		if (coord != Coord (null)) return new Vector3(sizex, sizey,0);
+		
+		
+		var scale = stretch ? new Vector3 (sizex*(coord.x)/(default_x), sizey*(coord.y)/(default_y), 0) : 
+			new Vector3 (sizex*(coord.y)/(default_x), sizey*(coord.y)/(default_y), 0);
+	
 		return scale;
 
 
 	}
 
-
-	//THIS IS ONLY USED FOR GUIPOSITION (ALMOST)
-	Vector3 GUISize(Vector3 scale){
-		float default_x = 100;
-		float default_y = 100;
-		
-		return new Vector3 (scale.x*default_x/2f, scale.y*default_y/2f, 0);//this is half the size of the object
-
-	}
 
 
 		

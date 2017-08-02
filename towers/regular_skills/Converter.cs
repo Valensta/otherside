@@ -30,22 +30,17 @@ public class Converter : Modifier {
             after = TransformType.Whale;
             timer = 99f;
         }
+        
         else
         {
-            foreach (TransformTo t in _hitme.transform_to)
-            {
-                current += t.percent * stats[0];
-                //       Debug.Log("transform to " + t.name + " ? need < " + current + "\n");
-                if (roll < current)
-                {
-                    after = t.transform;
-                    break;
-                }
-            }
+            bool flying = (_hitme.gameObject.layer == Get.flyingProjectileLayer); 
+            
+            if (roll < stats[0])                
+                after = (flying)? TransformType.FruitFly :  TransformType.StickFigure;        
         }
 
 
-        if (after.Equals("") || !ValidateMe(after))
+        if (!ValidateMe(after))
         {
        //     Debug.Log("Cancelling converter\n");
             return false;

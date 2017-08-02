@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
-using NUnit.Framework;
+
 
 
 [System.Serializable]
 
-public enum EnemyType { Null, TestUnit, Magical, Drone, Moth, Soldier, TinyFly, FurFly, SuperFly, TinyPlane, Plane, Tank, TinyTank, Bird, SuperPlane, Ghost, Orc,
+public enum EnemyType { Null, TestUnit, Magical, Drone, Moth, Soldier, TinyFly, FurFly, SuperFly, TinyPlane, Plane, Tank, TinyTank, Bird, SuperPlane, Ghost, SuperSoldier,
                         Turtle, SturdyTank, Frog, ImpossibleTank, AssemblyPlane, MechSoldier};
 
 public static class EnemyStore
@@ -86,7 +86,7 @@ public static class EnemyStore
             }
                 
         }
-        Debug.Log($"{type.ToString()} -> {mass} -> {mass / (1 - total_num / total_denum)}\n");
+        Debug.Log($"{type} -> {mass} -> {mass / (1 - total_num / total_denum)}\n");
         return mass / (1 - total_num / total_denum);
     }
 
@@ -104,13 +104,10 @@ public static class EnemyStore
     {
         //unfortunately this has to be a separate image from what's actually used for the enemy prefab.
         Sprite s = Get.getSprite("GUI/Enemies/" + type.ToString());
-        if (s == null)
-        {
-            Debug.LogError("EnemyStore could not find a sprite for " + type.ToString() + "\n");
-            return Get.getSprite("GUI/Enemies/Soldier");
-        }
-        return s;
-
+        if (s != null) return s;
+        
+        Debug.LogError("EnemyStore could not find a sprite for " + type.ToString() + "\n");
+        return Get.getSprite("GUI/Enemies/Soldier");
     }
 
     public static Sprite getInfoButtonSprite(EnemyType type)
@@ -132,27 +129,27 @@ public static class EnemyStore
         {
 
             case EnemyType.AssemblyPlane:
-                return "Typical human soldier. Boring. Carry on.";
+                return "ALBATROSS: Like an impenetrable, flying omen of doom.";
             case EnemyType.Bird:
-                return "BIRD: Hovering box that possesses advanced electrical shielding capabilities and moderate defenses.";
+                return "SPECTRE: A strange vehicle that possesses advanced electrical shielding capabilities and moderate defenses.";
             case EnemyType.Drone:
                 return "Drone";
             case EnemyType.Frog:
                 return "FROG: A curious, biomechanical invention of superior rubbery strength. Possesses regenerative capabilities.";
             case EnemyType.FurFly:
-                return "FURFLY: A slightly improved version of the Tinyfly unit. Resistant to magic.";
+                return "FURFLY: A slightly improved version of the Tinyfly unit.";
             case EnemyType.Ghost:
                 return "GHOST: needs a description.";
             case EnemyType.ImpossibleTank:
-                return "IMPOSSIBLE TANK: Advanced super-strong tank that makes a sturdy tank when destroyed. :(";
+                return "GRAPHENE TANK: Advanced armor tank that releases a sturdy tank when destroyed. :(";
             case EnemyType.Magical:
                 return "SPY DRONE: Kill it quick.";
             case EnemyType.MechSoldier:
                 return "MECH SOLDIER: Reinforced human soldier.";
+            case EnemyType.SuperSoldier:
+                return "GRAPHENE SOLDIER: Reinforced human soldier.";
             case EnemyType.Moth:
                 return "MOTH: Super tiny metal insect. Strength in numbers.";
-            case EnemyType.Orc:
-                return "ORC: needs a description";
             case EnemyType.Plane:
                 return "PLANE: Some kind of metal thing that can glide through the air.";
             case EnemyType.Soldier:
@@ -160,21 +157,21 @@ public static class EnemyStore
             case EnemyType.SturdyTank:
                 return "STURDY TANK: Tougher tank that turns into a regular tank when destroyed. What.";
             case EnemyType.SuperFly:
-                return "SUPERFLY: A superior version of the Furfly scouting unit with reinforced armor.";
+                return "SUPERFLY: A superior scouting unit with reinforced armor. Keen and ferocious.";
             case EnemyType.SuperPlane:
-                return "SUPER PLANE: an even bigger and stronger plane than the usual Plane! Oh no!";
+                return "SUPER PLANE: A fast and reinforced plane that will try to sneak by your defenses.";
             case EnemyType.Tank:
-                return "TANK: Converts into a tiny tank when destroyed.";
+                return "TANK: Releases a smaller tank when destroyed.";
             case EnemyType.TestUnit:
                 return "Test Unit";
             case EnemyType.TinyFly:
                 return "TINYFLY: A fast but weak unit used for recon.";
             case EnemyType.TinyPlane:
-                return "TINY PLANE: A tiny paper plane. Adorable.";
+                return "TINY PLANE: A tiny recon plane. Adorable.";
             case EnemyType.TinyTank:
-                return "TINY TANK: Some kind of a tiny bug-like thing.";
+                return "TINY TANK: Some kind of a small bug-like vehicle.";
             case EnemyType.Turtle:
-                return "TURTLE: Slow and very well defended.Keeps making little planes for some reason.";
+                return "TURTLE: Slow and well defended. Keeps making little planes for some reason.";
 
            default:
                 return type.ToString() + ": Some random enemy, I don't know.";
@@ -202,23 +199,33 @@ public static class EnemyStore
                 return new List<Defense>
                 {
                     new Defense(EffectType.Magic, 0),
-                    new Defense(EffectType.Force, low_defense)
+                    new Defense(EffectType.Force, low_defense),
+                    new Defense(EffectType.Transform, mid_defense)
                 };                
             case EnemyType.MechSoldier:
                 return new List<Defense>
                 {
                     new Defense(EffectType.Magic, low_defense),
                     new Defense(EffectType.Force, low_defense),
+                    new Defense(EffectType.Transform, high_defense),
                     new Defense(EffectType.Fear, mid_defense)
                 };
 
-
+            case EnemyType.SuperSoldier:
+                return new List<Defense>
+                {
+                    new Defense(EffectType.Magic, mid_defense),
+                    new Defense(EffectType.Force, mid_defense),
+                    new Defense(EffectType.Transform, high_defense),
+                    new Defense(EffectType.Fear, high_defense)
+                };
 
             case EnemyType.TinyFly:
                 return new List<Defense>
                 {
                     new Defense(EffectType.Magic, lowmid_defense),
                     new Defense(EffectType.Force, lowmid_defense),
+                    new Defense(EffectType.Transform, mid_defense),
                     new Defense(EffectType.Fear, low_defense)
                 };
             case EnemyType.FurFly:
@@ -226,6 +233,7 @@ public static class EnemyStore
                 {
                     new Defense(EffectType.Magic, low_defense),
                     new Defense(EffectType.Force, low_defense),
+                    new Defense(EffectType.Transform, low_defense),
                     new Defense(EffectType.Fear, low_defense)                    
                 };
             case EnemyType.SuperFly:
@@ -241,6 +249,7 @@ public static class EnemyStore
                 {
                     new Defense(EffectType.Magic, 0),
                     new Defense(EffectType.Force, low_defense),
+                    new Defense(EffectType.Transform, low_defense),
                     new Defense(EffectType.Fear, low_defense)
                 };                
             case EnemyType.TinyPlane:
@@ -248,6 +257,7 @@ public static class EnemyStore
                 {
                     new Defense(EffectType.Magic, 0),
                     new Defense(EffectType.Force, low_defense),
+                    new Defense(EffectType.Transform, mid_defense),
                     new Defense(EffectType.Fear, low_defense)
                 };
             case EnemyType.Plane:
@@ -255,7 +265,7 @@ public static class EnemyStore
                 {
                     new Defense(EffectType.Magic, 0),
                     new Defense(EffectType.Force, low_defense),                    
-                    new Defense(EffectType.Transform, low_defense),
+                    new Defense(EffectType.Transform, mid_defense),
                     new Defense(EffectType.Fear, low_defense)
                 };
             case EnemyType.SuperPlane:
@@ -264,14 +274,14 @@ public static class EnemyStore
                     new Defense(EffectType.Magic, low_defense),
                     new Defense(EffectType.Force, lowmid_defense),
                     new Defense(EffectType.Fear, mid_defense),
-                    new Defense(EffectType.Transform, lowmid_defense)
+                    new Defense(EffectType.Transform, mid_defense)
                 };
             case EnemyType.AssemblyPlane:
                 return new List<Defense>
                 {
-                    new Defense(EffectType.Magic, mid_defense),
-                    new Defense(EffectType.Force, mid_defense),
-                    new Defense(EffectType.Fear, low_defense),
+                    new Defense(EffectType.Magic, high_defense),
+                    new Defense(EffectType.Force, high_defense),
+                    new Defense(EffectType.Fear, high_defense),
                     new Defense(EffectType.Transform, 1)
                 };                
             case EnemyType.TinyTank:
@@ -323,7 +333,7 @@ public static class EnemyStore
                     new Defense(EffectType.Magic, low_defense),
                     new Defense(EffectType.Force, low_defense),
                     new Defense(EffectType.Fear, mid_defense),
-                    new Defense(EffectType.Transform, 0)
+                    new Defense(EffectType.Transform, mid_defense)
                 };
 
             case EnemyType.Ghost:
@@ -331,6 +341,7 @@ public static class EnemyStore
                 {
                     new Defense(EffectType.Magic, low_defense),
                     new Defense(EffectType.Force, low_defense),
+                    new Defense(EffectType.Transform, mid_defense),
                     new Defense(EffectType.Fear, low_defense),                    
                 };
             case EnemyType.Turtle:
@@ -348,15 +359,7 @@ public static class EnemyStore
                     new Defense(EffectType.Force, low_defense),                    
                     new Defense(EffectType.Transform, low_defense),
                     new Defense(EffectType.Fear, 0)
-                };
-            case EnemyType.Orc:
-                return new List<Defense>
-                {
-                    new Defense(EffectType.Magic, 0),
-                    new Defense(EffectType.Force, high_defense),
-                    new Defense(EffectType.Fear, low_defense),
-                    new Defense(EffectType.Transform, low_defense)
-                };                
+                };                            
             case EnemyType.TestUnit:
                 return new List<Defense>
                 {
@@ -407,8 +410,6 @@ public static class EnemyStore
                 return 3.8f;
             case EnemyType.Ghost:
                 return 0f;
-            case EnemyType.Orc:
-                return 0f;
             case EnemyType.Turtle:
                 return 1.05f;
             case EnemyType.SturdyTank:
@@ -423,6 +424,8 @@ public static class EnemyStore
                 return 0f;
             case EnemyType.MechSoldier:
                 return 1.19f;
+            case EnemyType.SuperSoldier:
+                return 1.19f;//not verified
             default:
                 return 0f;
         }
@@ -461,8 +464,6 @@ public static class EnemyStore
                 return 6f;
             case EnemyType.Ghost:
                 return 5f;
-            case EnemyType.Orc:
-                return 5f;
             case EnemyType.Turtle:
                 return 7f;
             case EnemyType.SturdyTank:
@@ -472,11 +473,13 @@ public static class EnemyStore
             case EnemyType.ImpossibleTank:
                 return 8.5f;
             case EnemyType.AssemblyPlane:
-                return 13f;
+                return 15f;
             case EnemyType.TestUnit:
                 return 6f;
             case EnemyType.MechSoldier:
                 return 5f;
+            case EnemyType.SuperSoldier:
+                return 8f;
             default:
                 return 0f;
         }
@@ -579,13 +582,6 @@ public static class EnemyStore
                 {
                     new Wish(WishType.Sensible,0.05f)
                 };
-            case EnemyType.Orc:
-                return new List<Wish>
-                {
-                    new Wish(WishType.Sensible,0.05f),
-                    new Wish(WishType.MoreXP,0.02f),
-                    new Wish(WishType.MoreDreams,0.02f)
-                };
             case EnemyType.Turtle:
                 return new List<Wish>
                 {
@@ -636,6 +632,15 @@ public static class EnemyStore
                     new Wish(WishType.MoreHealth,0.025f),
                     new Wish(WishType.MoreDamage,0.03f),
                     new Wish(WishType.MoreDreams,0.025f)
+                };
+            case EnemyType.SuperSoldier:
+                return new List<Wish>
+                {
+                    new Wish(WishType.Sensible,0.07f),
+                    new Wish(WishType.MoreXP,0.7f),
+                    new Wish(WishType.MoreHealth,0.04f),
+                    new Wish(WishType.MoreDamage,0.05f),
+                    new Wish(WishType.MoreDreams,0.04f)
                 };
             default:
                 return new List<Wish>();

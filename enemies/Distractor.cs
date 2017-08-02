@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEditor;
+
 
 
 public enum DistractorType{ Decoy, Monster, Shield, Null }

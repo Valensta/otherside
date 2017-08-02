@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 
 public class Mini_Toy_Button_Driver : MonoBehaviour {
-	Toy parent;
+	private Toy parent;
 	//public Building building_parent;
 	public GameObject status_panel;
 	public SpriteRenderer upgrade;
@@ -21,8 +21,8 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 	public List<MyLabel> labels;
 	public bool xp_full = false;
 	public bool level_max = false;
-    float time_of_last_xp_update = 0f;
-    float percent_xp;
+	private float time_of_last_xp_update = 0f;
+	private float percent_xp;
     //Color upgrade_me_please = new Color(1f, 186f / 255f, 156f / 255f, 0f);
    
 
@@ -77,7 +77,7 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 	}
 
 
-	void OnDisable(){
+	private void OnDisable(){
         Inventory.onWishChanged -= onWishChanged;
 		Sun.OnDayTimeChange -= OnDayTimeChange;
         level_max = false;//no cuz resetting, do it the stupid way
@@ -266,7 +266,7 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
         SetXP();
 		Show.SetAlpha(upgrade, 1);
         upgrade.gameObject.SetActive(ok);
-		Debug.Log("Enabled upgrage visual\n");
+	//	Debug.Log("Enabled upgrage visual\n");
 	}
 
     

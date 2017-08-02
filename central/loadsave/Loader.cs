@@ -331,8 +331,8 @@ public string oldLoadWaves()
 
                 if (pmax_lvl != null) stats.setMaxLvl(int.Parse(pmax_lvl.value));
                 stats.isUnlocked = false;
-                RuneType rune_type = (prune_type != null) ? Get.RuneTypeFromString(prune_type.value) : RuneType.Null;
-                ToyType toy_type = (ptoytype != null) ? Get.ToyTypeFromString(ptoytype.value) : ToyType.Null;
+                RuneType rune_type = (prune_type != null) ? EnumUtil.EnumFromString(prune_type.value, RuneType.Null) : RuneType.Null;
+                ToyType toy_type = (ptoytype != null) ? EnumUtil.EnumFromString(ptoytype.value, ToyType.Null) : ToyType.Null;
                 //WishType wish_type = WishType.Null;
                 CostType cost_type = CostType.Dreams;
 
@@ -348,7 +348,7 @@ public string oldLoadWaves()
                 stats.setCost(cost_type, cost);
 
                 
-                if (ppermanent != null) stats.island_type = Get.IslandTypeFromString(ppermanent.value); else stats.island_type = IslandType.Permanent;
+                stats.island_type = ppermanent != null ? EnumUtil.EnumFromString(ppermanent.value,IslandType.Permanent) : IslandType.Permanent;
                                 
 
                 if (pammo != null)

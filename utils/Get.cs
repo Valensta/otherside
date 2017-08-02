@@ -62,6 +62,21 @@ public static class Get {
         return factor * every_so_often / (lifespan * range);
     }
 
+    public static string getDifficultyName(Difficulty diff)
+    {
+        switch (diff)
+        {
+            case Difficulty.Insane:
+                return "Insane";
+            case Difficulty.Hard:
+                return "Normal";
+            case Difficulty.Normal:
+                return "Casual";
+            default:
+                return "Null";
+        }
+    }
+
     public static string getCarryOverInventory()
     {//special skills in inventory, wishes, potions
         StringBuilder sb = new StringBuilder();
@@ -73,13 +88,11 @@ public static class Get {
             StatSum sum = r.GetStats(false);
             foreach (StatBit s in sum.stats)
             {
-                if (s.level > 0)
-                {
-                    sb.Append((int)s.effect_type);
-                    sb.Append("_");
-                    sb.Append(s.level);
-                    sb.Append(":");
-                }
+                if (s.level <= 0) continue;
+                sb.Append((int)s.effect_type);
+                sb.Append("_");
+                sb.Append(s.level);
+                sb.Append(":");
             }                        
         }
 
@@ -91,15 +104,14 @@ public static class Get {
             foreach (SpecialSkillSaver saver in Peripheral.Instance.my_skillmaster.in_inventory)
                 if (skill.type == saver.type) in_inv = true;
 
-            if (skill.skill.level > 0)
-            {
-                sb.Append((int)skill.type);
-                sb.Append("_");
-                sb.Append(skill.skill.level);
-                sb.Append("_");
-                sb.Append(in_inv);                
-                sb.Append(":");
-            }
+            if (skill.skill.level <= 0) continue;
+            
+            sb.Append((int)skill.type);
+            sb.Append("_");
+            sb.Append(skill.skill.level);
+            sb.Append("_");
+            sb.Append(in_inv);                
+            sb.Append(":");
         }
         sb.Append("|W:");        
         foreach (Wishlet w in Peripheral.Instance.my_inventory.wishes)
@@ -192,7 +204,7 @@ public static class Get {
     public static string getDifficultyText(Difficulty diff)
     {        
 
-        return (diff == Difficulty.Normal || diff == Difficulty.Null) ? "" : diff.ToString();
+        return (diff == Difficulty.Normal || diff == Difficulty.Null) ? "" : getDifficultyName(diff);
         
     }
 
@@ -210,8 +222,8 @@ public static class Get {
     }
 
     public static float RandomNormal(){
-		float mean = 0;
-		float stdDev = 1;
+		const float mean = 0;
+		const float stdDev = 1;
 		
 		float u1 = UnityEngine.Random.Range (0, 1f);
 		float u2 = UnityEngine.Random.Range (0, 1f);
@@ -220,7 +232,7 @@ public static class Get {
 		float randStdNormal = Mathf.Sqrt(-2.0f * Mathf.Log(u1)) * Mathf.Sin(2.0f * Mathf.PI * u2); //random normal(0,1)
 		float randNormal = mean + stdDev * randStdNormal; //random normal(mean,stdDev^2)
 		//Debug.Log ("random normal is " + randNormal);
-		float normal_range = 3f;	
+		const float normal_range = 3f;	
 		float thing = randNormal/normal_range; // now should be rougly -1 to 1
 		if (thing > 1)thing = 1;
 		if (thing < -1)thing = -1;
@@ -263,13 +275,7 @@ public static class Get {
 
         if (return_xp > 0) hitme.stats.returnXp(return_xp);
         float added = xp - return_xp;
-        if (onXpAdded != null) onXpAdded(added, pos);
-
-        if (added <= 0)
-        {
-            //Debug.LogError("WTF added " + xp + "\n");
-        //    return;
-        }
+        onXpAdded?.Invoke(added, pos);
 
         firearm.toy.my_tower_stats.addXp(type, level, xp);
 
@@ -279,21 +285,20 @@ public static class Get {
     public static Sprite getSprite(string name)
     {
         Sprite s = Resources.Load(name, typeof(Sprite)) as Sprite;
-        if (!s) {
-            Debug.Log("Get cannot locate sprite " + name + "\n");
-            s = Resources.Load("GUI/Inventory/empty_inventory_slot", typeof(Sprite)) as Sprite;
-        }
+        if (s) return s;
+        
+        Debug.Log("Get cannot locate sprite " + name + "\n");
+        s = Resources.Load("GUI/Inventory/empty_inventory_slot", typeof(Sprite)) as Sprite;
         return s;
     }
 
     public static PhysicsMaterial2D getPhysicsMaterial(string name)
     {
         PhysicsMaterial2D s = Resources.Load("Monsters/Physics Materials/" + name, typeof(PhysicsMaterial2D)) as PhysicsMaterial2D;
-        if (!s)
-        {
-            Debug.Log("Get cannot locate PhysicsMaterial2D " + name + "\n");
-            s = Resources.Load("Monsters/Physics Materials/default_2d_material", typeof(PhysicsMaterial2D)) as PhysicsMaterial2D;
-        }
+        if (s) return s;
+        
+        Debug.Log("Get cannot locate PhysicsMaterial2D " + name + "\n");
+        s = Resources.Load("Monsters/Physics Materials/default_2d_material", typeof(PhysicsMaterial2D)) as PhysicsMaterial2D;
         return s;
     }
 
@@ -343,28 +348,26 @@ public static class Get {
         y_border = EagleEyes.Instance.getMapYSize()/2f;
         x_border = EagleEyes.Instance.getMapXSize();
  // Debug.Log("Checking " + pos + " vs " + x_border + ", " + y_border + "\n");
-        if (Mathf.Abs(pos.y) > y_border || Mathf.Abs(pos.x) > x_border)
-        {
-            return false;
-        }
-        return true;   
-    }
+        return !(Mathf.Abs(pos.y) > y_border) && !(Mathf.Abs(pos.x) > x_border);
+	}
 
     public static Vector2 fixPosition(Vector2 pos)
     {
-        float inner_x_border = 0.5f;
-        float inner_y_border = -1.5f;
-        float outer_x_border = 0.5f;        
-        float outer_y_border = -1.5f;
-        if (Mathf.Abs(pos.y) > (Camera.main.orthographicSize + outer_y_border))    
-        {
-            pos.y = (Camera.main.orthographicSize * pos.y / Mathf.Abs(pos.y) - inner_y_border);
-        }
+        const float inner_x_border = 0.5f;
+        const float inner_y_border = 0.75f;
+        
+        const float outer_x_border = -0.5f;        
+        const float outer_y_border = -0.75f;
+       
+    //    Debug.Log($"Fix position {old_pos} -> {pos}  .... max_x {Monitor.Instance.my_spyglass.max_x} max_y  {Monitor.Instance.my_spyglass.max_y}\n");
+        
+        if (Mathf.Abs(pos.y) > (Monitor.Instance.my_spyglass.map_y_size/2 + outer_y_border))    
+            pos.y = Monitor.Instance.my_spyglass.map_y_size/2 - inner_y_border;
 
-        if (Mathf.Abs(pos.x) > (Camera.main.orthographicSize * Screen.width / Screen.height + outer_x_border))
-        {
-            pos.x = ((Camera.main.orthographicSize * Screen.width / Screen.height ) * pos.x / Mathf.Abs(pos.x) - inner_x_border);        
-        }
+        
+        if (Mathf.Abs(pos.x) > (Monitor.Instance.my_spyglass.map_x_size/2 + outer_x_border))
+            pos.x = Monitor.Instance.my_spyglass.map_x_size/2 - inner_x_border;
+   
         return pos;
     }
 	
@@ -404,7 +407,7 @@ public static class Get {
 
 
         foreach (TimeName val in Enum.GetValues(typeof(TimeName)))        
-            if (val.ToString().ToLower() == s.ToLower()) return val; 
+            if (string.Equals(val.ToString(), s, StringComparison.CurrentCultureIgnoreCase)) return val; 
                
         Debug.Log("Could not find timename from string: " + s + "\n");
         return TimeName.Day;
@@ -459,60 +462,6 @@ public static class Get {
         return arrow;
     }
 
-    public static ToyType ToyTypeFromString(string s)
-    {
-        foreach (ToyType val in Enum.GetValues(typeof(ToyType)))
-            if (val.ToString().ToLower() == s.ToLower()) return val;
-
-        Debug.Log("Could not find ToyType from string: " + s + "\n");
-        return ToyType.Null;
-    }
-
-    public static RuneType RuneTypeFromString(string s)
-    {
-        if (s == null || s.Equals("")) return RuneType.Null;
-        foreach (RuneType val in Enum.GetValues(typeof(RuneType)))
-            if (val.ToString().ToLower() == s.ToLower()) return val;
-
-        Debug.Log("Could not find ToyType from string: " + s + "\n");
-        return RuneType.Null;
-    }
-    
-    
-    public static EffectType EffectTypeFromString(string s)
-    {      
-        foreach (EffectType val in Enum.GetValues(typeof(EffectType)))
-            if (val.ToString().ToLower() == s.ToLower())     
-                return val;
-        
-        Debug.Log("Could not find effecttype from string: " + s + "\n");
-        return EffectType.Null;
-    }
-
-    public static IslandType IslandTypeFromString(string s)
-    {
-        foreach (IslandType val in Enum.GetValues(typeof(IslandType)))
-            if (val.ToString().ToLower() == s.ToLower())
-                return val;
-
-        Debug.Log("Could not find IslandType from string: " + s + "\n");
-        return IslandType.Permanent;
-    }
-
-    
-    /*
-    public static List<Wish> copyWishTypeList(List<Wish> list)
-    {
-        List<Wish> new_list = new List<Wish>();
-
-        for (int i = 0; i < list.Count; i++)
-        {
-            Wish w = list[i].DeepClone();            
-        }
-
-        return new_list;
-    }
-    */
     
 
 
@@ -522,11 +471,9 @@ public static class Get {
 		
 	}
     
-	public static bool isGeneric(EffectType type){
-		if (type == EffectType.Range || type == EffectType.ReloadTime) {
-			return true;
-		}
-		return false;
+	public static bool isGeneric(EffectType type)
+	{
+	    return type == EffectType.Range || type == EffectType.ReloadTime;
 	}
 
 
@@ -546,11 +493,9 @@ public static class Get {
         }
     }
 
-	public static bool isBasic(EffectType type){
-		if (type == EffectType.Force || type == EffectType.Speed) {
-			return true;
-		}
-		return false;
+	public static bool isBasic(EffectType type)
+	{
+	    return type == EffectType.Force || type == EffectType.Speed;
 	}
 
 	
@@ -565,7 +510,7 @@ public static class Get {
 		Ray ray = Camera.main.ScreenPointToRay (mouse);
 		
 		
-		int layerMask = 1 << 11;
+		const int layerMask = 1 << 11;
 		if (Physics.Raycast (ray, out hit, Mathf.Infinity, layerMask)) {
 			mouse.z = Vector3.Distance (Camera.main.transform.position, hit.point);// - 10f;
 			//	Debug.Log ("z is " + mouse.z);

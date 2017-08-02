@@ -848,11 +848,12 @@ public class Peripheral : MonoBehaviour {
     public void StartWave()
     {        
         EagleEyes.Instance.SetActiveFFButtons(true);
-        float time_left = next_wave_time - Mathf.Floor(TIME);
+        float time_left = 5f*(next_wave_time - Mathf.Floor(TIME))/30f;
         if (Wave_interval > 0 && time_left > 0)
         {
-            float dreams_awarded = Mathf.RoundToInt(Mathf.Max(5f, time_left / 3f));
-            //  Debug.Log("Awarding " + dreams_awarded + " points for starting wave early\n");
+            float dreams_awarded = Mathf.RoundToInt(Mathf.Max(5f, time_left));
+            
+              Debug.Log("Awarding " + dreams_awarded + " points for starting wave early\n");
             
 
 

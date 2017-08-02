@@ -44,7 +44,7 @@ public class End : MonoBehaviour {
         float distance = Vector2.Distance(check_me, this.transform.position);
         if (distance > 7f)
         {
-            Debug.Log("Night Tower Hit too far " + distance + "\n");
+    //        Debug.Log("Night Tower Hit too far " + distance + "\n");
             return;
         }
 

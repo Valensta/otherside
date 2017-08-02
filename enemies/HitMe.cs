@@ -1,17 +1,6 @@
 using UnityEngine;
 using System.Collections;
-using System.Text;
-using System.IO;
 using System.Collections.Generic;
-using System;
-//using Cloner;
-
-[System.Serializable]
-public class TransformTo
-{
-    public TransformType transform;    
-    public float percent;
-}
 
 [System.Serializable]
 public class HitMe : DistractorObject
@@ -27,7 +16,7 @@ public class HitMe : DistractorObject
     float mass_factor = 2f; //die when reach mass/mass_factor - for hitmestatusbar
     //float tileSize;
     public SpriteRenderer sprite_renderer;
-    public TransformTo[] transform_to;
+    //public TransformTo[] transform_to;
     Vector3 init_scale;
     float init_speed = -1;
     float init_mass = -1;
@@ -126,6 +115,8 @@ public class HitMe : DistractorObject
         my_visuals = thing.GetComponent<EffectVisuals>();
         my_visuals.transform.parent = this.transform.GetChild(0).transform;
         my_visuals.transform.localPosition = Vector3.zero;
+        my_visuals.auto_stabilize = my_ai.orient;
+        my_ai.visuals = my_visuals;
 
     }
 
@@ -372,8 +363,8 @@ public class HitMe : DistractorObject
 
                         if (statbits[i].effect_type == EffectType.Speed && statbits[i].effect_sub_type == EffectSubType.Ultra)
                         {
-                            float add = SpeedMe(skill_stats.getModifiedStats(factor, 0), statbits[i].effect_type, statbits[i].effect_sub_type);
-                            xp += add;
+                            float add = SpeedMe(skill_stats.getModifiedStats(factor, 0), statbits[i].effect_type, statbits[i].effect_sub_type);                            
+                            xp += add * (1 + firearm.toy.rune.level * 0.5f);
                             assignXp(add, firearm, primary_effecttype, EffectType.Meteor, primary_level, skill_stats.level);
                         }
                     }

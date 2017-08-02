@@ -1,25 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using System.Collections.Generic;
-using System;
-//using UnityEditor;
 
 [System.Serializable]
-
 public class MarketplaceDriver : MonoBehaviour
-{
-
-    
+{   
     //public List_Panel selected_skill_panel;
     public List<MarketplaceObject> marketplace_objects;
     public Text default_currency_amount;
     public GameObject view;
     public MarketplaceID default_currency = MarketplaceID.ScorePoint;
-    void Start(){
-		
-		
-	}
+    public Button sell_all_button;
+    public MyText sell_all_amount_text;
 
     public void Init(bool enable)
     {
@@ -30,6 +22,7 @@ public class MarketplaceDriver : MonoBehaviour
             Central.Instance.game_saver.SaveGame(SaveWhen.BetweenLevels);
             return;
         }
+        
         foreach (MarketplaceObject obj in marketplace_objects)
         {
             
@@ -37,9 +30,28 @@ public class MarketplaceDriver : MonoBehaviour
             if (rate == null) continue;
                 
             obj.Init(this,getCurrentAmount(obj.ID), rate,getDefaultCurrency());
+            
         }
+
+
+        setSellAllButton();
         updateDefaultCurrency();
         
+    }
+
+    public void setSellAllButton()
+    {
+        int sell_all_for_this_much = 0;
+        foreach (MarketplaceObject obj in marketplace_objects)
+        {
+            sell_all_for_this_much += Mathf.FloorToInt(obj.fxRate.sell_rate * getCurrentAmount(obj.ID));
+        }
+
+
+
+        sell_all_button.interactable = sell_all_for_this_much > 0;
+        sell_all_amount_text.setText((sell_all_for_this_much > 0) ? sell_all_for_this_much.ToString() : "");
+
     }
 
     public int getDefaultCurrency()
@@ -47,15 +59,25 @@ public class MarketplaceDriver : MonoBehaviour
         return ScoreKeeper.Instance.getTotalScore();
     }
 
+    public void SellAll()
+    {
+        foreach (MarketplaceObject obj in marketplace_objects)
+        {
+            obj.SellAll();
+        }
+    }
+    
     public bool Sell(MarketplaceID ID, int amount, bool all)
     {
         if (all) amount = getCurrentAmount(ID);
+        if (amount == 0) return true;
         Debug.Log("Sell " + ID.ToString() + " " + amount + "\n");
         FXRate rate = Marketplace.getFXRate(ID);
         _process(ID, -amount);        
         _process(default_currency, amount * rate.sell_rate);
 
         getObject(ID).UpdateLabels(getCurrentAmount(ID), getDefaultCurrency());
+        setSellAllButton();
         updateDefaultCurrency();
         return true;
     }
@@ -73,6 +95,7 @@ public class MarketplaceDriver : MonoBehaviour
         _process(default_currency, -amount * rate.buy_rate);
 
         getObject(ID).UpdateLabels(getCurrentAmount(ID), getDefaultCurrency());
+        setSellAllButton();
         updateDefaultCurrency();
         return true;
     }
@@ -92,6 +115,9 @@ public class MarketplaceDriver : MonoBehaviour
                 return true;
             case MarketplaceID.MoreDamage:
                 Peripheral.Instance.my_inventory.AddWish(WishType.MoreDamage, 1,Mathf.FloorToInt(amount));
+                return true;
+            case MarketplaceID.MoreHealth:
+                Peripheral.Instance.my_inventory.AddWish(WishType.MoreHealth, 1,Mathf.FloorToInt(amount));
                 return true;
             case MarketplaceID.MoreDreams:
                 Peripheral.Instance.my_inventory.AddWish(WishType.MoreDreams, 1,Mathf.FloorToInt(amount));

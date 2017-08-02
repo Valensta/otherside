@@ -79,6 +79,7 @@ public class Moon : MonoBehaviour {
 		current_wave = wave;
         current_wavelet = wavelet;
         EagleEyes.Instance.WaveCountUpdate();
+	    
     }
 
     public void SetWavelet(int w)
@@ -175,7 +176,7 @@ public class Moon : MonoBehaviour {
     public void InitWave(int i)
     {
         if (i == 0) TIME = 0f;
-        Debug.Log("INITIALIZING WAVE " + i + "\n");
+        
         wait = TIME;
 
 
@@ -187,6 +188,8 @@ public class Moon : MonoBehaviour {
         point_factor = (mod.dream_uplift + 1f) * my_wave.point_factor();
 		xp_factor = (mod.xp_uplift + 1f) * my_wave.xp_factor();
 
+	    Debug.Log($"INITIALIZING WAVE {i} point_factor {point_factor} mod.dream_uplift {mod.dream_uplift} + {Central.Instance.getCurrentDifficultyLevel().ToString()}\n");
+	    
         my_wave.enemies_left = (int)my_wave.monster_count;
         done = false;
         
@@ -352,9 +355,9 @@ public class Moon : MonoBehaviour {
 
         }
         if (!balanceMode()) my_sun.SetTime(TIME);
+        
 
-
-        if (my_wavelet == null && Central.Instance.waitForEndofWavelet())
+        if (my_wavelet == null)
         {
             if (monsters_transform.childCount >= 3)
             {
@@ -394,7 +397,7 @@ public class Moon : MonoBehaviour {
                     if (current_wavelet == my_wave.wavelets.Count)
                     {
                         Peripheral.Instance.level_state = LState.OnLastWavelet;
-                        Peripheral.Instance.Wave_interval = my_wavelet.getEndWait();
+	                    Peripheral.Instance.Wave_interval = my_wavelet.getEndWait();
                         if (onLastWavelet != null) onLastWavelet(current_wave);
                     }
 
@@ -407,39 +410,35 @@ public class Moon : MonoBehaviour {
 			}
 			if(!done)
 			{
-
-			    bool reset = (m_count >= my_wavelet.enemies[e_count].c);
-			    bool last =  (m_count == my_wavelet.enemies[e_count].c - 1);
-			    
-			    if (reset) { m_count = 0; e_count++; }
-			    
-			  //  Debug.Log($"RESET {reset} m_count {m_count}\n");
-			    
-                if (e_count < my_wavelet.enemies.Length) {
-
-                    
-                    if (last)
-                    {                        
-                        incrementWait(my_wavelet.lull);
-              //          Debug.Log($"RESET {reset} m_count {m_count} MAKING {my_wavelet.enemies[e_count].name} THEN WAITING {my_wavelet.lull}\n");
-                    }
-                    else
-                    {
-                        incrementWait(my_wavelet.interval);
-                   //     Debug.Log($"RESET {reset} m_count {m_count} MAKING {my_wavelet.enemies[e_count].name} THEN WAITING {my_wavelet.interval}\n");
-                    }
-                    
-                        
-                    StartCoroutine(makeMonster(my_wavelet.enemies[e_count].name, my_wavelet.enemies[e_count].p));
-                    m_count++;                    				
                 
-                    
-				}else{
-                        
-                    if (current_wavelet != my_wave.wavelets.Count) incrementWait(my_wavelet.end_wait);                    
-                    my_wavelet = null;
-					
-                }
+				
+					bool reset = (m_count >= my_wavelet.enemies[e_count].c);
+					bool last = (m_count == my_wavelet.enemies[e_count].c - 1);
+
+					if (reset)
+					{
+						m_count = 0;
+						e_count++;
+					}
+
+					if (e_count < my_wavelet.enemies.Length)
+					{
+
+						if (last) incrementWait(my_wavelet.lull);
+						else incrementWait(my_wavelet.interval);
+
+						StartCoroutine(makeMonster(my_wavelet.enemies[e_count].name, my_wavelet.enemies[e_count].p));
+						m_count++;
+
+					}
+					else
+					{
+
+						if (current_wavelet != my_wave.wavelets.Count) incrementWait(my_wavelet.end_wait);
+						my_wavelet = null;
+
+					}
+				
 			}
 			return;
 		}else{				
@@ -452,7 +451,6 @@ public class Moon : MonoBehaviour {
             WaveInProgress = false;
 			Peripheral.Instance.level_state = LState.WaveEnded;
             
-            //EagleEyes.Instance.WaveCountUpdate();
 		}
 
 	}

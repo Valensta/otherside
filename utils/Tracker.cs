@@ -12,6 +12,7 @@ using System;
 using Amazon;
 using Amazon.S3;
 using Amazon.SecurityToken.Model;
+using UnityEngine.UI;
 
 public static class Tracker {
     public static bool track = true;
@@ -52,6 +53,15 @@ public static class Tracker {
     
     {
         if (!track) return;
+
+        if (label == PlayerEvent.Error && customAttributes != null)
+        {
+            customAttributes["attribute_1"] =
+                Encoding.UTF8.GetString(Encoding.Default.GetBytes(customAttributes["attribute_1"])); 
+            customAttributes["attribute_2"] =
+                Encoding.UTF8.GetString(Encoding.Default.GetBytes(customAttributes["attribute_2"]));
+            
+        }
         
         customAttributes = (customAttributes == null) ? new Dictionary<string, string>() : customAttributes;
         customMetrics = (customMetrics == null) ? new Dictionary<string, double>() : customMetrics;

@@ -90,7 +90,7 @@ public class Island_Button : MonoBehaviour, IPointerClickHandler, IDropHandler, 
         {
             hidden = value; 
             
-            Debug.Log($"setting island {gameObject.name} to hidden {hidden}\n");
+        //    Debug.Log($"setting island {gameObject.name} to hidden {hidden}\n");
         }
     }
 

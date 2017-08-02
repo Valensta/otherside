@@ -31,7 +31,7 @@ public static class Marketplace
 {
 
     public static Dictionary<MarketplaceID, FXRate> rates;
-    public static float defaultSellPenalty = 0.8f;
+    public static float defaultSellPenalty = 1f;
 
     public static FXRate getFXRate(MarketplaceID ID)
     {
@@ -49,11 +49,11 @@ public static class Marketplace
     {
         rates = new Dictionary<MarketplaceID, FXRate>();
 
-        rates.Add(MarketplaceID.Sensible, new FXRate(MarketplaceID.Sensible, 1));
-        rates.Add(MarketplaceID.MoreHealth, new FXRate(MarketplaceID.MoreHealth, 2));
-        rates.Add(MarketplaceID.MoreXP, new FXRate(MarketplaceID.MoreXP, 1));
-        rates.Add(MarketplaceID.MoreDamage, new FXRate(MarketplaceID.MoreDamage, 1));
-        rates.Add(MarketplaceID.MoreDreams, new FXRate(MarketplaceID.MoreDreams, 1));
+        rates.Add(MarketplaceID.Sensible, new FXRate(MarketplaceID.Sensible, 2));
+        rates.Add(MarketplaceID.MoreHealth, new FXRate(MarketplaceID.MoreHealth, 5));
+        rates.Add(MarketplaceID.MoreXP, new FXRate(MarketplaceID.MoreXP, 2));
+        rates.Add(MarketplaceID.MoreDamage, new FXRate(MarketplaceID.MoreDamage, 3));
+        rates.Add(MarketplaceID.MoreDreams, new FXRate(MarketplaceID.MoreDreams, 3));
 
     }
 }

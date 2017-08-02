@@ -173,6 +173,7 @@ using System;
         List<int> pathlist = new List<int>();
 
         LevelMod level_mod = Peripheral.Instance.getLevelMod();
+
         Moon.Instance.waves = new List<wave>();
         
 
@@ -187,8 +188,8 @@ using System;
             for (int y = 0; y < init_wave.wavelets.Length; y++)
             {
                 InitWavelet init_wavelet = init_wave.wavelets[y];
-                init_wavelet.Modify(level_mod.lull_multiplier, level_mod.interval_multiplier);                
-                mywave.add_wavelet(init_wavelet);
+                init_wavelet.Modify(level_mod.wave_time_multiplier);                
+                mywave.add_wavelet(init_wavelet, false);
                 i++;
             }
             mywave.wait = init_wave.wait_time;

@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
-using System.Runtime.InteropServices;
+
 using System.Text;
-using NUnit.Framework;
+
 using UnityEngine.UI;
 
 
@@ -32,6 +32,8 @@ public class LevelBalancer : MonoBehaviour
     wave waveInProgress = null;
     public WaveBalanceHelper helper;
     public List<Text> summary;
+
+    public List<EnemyType> enabled_enemy_types;
     
     public void showDetailsPanel(bool show) => enemyDetails.SetActive(true);
     
@@ -171,7 +173,7 @@ public class LevelBalancer : MonoBehaviour
 
         if (waveInProgress == null) waveInProgress = new wave();
         foreach (InitWavelet wlet in part.wavelets)
-            waveInProgress.add_wavelet(wlet);
+            waveInProgress.add_wavelet(wlet, false);
 
         waveInProgress.xp = original_waves[currentWave].xp;
         waveInProgress.points = original_waves[currentWave].points;
@@ -191,7 +193,7 @@ public class LevelBalancer : MonoBehaviour
     {
         wave new_wave = new wave();
         InitWavelet wavelet = generateWavelet();
-        new_wave.add_wavelet(wavelet);
+        new_wave.add_wavelet(wavelet, false);
         new_wave.monster_count = wavelet.GetMonsterCount();
         new_wave.time_name_start = (day) ? TimeName.Day : TimeName.Night;
         new_wave.time_name_end = (day) ? TimeName.Day : TimeName.Night;
@@ -378,7 +380,7 @@ public class LevelBalancer : MonoBehaviour
 
         foreach (WaveletBuilder wb in waveletBuilders)
         {
-            wb.Init();
+            wb.Init(enabled_enemy_types);
 
         }
 
@@ -387,7 +389,7 @@ public class LevelBalancer : MonoBehaviour
     }
 
 
-
+    
 
     void Awake()
     {

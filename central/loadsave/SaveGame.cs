@@ -384,7 +384,7 @@ public class SaveGame
         }
         else
         {
-            return "Level: " + getCurrentLevelDisplay().ToString();            
+            return $"LVL: {getCurrentLevelDisplay()}";            
         }
     }
 

@@ -69,13 +69,29 @@ public class WaveletBuilder : MonoBehaviour {
         else return "";
     }
 
-    public void Init()
+    public void Init(List<EnemyType> enabled_enemies)
     {
         foreach (MyToggle toggle in enemyToggles)
         {
-            toggle.toggleAction += new MyToggle.ToggleAction(toggleEnemyType);
+            if (!enemyEnabled(enabled_enemies, toggle.text))
+            {
+                toggle.gameObject.SetActive(false);
+            }
+            else
+            {
+                toggle.gameObject.SetActive(true);
+
+                toggle.toggleAction += new MyToggle.ToggleAction(toggleEnemyType);
+            }
         }
         
-    }  
+    }
+
+    bool enemyEnabled(List<EnemyType> list, string s)
+    {
+        EnemyType type = EnumUtil.EnumFromString(s, EnemyType.Null);
+        foreach (EnemyType t in list) if (type == t) return true;
+        return false;
+    }
        
 }

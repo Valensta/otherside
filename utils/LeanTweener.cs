@@ -24,9 +24,6 @@ public class LeanTweener : MonoBehaviour {
 	public enum TweenColor{Force, Scale, Speed, Collided, Select, Hint, Disabled};
 	public enum TweenType{Scale, Rotate, ColorChange, Null};
 
-	public void Awake(){
-		//Init ();
-	}
 
 
 	public void Init () {
@@ -70,9 +67,34 @@ public class LeanTweener : MonoBehaviour {
     
 		duration = -99f;
         LeanTween.cancel(target);
+		ResetMe();
         tweening = false;
 	}
-		
+
+	void ResetMe()
+	{
+		switch (preset)
+		{
+			case LeanTweenerPreset.Null:
+				break;
+			case LeanTweenerPreset.DefaultFastButton:
+			case LeanTweenerPreset.DefaultSlowButton:
+			case LeanTweenerPreset.GentleSlow:
+			case LeanTweenerPreset.UI3Blips:
+			case LeanTweenerPreset.UIBlip:
+				target.transform.localScale = init_vector;
+				break;
+			case LeanTweenerPreset.GentleSlowAlpha:
+			case LeanTweenerPreset.DefaultSlowButtonAlpha:
+				//Debug.LogError("Duno how to reset alpha tweeners\n");
+				break;
+			default:
+				Debug.LogError($"Duno how to reset {preset} tweeners\n");
+				break;
+
+		}
+	}
+	
 	IEnumerator StopMeSoon(){
         if (!tweening) yield return null;
         if (duration > 0.05f) {

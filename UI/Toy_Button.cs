@@ -221,18 +221,11 @@ public class Toy_Button : MyButton
             case "sell_cancel":
                 click = ClickType.Cancel;
                 ((InGame_Toy_Button_Driver)global_rune_panel).toggleSell();
-                break;
-       //     case "move":                
-                //((InGame_Toy_Button_Driver)global_rune_panel).toggleMovePanel();
-//                break;
+                break;      
             case "move_confirm":
                 click = ClickType.Action;
                 ((InGame_Toy_Button_Driver)global_rune_panel).moveToy();
                 break;
-            //      case "move_cancel":
-            //click = ClickType.Cancel;
-            //                ((InGame_Toy_Button_Driver)global_rune_panel).toggleMovePanel();
-            //              break;
             case "reset_special_skills":
                 click = ClickType.Action;
                 

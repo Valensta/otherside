@@ -26,13 +26,16 @@ public class StatBitSaver : IDeepCloneable<StatBitSaver>
 
     public StatBitSaver DeepClone()
     {
-        StatBitSaver my_clone = new StatBitSaver();
-        my_clone.level = this.level;
-        my_clone.effect_type = this.effect_type;
-        my_clone.rune_type = this.rune_type;
-        my_clone.is_hero = this.is_hero;
-        my_clone.active = this.active;
-        my_clone.effect_sub_type = this.effect_sub_type;      
+        StatBitSaver my_clone = new StatBitSaver
+        {
+            level = this.level,
+            effect_type = this.effect_type,
+            rune_type = this.rune_type,
+            is_hero = this.is_hero,
+            active = this.active,
+            effect_sub_type = this.effect_sub_type
+        };
+
 
         return my_clone;
     }
@@ -49,8 +52,8 @@ public class StatBit
     public EffectType effect_type;
     public bool dumb = false;         //never update stats on your own. this is used for lava based skills. take stat as it is given
     public bool very_dumb = false;     //use base_stat, do not get base stat on your own. for some skills
-    bool finisher;             //depends on level
-    bool permanent;            //skill is permanent, depends on level
+    private bool finisher;             //depends on level
+    private bool permanent;            //skill is permanent, depends on level
     public EffectSubType effect_sub_type = EffectSubType.Null;
     public RuneType rune_type;
     public bool is_hero;
@@ -76,12 +79,14 @@ public class StatBit
 
     public StatBitSaver getSnapshot()
     {
-        StatBitSaver s = new StatBitSaver();
-        s.level = this.level;
-        s.effect_type = this.effect_type;
-        s.rune_type = this.rune_type;
-        s.is_hero = this.is_hero;
-        s.active = this.active;
+        StatBitSaver s = new StatBitSaver
+        {
+            level = this.level,
+            effect_type = this.effect_type,
+            rune_type = this.rune_type,
+            is_hero = this.is_hero,
+            active = this.active
+        };
         return s;
     }
 
@@ -117,11 +122,9 @@ public class StatBit
 
     public void onRewardEnabled(RewardType _reward_type, EffectType _effect_type)
     {
-        if (_effect_type == this.effect_type)
-        {
-            checkFinisher();
-            RewardOverseer.onRewardEnabled -= onRewardEnabled;
-        }
+        if (_effect_type != this.effect_type) return;
+        checkFinisher();
+        RewardOverseer.onRewardEnabled -= onRewardEnabled;
     }
     /*
     public float Stat
@@ -284,9 +287,6 @@ public class StatBit
             case EffectType.Renew:
                 f = getRenew(lvl_increase);
                 break;
-            case EffectType.Sync:
-                f = getSync(lvl_increase);
-                break;
             case EffectType.Architect:
                 f = getArchitect(lvl_increase);
                 break;
@@ -401,9 +401,8 @@ public class StatBit
 
     private MyFloat[] initStats()
     {
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type,effect_sub_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, effect_sub_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type,effect_sub_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, effect_sub_type, false)];
         return numbers;
     }
 
@@ -412,27 +411,31 @@ public class StatBit
         float current_stat = get(lvl_increase);
         MyFloat[] numbers = initStats();
 
-        float time = (rune == null) ? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false) : rune.GetStats(false).getReloadTime();
+        float time = rune?.GetStats(false).getReloadTime() ?? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false);
         
         numbers[0] = new MyFloat(current_stat, LabelName.SkillStrength, LabelUnit.Percent); //speed modifier
 
-        if (effect_sub_type == EffectSubType.Null)
+        switch (effect_sub_type)
         {
-            numbers[1] = new MyFloat(time / 2f, LabelName.SkillStrength, LabelUnit.Duration); //time to normal  - how quickly to return to normal         
-            numbers[2] = new MyFloat(time / 4f, LabelName.SkillStrength, LabelUnit.Duration); //lifetime              
-        }else if (effect_sub_type == EffectSubType.Ultra)
-        {
-            numbers[1] = new MyFloat(time, LabelName.SkillStrength, LabelUnit.Duration); //time to normal  - how quickly to return to normal 
-            numbers[2] = new MyFloat(time, LabelName.SkillStrength, LabelUnit.Duration); //lifetime         
-        }else if (effect_sub_type == EffectSubType.Freeze)
-        {
-            numbers[1] = new MyFloat(current_stat * time * 1f / 100f, LabelName.SkillStrength, LabelUnit.Duration); //time to normal  - how quickly to return to normal 
-            numbers[2] = new MyFloat(current_stat * time * 1f / 100f, LabelName.SkillStrength, LabelUnit.Duration); //lifetime         
-            numbers[3] = new MyFloat(current_stat * 3f * (level + lvl_increase) / 100f, LabelName.SkillStrength, LabelUnit.Percent); //% freeze per level
-            numbers[4] = new MyFloat(current_stat * 70f * (level + lvl_increase) / 100f, LabelName.SkillStrength, LabelUnit.Percent); //% weaken per freeze
-            numbers[5] = new MyFloat(current_stat * time * 6f / 100f, LabelName.SkillStrength, LabelUnit.Duration); //Freeze duration
-            //all the #s have the adjusted by current_stat/100f to account for factor because this is a lava.
-            //current stat already has factor baked in and is in mid upper 90's so close enough.
+            case EffectSubType.Null:
+                numbers[1] = new MyFloat(time / 2f, LabelName.SkillStrength, LabelUnit.Duration); //time to normal  - how quickly to return to normal         
+                numbers[2] = new MyFloat(time / 4f, LabelName.SkillStrength, LabelUnit.Duration); //lifetime              
+                break;
+            case EffectSubType.Ultra:
+                numbers[1] = new MyFloat(time, LabelName.SkillStrength, LabelUnit.Duration); //time to normal  - how quickly to return to normal 
+                numbers[2] = new MyFloat(time, LabelName.SkillStrength, LabelUnit.Duration); //lifetime         
+                break;
+            case EffectSubType.Freeze:
+                numbers[1] = new MyFloat(current_stat * time * 1f / 100f, LabelName.SkillStrength, LabelUnit.Duration); //time to normal  - how quickly to return to normal 
+                numbers[2] = new MyFloat(current_stat * time * 1f / 100f, LabelName.SkillStrength, LabelUnit.Duration); //lifetime         
+                numbers[3] = new MyFloat(current_stat * 3f * (level + lvl_increase) / 100f, LabelName.SkillStrength, LabelUnit.Percent); //% freeze per level
+                numbers[4] = new MyFloat(current_stat * 70f * (level + lvl_increase) / 100f, LabelName.SkillStrength, LabelUnit.Percent); //% weaken per freeze
+                numbers[5] = new MyFloat(current_stat * time * 6f / 100f, LabelName.SkillStrength, LabelUnit.Duration); //Freeze duration
+                //all the #s have the adjusted by current_stat/100f to account for factor because this is a lava.
+                //current stat already has factor baked in and is in mid upper 90's so close enough.
+                break;
+            case EffectSubType.Junk:
+                break;
         }
 
             if (finisher) numbers[3] = new MyFloat(current_stat / 4f, LabelName.SkillStrength, LabelUnit.Percent);
@@ -444,9 +447,8 @@ public class StatBit
     private MyFloat[] getWeaken(int lvl_increase)
     {
         float current_stat = get(lvl_increase);
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, false)];
 
         float time = (rune == null) ? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false) : rune.GetStats(false).getReloadTime();
         int current_level = level + lvl_increase;
@@ -455,20 +457,21 @@ public class StatBit
 
 
         float weaken_mult = 0f;
-        if (effect_sub_type == EffectSubType.Null)
+        switch (effect_sub_type)
         {
-            weaken_mult = (current_level == 1) ? 35f : (current_level == 2) ? 45f : 55f;
+            case EffectSubType.Null:
+                weaken_mult = (current_level == 1) ? 35f : (current_level == 2) ? 45f : 55f;
 
-            if (permanent)
-                numbers[1] = new MyFloat(99f, LabelName.TimeRemaining, LabelUnit.Duration);
-            else
-                numbers[1] = new MyFloat(time_mult * 3f * time / 4f, LabelName.TimeRemaining, LabelUnit.Duration);
-        }
-        else if (effect_sub_type == EffectSubType.Freeze)
-        {
-            weaken_mult = (current_level == 1) ? 70f : (current_level == 2) ? 80f : 90f;
-            numbers[1] = new MyFloat(time_mult * 6f * time, LabelName.TimeRemaining, LabelUnit.Duration);
-        //    Debug.Log(time_mult + " " + 6 + " " + time + "\n");
+                if (permanent)
+                    numbers[1] = new MyFloat(99f, LabelName.TimeRemaining, LabelUnit.Duration);
+                else
+                    numbers[1] = new MyFloat(time_mult * 3f * time / 4f, LabelName.TimeRemaining, LabelUnit.Duration);
+                break;
+            case EffectSubType.Freeze:
+                weaken_mult = (current_level == 1) ? 70f : (current_level == 2) ? 80f : 90f;
+                numbers[1] = new MyFloat(time_mult * 6f * time, LabelName.TimeRemaining, LabelUnit.Duration);
+                //    Debug.Log(time_mult + " " + 6 + " " + time + "\n");
+                break;
         }
         numbers[0] = new MyFloat(weaken_mult, LabelName.SkillStrength, LabelUnit.Percent);
 
@@ -506,10 +509,10 @@ public class StatBit
         MyFloat[] numbers = initStats();
 
         int cl = level + lvl_increase;
-        float damage =    (cl == 1) ? 10f : (cl == 2) ? 20f : (cl == 3)? 30f : (cl == 4)? 50f : 100f;
-        float lava_life = (cl == 1) ? 8f :   (cl == 2) ? 10f : (cl == 3)? 12f : 14;
-        float slow = 100f;
-        float radius =    (cl == 1) ? 3f : (cl == 2) ? 3.75f : (cl==3)? 4.5f : (cl==4)? 5f : 5.5f;
+        float damage =    (cl == 1) ? 30f : (cl == 2) ? 60f : (cl == 3)? 110f : (cl == 4)? 150f : 220f;
+        float lava_life = (cl == 1) ? 6f :   (cl == 2) ? 7f : (cl == 3)? 8f : 9;
+        const float slow = 100f;
+        float radius =    (cl == 1) ? 2f : (cl == 2) ? 2.5f : (cl==3)? 3f : (cl==4)? 3.5f : 4f;
         float rt = (cl == 1) ? recharge_time : (cl == 2) ? recharge_time - 5 : (cl == 3) ? recharge_time - 9 : (cl == 4) ? (recharge_time - 14) : (recharge_time - 20);
         numbers[1] = new MyFloat(damage, LabelName.SkillStrength, LabelUnit.DPS); //damage            
         numbers[2] = new MyFloat(lava_life, LabelName.TimeRemaining, LabelUnit.Duration); //lava life                
@@ -556,11 +559,8 @@ public class StatBit
         numbers[1] = new MyFloat(freq, LabelName.SkillStrength, LabelUnit.Regen); //how often
         return numbers;
     }
-
-    private MyFloat[] getSync(int lvl_increase)
-    {
-        throw new NotImplementedException();
-    }
+    
+    
     //SPECIAL
     private MyFloat[] getArchitect(int lvl_increase)
     {     
@@ -802,6 +802,7 @@ public class StatBit
         MyFloat[] numbers = initStats();
         int cl = level + lvl_increase;
         float damage_mult = (cl == 1) ? 7f : (cl == 2) ? 9f : (cl == 3)? 12f : (cl == 4)? 15 : 18;
+        damage_mult *= 0.8f;
         int bullets = (cl == 1) ? 7 : (cl == 2) ? 12 : (cl == 3) ? 16 : (cl == 4) ? 22 : 28;
         float rt = (cl == 1) ? recharge_time : (cl == 2) ? recharge_time - 5 : (cl == 3) ? recharge_time - 9 : (cl == 4) ? (recharge_time - 14) : (recharge_time - 20);
         float lava_size = (cl == 1) ? 1.7f : (cl == 2) ? 2 : (cl == 3) ? 2.3f : (cl == 4) ? 2.5f : 2.8f;
@@ -821,13 +822,15 @@ public class StatBit
         int cl = level + lvl_increase;
 
         float rt = (cl == 1) ? recharge_time : (cl == 2) ? recharge_time - 5 : (cl == 3) ? recharge_time - 9 : (cl == 4) ? (recharge_time - 14) : (recharge_time - 20);
-        float damage_mult = (cl == 1) ? 70f : (cl == 2) ? 120f : (cl == 3) ? 170f : (cl == 4) ? 220 : 280;
+        float damage_mult = (cl == 1) ? 35f : (cl == 2) ? 75f : (cl == 3) ? 170f : (cl == 4) ? 220 : 280;
+        
         float slow = (cl == 1) ? 85f : (cl == 2) ? 90f : 100f;
+        float lava_size = (cl == 1) ? 2.5f : (cl == 3.0f) ? 3.5f : 4f;
                 
         numbers[0] = new MyFloat(damage_mult, LabelName.SkillStrength, LabelUnit.Damage);
         numbers[1] = new MyFloat(1f, LabelName.TimeRemaining, LabelUnit.Duration); //lava life               
         numbers[3] = new MyFloat(rt, LabelName.TimeRemaining, LabelUnit.Recharge);  //recharge time
-        numbers[4] = new MyFloat(3.5f, LabelName.Range, LabelUnit.Distance);  //lava size
+        numbers[4] = new MyFloat(lava_size, LabelName.Range, LabelUnit.Distance);  //lava size
         numbers[2] = new MyFloat(slow * numbers[4].num * numbers[1].num / Get.lava_damage_frequency, LabelName.SkillStrength, LabelUnit.Percent); //TimeSpeed  
         return numbers;
     }
@@ -844,9 +847,8 @@ public class StatBit
     private MyFloat[] getExplodeForce(int lvl_increase)
     {
         float current_stat = get(lvl_increase);
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, false)];
 
         numbers[0] = new MyFloat(current_stat, LabelName.SkillStrength, LabelUnit.Damage);
         numbers[1] = new MyFloat(1.25f + current_stat * 1.5f, LabelName.Range, LabelUnit.Distance); //explode range        
@@ -859,11 +861,10 @@ public class StatBit
     private MyFloat[] getCalamity(int lvl_increase)
     {
         float current_stat = get(lvl_increase);
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, false)];
         int current_level = level + lvl_increase;
-        float time = (rune == null) ? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false) : rune.GetStats(false).getReloadTime();
+        float time = rune?.GetStats(false).getReloadTime() ?? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false);
         float range = (current_level == 1) ? 0.5f : (current_level == 2) ? 0.7f : 0.9f;
         float damage_mult = (current_level == 1) ? 0.28f : (current_level == 2) ? 0.5f : .8f;
         numbers[0] = new MyFloat(damage_mult * current_stat, LabelName.SkillStrength, LabelUnit.DPS);
@@ -883,7 +884,7 @@ public class StatBit
         MyFloat[] numbers = initStats();
 
         int current_level = level + lvl_increase;
-        float time = (rune == null) ? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false) : rune.GetStats(false).getReloadTime();
+        float time = rune?.GetStats(false).getReloadTime() ?? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false);
         float range = (current_level == 1) ? 0.5f : (current_level == 2) ? 0.7f : 0.9f;
         numbers[0] = new MyFloat(0.5f, LabelName.SkillStrength, LabelUnit.Percent); //effect for each lava hurtme, so very short
         numbers[1] = new MyFloat(range, LabelName.Range, LabelUnit.Distance); //emp range    
@@ -911,13 +912,15 @@ public class StatBit
     private MyFloat[] getSwarm(int lvl_increase)
     {
         float current_stat = get(lvl_increase);
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, false)];
+        
+       
         int current_level = level + lvl_increase;
-        float time = (rune == null) ? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false) : rune.GetStats(false).getReloadTime();
-        float range = (rune == null) ? StaticStat.getBaseFactor(rune_type, EffectType.Range, false) : rune.GetStats(false).getRange();
+        float time = rune?.GetStats(false).getReloadTime() ?? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false);
+        float range = rune?.GetStats(false).getRange() ?? StaticStat.getBaseFactor(rune_type, EffectType.Range, false);
         float damage_mult = (current_level == 1) ? 0.7f : (current_level == 2) ? 0.85f : 1.0f;
+        
         numbers[0] = new MyFloat(current_stat * damage_mult, LabelName.SkillStrength, LabelUnit.DPS); //.32 -> .5
         numbers[1] = new MyFloat(range, LabelName.Range, LabelUnit.Distance);  //lava size
         numbers[2] = new MyFloat(2f * time, LabelName.TimeRemaining, LabelUnit.Duration); //make new lava timer % of reload time
@@ -933,20 +936,17 @@ public class StatBit
     private MyFloat[] getFear(int lvl_increase)
     {
         float current_stat = get(lvl_increase);
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, false)];
 
         numbers[0] = new MyFloat(current_stat * 3f, LabelName.TimeRemaining, LabelUnit.Duration);
 
 
-        if (finisher)
-        {
-            numbers[1] = new MyFloat(current_stat, LabelName.Range, LabelUnit.Distance); //mass panic range
-            numbers[2] = new MyFloat(current_stat, LabelName.SkillStrength, LabelUnit.Percent); //% strength (time) of base for lava
-            numbers[3] = new MyFloat(current_stat / 4f, LabelName.SkillStrength, LabelUnit.Percent); //% change to cause mass panic
-                                                                                                     //    Debug.Log("Fear finisher stats!!! Range: " + numbers[1].num + " strength: " + numbers[2].num + " % chance: " + numbers[3].num + "\n");
-        }
+        if (!finisher) return numbers;
+        numbers[1] = new MyFloat(current_stat, LabelName.Range, LabelUnit.Distance); //mass panic range
+        numbers[2] = new MyFloat(current_stat, LabelName.SkillStrength, LabelUnit.Percent); //% strength (time) of base for lava
+        numbers[3] = new MyFloat(current_stat / 4f, LabelName.SkillStrength, LabelUnit.Percent); //% change to cause mass panic
+        //    Debug.Log("Fear finisher stats!!! Range: " + numbers[1].num + " strength: " + numbers[2].num + " % chance: " + numbers[3].num + "\n");
 
         return numbers;
     }
@@ -954,14 +954,13 @@ public class StatBit
     private MyFloat[] getWishCatcher(int lvl_increase)
     {
         //float current_stat = get(lvl_increase);
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, false)];
         int current_level = level + lvl_increase;
 
-        float percent = 20; // is actually 1 - this
+        const float percent = 20; // is actually 1 - this
         
-        float time = (rune == null) ? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false) : rune.GetStats(false).getReloadTime();
+        float time = rune?.GetStats(false).getReloadTime() ?? StaticStat.getBaseFactor(rune_type, EffectType.ReloadTime, false);
         float time_mult = (current_level == 1) ? 1.3f : (current_level == 2) ? 2f : 3f;
 
         numbers[0] = new MyFloat(percent, LabelName.SkillStrength, LabelUnit.Percent);
@@ -976,9 +975,8 @@ public class StatBit
     private MyFloat[] getCritical(int lvl_increase)
     {
         float current_stat = get(lvl_increase);
-        MyFloat[] numbers;
-        numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
-                              new MyFloat[StaticStat.StatLength(effect_type, false)];
+        var numbers = (finisher) ? new MyFloat[StaticStat.StatLength(effect_type, true)] :
+            new MyFloat[StaticStat.StatLength(effect_type, false)];
 
         numbers[0] = new MyFloat(current_stat * 2f / 3f, LabelName.SkillStrength, LabelUnit.Percent); //min % damage increase
         numbers[1] = new MyFloat(current_stat * 2f, LabelName.SkillStrength, LabelUnit.Percent);  //max % damage increase
@@ -998,13 +996,13 @@ public class StatBit
     }
 
 
-
-    string addLabelText(List<MyFloat> currentFloats, List<MyFloat> nextFloats)
+    private string addLabelText(List<MyFloat> currentFloats, List<MyFloat> nextFloats)
     {
         string text = "";
         if (currentFloats == null && nextFloats == null) return "";
         List<MyFloat> currentSorted = currentFloats.OrderByDescending(x => (int) (x.type)).ToList();
-        List<MyFloat> nextSorted = (nextFloats == null)? null : nextFloats.OrderByDescending(x => (int)(x.type)).ToList();
+        List<MyFloat> nextSorted = nextFloats?.OrderByDescending(x => (int)(x.type)).ToList();
+        
         for (int i = 0; i < currentSorted.Count; i++)
         {
             MyFloat f = currentSorted[i];
@@ -1020,14 +1018,14 @@ public class StatBit
     }
 
     //this is dumb
-    string Padded(string pad_me, int num, bool before)
+    private static string Padded(string pad_me, int num, bool before)
     {
         string a = pad_me;
         if (pad_me.Length < num)
         {
             pad_me = (before)
-                ? new String(' ', Mathf.FloorToInt(1.5f*(num - pad_me.Length))) + pad_me
-                : pad_me + new String(' ', Mathf.FloorToInt(1.5f * (num - pad_me.Length)));
+                ? new string(' ', Mathf.FloorToInt(1.5f*(num - pad_me.Length))) + pad_me
+                : pad_me + new string(' ', Mathf.FloorToInt(1.5f * (num - pad_me.Length)));
         }
 
   //      Debug.Log("Padded '" + a + "' to '" + pad_me + "'");
@@ -1319,10 +1317,10 @@ public class StatBit
                         
                         next_floats[0].num = next_floats[1].num * next_floats[0].num * Get.getModLavaFactor(1f, 1, next_floats[1].num, next_floats[4].num);
                         
-                        text += addLabelText(new List<MyFloat> { current_floats[0], current_floats[3] }, new List<MyFloat> { next_floats[0], next_floats[3] });
+                        text += addLabelText(new List<MyFloat> { current_floats[0], current_floats[3], current_floats[4] }, new List<MyFloat> { next_floats[0], next_floats[3], next_floats[4] });
                     }
                     else
-                        text += addLabelText(new List<MyFloat> { current_floats[0], current_floats[3] }, null);
+                        text += addLabelText(new List<MyFloat> { current_floats[0], current_floats[3], current_floats[4] }, null);
                 }
                
 
@@ -1507,7 +1505,7 @@ public class StatBit
 
     }
 
-    void updateStatsForLevel()
+    private void updateStatsForLevel()
     {
         if (dumb) return;
         this.cost = StaticStat.getCost(rune_type, effect_type, level);
@@ -1541,16 +1539,11 @@ public class StatBit
 
         if (effect_type == EffectType.Renew) g = Mathf.Floor(g);
 
+        if (!very_dumb) return g;
         
-        if (very_dumb)
-        {            
-            float dumb_g = get_simple();
-            //Debug.Log(effect_type + " SMART " + g + " VERY DUMB " + dumb_g + "\n");
-            return dumb_g;
-        }
-
-        return g;
-
+        float dumb_g = get_simple();
+        //Debug.Log(effect_type + " SMART " + g + " VERY DUMB " + dumb_g + "\n");
+        return dumb_g;
     }
 
     public float get_simple()
@@ -1582,7 +1575,7 @@ public class StatBit
 
         float g = StaticStat.getInitRechargeTime(effect_type);
         float diff_scaler = -Central.Instance.medium_difficulty / difficulty;
-        float time_multiplier = .1f;
+        const float time_multiplier = .1f;
         //   Debug.Log("getting recharge time " + difficulty + "\n");
         g = diff_scaler + 1 + g;
         g -= recharge_time * time_multiplier * check_level / difficulty;

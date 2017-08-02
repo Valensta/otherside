@@ -110,7 +110,7 @@ public class MultiLevelStateSaver : MonoBehaviour {
 
         games[id].ReloadFile(copy_from);
         savegame_buttons[id].level.text = games[id].getDescription(false);
-        savegame_buttons[id].score.text = games[id].getScoreText();
+        //savegame_buttons[id].score.text = games[id].getScoreText();
         return true;
     }
 

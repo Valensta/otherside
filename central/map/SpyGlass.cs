@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using UnityEngine.EventSystems;
 
@@ -43,9 +44,13 @@ public class SpyGlass : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, I
         float ortho_size = Camera.main.orthographicSize;
 
         float bg_sprite_scale = Monitor.Instance.background_image.gameObject.transform.localScale.x;
+	    
+	    
         max_y = (map_y_size / 2f - ortho_size) * bg_sprite_scale;
         max_x = (map_x_size / 2f - ortho_size * screen_ratio) * bg_sprite_scale; //not quite right
-     //   Debug.Log("Map size x " + map_x_size + " y " + map_y_size + "\n");
+	    
+//	    Debug.Log($"bg_sprite_scale {bg_sprite_scale} : map_x_size {map_x_size} -> {max_x},  map_y_size {map_y_size} -> {max_y}");
+  
     }
 
     public bool OverBackground()
