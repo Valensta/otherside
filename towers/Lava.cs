@@ -85,7 +85,7 @@ public class Lava : MonoBehaviour {
     public void SetLocation(Transform parent, Vector3 _position, float size, Quaternion rotation)
     {
    //     Debug.Log("Setting location for lava\n");
-        this.transform.parent = (parent == null)? Peripheral.Instance.arrows_transform : this.transform.parent = parent;
+        this.transform.SetParent((parent == null)? Peripheral.Instance.arrows_transform : parent);
         this.transform.position = _position;
         
         Vector3 new_scale = (size > 0)? Vector3.one * size : Vector3.one;

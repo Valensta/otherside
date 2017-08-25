@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 [System.Serializable]
 public class LevelMod : IDeepCloneable<LevelMod>
@@ -13,8 +14,9 @@ public class LevelMod : IDeepCloneable<LevelMod>
     public float sensible_wish_uplift = 0;
     public float lull_multiplier_unused = 1f;     //between wavelets
     public float wave_time_multiplier = 1f; //between individual enemies in a wavelet
+    public float destination_time_based_level;
     public Difficulty difficulty = Difficulty.Normal;
-    
+    public List<TowerMaxLevel> tower_max_level_settings;
 
     public override string ToString()
     {
@@ -24,9 +26,9 @@ public class LevelMod : IDeepCloneable<LevelMod>
         if (lull_multiplier_unused != 1) me.Add("lull_mult_" + lull_multiplier_unused);
         if (wave_time_multiplier != 1) me.Add("interval_mult_" + wave_time_multiplier);
         if (remove_lvl_caps) me.Add("nolvlcap");
-        if (me.Count > 0) return string.Join("_", me.ToArray());
-
-        return "default";
+        me.Add($"percent_lvl_xp_per_wave_{destination_time_based_level}");
+        
+        return me.Count > 0 ? string.Join("|", me.ToArray()) : "default";
     }
  
     public void setIntervals(float lull_mult, float interval_mult)
@@ -36,6 +38,8 @@ public class LevelMod : IDeepCloneable<LevelMod>
             
     }
 
+  
+    
     public LevelMod(Difficulty difficulty, float xp_uplift, float dream_uplift, float sensible_wish_uplift, bool remove_lvl_caps)
     {
         this.difficulty = difficulty;
@@ -43,6 +47,18 @@ public class LevelMod : IDeepCloneable<LevelMod>
         this.dream_uplift = dream_uplift;
         this.sensible_wish_uplift = sensible_wish_uplift;
         this.remove_lvl_caps = remove_lvl_caps;
+    }
+
+    public LevelMod(Difficulty difficulty, float xp_uplift, float dream_uplift, float sensible_wish_uplift, bool remove_lvl_caps, float lull_mult, float waveTimeMult, float percent_xp)
+    {
+        this.difficulty = difficulty;
+        this.xp_uplift = xp_uplift;
+        this.dream_uplift = dream_uplift;
+        this.sensible_wish_uplift = sensible_wish_uplift;
+        this.remove_lvl_caps = remove_lvl_caps;
+        this.lull_multiplier_unused = lull_mult;
+        this.wave_time_multiplier = waveTimeMult;
+        this.destination_time_based_level = percent_xp;
     }
 
     public LevelMod(Difficulty difficulty, float xp_uplift, float dream_uplift, float sensible_wish_uplift, bool remove_lvl_caps, float lull_mult, float waveTimeMult)
@@ -54,8 +70,14 @@ public class LevelMod : IDeepCloneable<LevelMod>
         this.remove_lvl_caps = remove_lvl_caps;
         this.lull_multiplier_unused = lull_mult;
         this.wave_time_multiplier = waveTimeMult;
+        this.destination_time_based_level = difficulty == Difficulty.Normal
+            ? 5f
+            : difficulty == Difficulty.Hard
+                ? 4f
+                : difficulty == Difficulty.Insane
+                    ? 3f : 5f;
     }
-
+    
     object IDeepCloneable.DeepClone()
     {
         return this.DeepClone();

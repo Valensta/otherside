@@ -139,7 +139,7 @@ public class Distractor : Modifier
 
                 obj.name = obj.name + Peripheral.Instance.IncrementMonsterCount();
 
-                obj.transform.parent = this.transform.parent;
+                obj.transform.SetParent(transform.parent);
                 obj.SetActive(true);
                 obj.GetComponent<Rigidbody2D>().velocity = direction * init_velocity * 2f;
                 
@@ -166,7 +166,7 @@ public class Distractor : Modifier
                 if (my_shield == null)
                 {
                     my_shield = Peripheral.Instance.zoo.getObject(decoy, false).GetComponent<Decoy>();
-                    my_shield.transform.parent = this.transform;
+                    my_shield.transform.SetParent(transform);
                     my_shield.transform.localPosition = decoy_position;
                     my_shield.transform.localRotation = Quaternion.identity;
                 }

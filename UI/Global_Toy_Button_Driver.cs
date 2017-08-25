@@ -166,7 +166,7 @@ public abstract class Global_Toy_Button_Driver : MonoBehaviour
             RectTransform image = select_me.my_button.image.GetComponent<RectTransform>();
             RectTransform set_to = select_me.my_button.GetComponent<RectTransform>();
 
-            selected_button_image.parent = set_to;
+            selected_button_image.SetParent(set_to);
             selected_button_image.localScale = image.localScale;
 
             //selected_button_image.anchoredPosition = set_to.anchoredPosition;

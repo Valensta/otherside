@@ -63,7 +63,7 @@ public class List_Panel : MonoBehaviour {
         {
             if (setparent)
             {
-                l.transform.parent = this.transform;
+                l.transform.SetParent(transform);
                 l.transform.localScale = Vector3.one;
                 l.transform.localRotation = Quaternion.identity;
                 list.Add(l);
@@ -156,9 +156,19 @@ public class List_Panel : MonoBehaviour {
             case PanelType.Circle:
 
                 //float angle = current * 2 * Mathf.Asin(spacing / (2 * radius));
-                float angle = 2f * Mathf.PI * (float)current / (float)current_buttons;
-                pos.x = radius * Mathf.Cos(angle);
-                pos.y = radius * Mathf.Sin(angle);
+                if (current_buttons < 7)
+                {
+
+                    float angle = 2f * Mathf.PI * (float) current / (float) current_buttons;
+                    pos.x = radius * Mathf.Cos(angle);
+                    pos.y = radius * Mathf.Sin(angle);
+                }
+                else
+                {
+                    bool top = current / current_buttons < 0.5f;
+                    pos.x = (top) ? current * spacing : (current - current_buttons / 2) * spacing;
+                    pos.y = (top) ? spacing * 2f : -spacing * 2f;
+                }
                 return pos;
             case PanelType.Horizontal:
                 pos.x = current * spacing;

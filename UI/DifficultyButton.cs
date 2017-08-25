@@ -39,7 +39,7 @@ public class DifficultyButton : MySelectable {
 
     public override void SetInteractable(bool set)
     {
-        Debug.Log($"DifficultyButton setInteractable {set} -> {button.gameObject.name}\n");
+ //       Debug.Log($"DifficultyButton setInteractable {set} -> {button.gameObject.name}\n");
         Interactable = set;
         button.interactable = set;
     }

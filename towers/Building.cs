@@ -10,7 +10,10 @@ using System;
 public class Building : MonoBehaviour {
 
     public SpriteRenderer construction_sprite;
-    public SpriteRenderer building_sprite;
+    public SpriteRenderer tower_sprite;
+    public SpriteRenderer upgrade_sprite;
+    public  TowerVisual tower_visual;
+    
     public Mini_Toy_Button_Driver construction_indicator = null;
 
     public Toy my_toy;
@@ -22,23 +25,23 @@ public class Building : MonoBehaviour {
     float min_to_show_progress_bar = 0.2f; //if construction takes less time than this, don't bother with a progress bar
     float min_to_show_construction = 0.12f;
 
+        
     public void OnEnable()
     {
-        if (init_construction_time <= 0) init_construction_time = 0.1f;
+        //if (init_construction_time <= 0) init_construction_time = 0.1f;
 
+        /*
         if (my_toy.rune_buttons && my_toy.rune_buttons.upgrade)
-        {
-          //  Debug.Log("Yes\n");
+        {         
             my_toy.rune_buttons.upgrade.gameObject.SetActive(false);
-        }
-        else
-        {
-        //    Debug.Log("Toy has no upgrade visual\n");
-        }
+        }        
+*/
+         if (tower_visual) tower_visual.setUpgrade(false);
+
         
         try
         {
-            if (showConstruction()) Assert.IsNotNull(building_sprite);
+            //if (showConstruction()) Assert.IsNotNull(tower_visual);
             if (showConstruction()) Assert.IsNotNull(construction_sprite);
             Assert.IsNotNull(my_toy);
         }catch(Exception e)
@@ -48,14 +51,16 @@ public class Building : MonoBehaviour {
         }
     }
 
+
+
     public void initStats(Toy toy)
-    {        
+    {
 
         my_toy = toy;
 
         if (!showProgress()) return;
 
-            GameObject buttons = Peripheral.Instance.zoo.getObject("GUI/construction_indicator", false);
+        GameObject buttons = Peripheral.Instance.zoo.getObject("GUI/construction_indicator", false);
         construction_indicator = buttons.GetComponent<Mini_Toy_Button_Driver>();
         construction_indicator.InitMiniDriver(this);
         buttons.SetActive(true);
@@ -65,10 +70,11 @@ public class Building : MonoBehaviour {
 
     void FinishConstruction()
     {
-//Debug.Log("Finished construction\n");
+//        Debug.Log("Finished construction\n");
         if (showConstruction())
         {
-            Show.SetAlpha(building_sprite, 1f);
+            //Show.SetAlpha(building_sprite_parent, 1f);
+            if (tower_visual) tower_visual.setSprite(true);
             Show.SetAlpha(construction_sprite, 0f);
         }
         
@@ -79,17 +85,7 @@ public class Building : MonoBehaviour {
         
         if (my_toy.runetype == RuneType.SensibleCity) Peripheral.Instance.addedCity(true, my_toy);
         
-        if (my_toy.stats.ammo != -1)
-        {
-
-            my_toy.firearm.setAmmo((int) (Mathf.Max(1, my_toy.stats.ammo) *
-                                          (1f + StaticRune.GetTimeBonus(my_toy.rune.runetype, my_toy.rune.toy_type))));
-            
-            my_toy.firearm.InitAmmoPanel();
-        }        
-        else{
-            my_toy.InitRuneButtons();
-        }
+        my_toy.InitHelperPanels(true);
 
 
         if (my_toy.firearm != null && my_toy.firearm.area_effector != null) my_toy.firearm.InitAreaEffector();
@@ -149,22 +145,33 @@ public class Building : MonoBehaviour {
 
     }
 
-    public void StartConstruction()    
-    {
+    public void StartConstruction()
+    {        
         StartConstruction(init_construction_time);
     }
     public void StartConstruction(float time)
     {
         if(my_toy.runetype == RuneType.SensibleCity) Peripheral.Instance.building_a_city = true;
 
+        if (init_construction_time == 0)
+        {
+       //     Debug.Log($"Aborting construction {this.gameObject.name}\n");
+            current_construction_time = -1;
+            construction_in_progress = false;
+            FinishConstruction();
+            return;
+        }
+        
+        my_toy.InitHelperPanels(false);
+       // Debug.Log($"Starting Construction {this.gameObject.name} for {init_construction_time} seconds\n");
         construction_in_progress = true;
-        current_construction_time = time;
-
-        if (init_construction_time == 0) return;
-
+        current_construction_time = time;     
+        
+        
         if (showConstruction())
         {
-            Show.SetAlpha(building_sprite, 0f);
+            //Show.SetAlpha(building_sprite_parent, 0f);
+            if (tower_visual) tower_visual.setSprite(false);
             Show.SetAlpha(construction_sprite, 1f);
         }
 

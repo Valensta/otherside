@@ -9,7 +9,7 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 	private Toy parent;
 	//public Building building_parent;
 	public GameObject status_panel;
-	public SpriteRenderer upgrade;
+	
 	public GameObject time_bonus;
 	public RectTransform XP;
     public Image XP_image;
@@ -24,7 +24,7 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 	private float time_of_last_xp_update = 0f;
 	private float percent_xp;
     //Color upgrade_me_please = new Color(1f, 186f / 255f, 156f / 255f, 0f);
-   
+	private bool upgrade_initialized = false;   
 
 	public void InitMiniDriver(Building p){
    //     Debug.Log("Initializing mini toy button driver as building\n");
@@ -33,6 +33,7 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
         
         level_max = false;//cuz parent is not defined yet at this point
         setXPFull(false);
+		upgrade_initialized = false;
         //building_parent = p;
         canvas.worldCamera = Camera.main;
        // UpdateMe();
@@ -72,7 +73,7 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 
 	private void OnEnable()
 	{
-		if (upgrade) Show.SetAlpha(upgrade,1);
+		//if (upgrade) Show.SetAlpha(upgrade,1);
 
 	}
 
@@ -82,8 +83,8 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 		Sun.OnDayTimeChange -= OnDayTimeChange;
         level_max = false;//no cuz resetting, do it the stupid way
         xp_full = false;
-	    if(upgrade) upgrade.gameObject.SetActive(false);
-
+	    //if(upgrade) upgrade.gameObject.SetActive(false);
+		if (parent && parent.building && parent.building.tower_visual) parent.building.tower_visual.setUpgrade(false);
     }
 
 	public void onWishChanged(Wish w, bool added, bool visible, float delta){
@@ -126,26 +127,17 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 
 	public void InitUpgradeVisual()
 	{
-		if (upgrade) return;
+		if (upgrade_initialized) return;
+		if (!parent || !parent.building || !parent.building.tower_visual) return; 
+		if (parent == null || parent.rune.runetype == RuneType.Castle) return;
 
 		if (!(parent.runetype == RuneType.Sensible || parent.runetype == RuneType.Airy ||
 		      parent.runetype == RuneType.Vexing)) return;
 
-
+		upgrade_initialized = true;
 		Peripheral.onDreamsChanged += onDreamsChanged;
+
 		
-
-		string get_me = "GUI/Toys/" + parent.my_name + "_upgrade_visual";
-		upgrade = Peripheral.Instance.zoo.getObject(get_me, false).GetComponent<SpriteRenderer>();
-
-		Transform to = parent.building.building_sprite.transform;
-
-		upgrade.transform.SetParent(to);
-		upgrade.transform.localScale = Vector3.one;
-		upgrade.transform.localPosition = Vector3.zero;//to.localPosition;
-		upgrade.transform.rotation = Quaternion.identity;
-		upgrade.gameObject.SetActive(false);
-
 	}
 
 	public void SetXP(){
@@ -162,12 +154,18 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
         time_of_last_xp_update = Peripheral.Instance.TIME;
 
         float new_percent_xp = parent.rune.getCurrentLevelXp() / parent.rune.getXpToNextLevel();
-        
-        
-        
-        if (new_percent_xp >= 1){           
-            new_percent_xp = 1f;
-            setXPFull(true);			
+
+
+
+		if (new_percent_xp >= 1)
+		{
+			new_percent_xp = 1f;
+			setXPFull(true);
+			return;
+		}
+		else
+		{
+			if (xp_full) setXPFull(false);
 		}
         if (Mathf.Abs(new_percent_xp - XP.sizeDelta.y) < 0.05) return;
         
@@ -191,6 +189,8 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 
     private void _setColor()
     {
+	    
+	    //if (parent != null) Debug.Log($"{parent.gameObject.name} Setting xp color level_max {level_max} xp_full {xp_full}\n");
         if (XP_image == null) return;
         if (level_max || xp_full)
         {
@@ -201,26 +201,7 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
             XP_image.color = Color.green;
         }
     }
-    /*
-    public void SetLevel(){
-		if (level != null){
-			level.sizeDelta = new Vector2(parent.rune.level/10f, level.sizeDelta.y);		
-		}
-        setLevelMax();
-
-        //level_max = true;
-        setXPFull(false);
-		//these show already purchased upgrades
-		foreach (MyLabel label in labels){
-			if (label.content == "effect" && parent.rune.get(label.effect_type) > 0 ){
-				label.gameObject.SetActive(true);
-
-			}else{
-				label.gameObject.SetActive(false);
-			}
-		}
-	}
-    */
+   
 	public void SetAmmoPercentage(float i){
 		ammo.sizeDelta = new Vector2(i, ammo.sizeDelta.y);
 		//	Debug.Log("Setting ammo " + parent.name + " " + a + " " + ammo.sizeDelta + "\n");
@@ -230,9 +211,9 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 	public void SetAmmo(){
         if (parent.firearm == null) return;
 
-		int a = parent.firearm.Ammo();
-        int max_ammo = parent.firearm.max_ammo;
-        float hey = (float)a / (float)max_ammo;
+		float a = parent.firearm.Ammo();
+        float max_ammo = parent.firearm.max_ammo;
+        float hey = a / max_ammo;
   //      Debug.Log($"{parent.gameObject.name} Ammo {a} / {max_ammo} = {hey}\n");
 
 
@@ -247,9 +228,15 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 	{
 		InitUpgradeVisual();
 
-		if (parent.building.construction_in_progress) return;
+
+		if (parent.building.construction_in_progress)
+		{
+			if (parent.building.tower_visual) parent.building.tower_visual.setUpgrade(false);
+			return;
+		}
+		if (!parent.building.tower_visual || !parent.building.tower_visual.haveUpgrades) return;
 		
-		if (upgrade == null){ return;}
+		//if (upgrade == null){ return;}
 //		Debug.Log("rune_buttons Checking upgrades " + this.parent.name + "\n");
 		bool ok = false;
 		StatSum sum = parent.rune.GetStats(false);
@@ -259,13 +246,15 @@ public class Mini_Toy_Button_Driver : MonoBehaviour {
 				ok = true;
 			}
 		}
-        if (ok == upgrade.gameObject.activeSelf) return;
+        //if (ok == upgrade.gameObject.activeSelf) return;
 
-        setXPFull(false);
+        //setXPFull(false);
         
         SetXP();
-		Show.SetAlpha(upgrade, 1);
-        upgrade.gameObject.SetActive(ok);
+		parent.building.tower_visual.setUpgrade(ok);
+		
+		//Show.SetAlpha(upgrade, 1);
+        //upgrade.gameObject.SetActive(ok);
 	//	Debug.Log("Enabled upgrage visual\n");
 	}
 

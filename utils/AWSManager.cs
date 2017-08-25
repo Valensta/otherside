@@ -73,7 +73,7 @@ ENABLED = true;
         if (midlevel)
         {
             customEvent.AddMetric("health", Peripheral.Instance.GetHealth());
-            customEvent.AddMetric("wave_time", Sun.Instance.current_time_of_day);
+            customEvent.AddMetric("wave_time", Moon.Instance.TIME);
             customEvent.AddAttribute("difficulty", Peripheral.Instance.difficulty.ToString());
         }else
         {

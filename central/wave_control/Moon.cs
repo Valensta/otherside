@@ -2,13 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Security.Cryptography;
 
 
 public class Moon : MonoBehaviour {	
 	private static Moon instance;
 	
 	public float TIME;
-	public List<wave> waves;
+	private List<wave> waves;
     public WishDial[] wish_dials; //ideal spawn counts per wishtype    
     bool wave_in_progress;
 
@@ -34,22 +35,38 @@ public class Moon : MonoBehaviour {
     public static event OnLastWaveletHandler onLastWavelet;
 
     public static Moon Instance { get; private set; }
+
+	public List<wave> Waves
+	{
+		get { return waves; }
+		set
+		{
+			Debug.Log("Setting moon waves\n");
+			waves = value;
+		}
+	}
+
+	private wave my_wave;	
+	private InitWavelet my_wavelet;
+	private float point_factor; //wave point factor
+	private float dmg_xp; //wave point factor
+	private float xp_grant_interval = 1f;
+	private float xp_timer; 
 	
-	wave my_wave;	
-	InitWavelet my_wavelet;
-	float point_factor; //wave point factor
-	float xp_factor; //wave point factor
-
-	bool done;    
-	float wait;
-
+	private bool done;    
+	private float wait;
+	private float time_based_xp;
+	
     public float making_a_wave;
   //  float waiting_for_a_wave_in_progress;
-	bool make_wave;
-	Sun my_sun;
+	private bool make_wave;
+
+	private float total_level_time;
+	private Sun my_sun;
 	public float one_day = 24;
 	public Transform monsters_transform;
 
+	
     public int current_wave;
     public int current_wavelet;
     public int m_count; // Monster within InitEnemyCount counter
@@ -58,9 +75,11 @@ public class Moon : MonoBehaviour {
     //float skip_forward_gap = 3.5f; // if skipping forward due to no enemies to kill, leave this much time before starting the next wavelet
 
     public float extra_end_wait = 0;
+	bool do_xp = true;
 
-    // factor for wave balancing. peripheral has xp_factor that is modifiable by potions
-    public float getWaveXpFactor() => xp_factor;
+	
+    // factor for wave balancing. peripheral has dmg_xp_factor that is modifiable by potions
+    public float getWaveXpFactor() => dmg_xp;
 
     public void SetLevelDuration(float i) => one_day = i;
 
@@ -70,16 +89,22 @@ public class Moon : MonoBehaviour {
 
     public string getEnemyID() => current_wave + "." + current_wavelet + "." + e_count + "." + m_count;
 
-    public int GetWaveCount() => waves.Count;
+    public int GetWaveCount() => Waves != null? Waves.Count : 0;
+
+	public delegate void OnTimeBasedXpAssignedHandler(float xp);
+	public static event OnTimeBasedXpAssignedHandler onTimeBasedXpAssigned;
 
 
-
-
-    public void SetWave(int wave, int wavelet){              
+    public void SetWave(int wave, int wavelet){
+//	    Debug.Log($"Set wave {wave} {wavelet}\n");
+	    if (wave > GetWaveCount()) return; 
 		current_wave = wave;
         current_wavelet = wavelet;
         EagleEyes.Instance.WaveCountUpdate();
 	    
+	    xp_timer = TIME + xp_grant_interval;
+	    if (Waves.Count != 0)Sun.Instance.setWave();
+
     }
 
     public void SetWavelet(int w)
@@ -104,48 +129,81 @@ public class Moon : MonoBehaviour {
 	}
 	public void SetTime(float time)
     {
-        TIME = time;
-        Sun.Instance.SetTimePassively(time);
+        TIME = time;        
     }
 
 	
 
     void onWaveStart(int i){ //i is always current_wave but we need this for eventoverseers
-     
+	    calcTimeBasedXp();
 		InitWave(i);
         Noisemaker.Instance.Play("wave_start");
         if (my_sun == null) my_sun = Sun.Instance;
 	}
 
-	public void InitEmpty(){
-		waves = new List<wave>();
-        SetWave(0,0);
-        
-
-    }
+	
 
 	public void AddWave(wave w){
-		//total_wave_time += w.total_run_time;
-		waves.Add(w);
-		return;
+		if (Waves == null) Waves = new List<wave>();
+//		Debug.Log("Adding a wave\n");
+		Waves.Add(w);
+
+	}
+
+
+	public float calcDestinationLevel(int wave_number)
+	{
+		float total_level_time = 0;		
+		foreach (var wave in Waves) total_level_time += wave.total_run_time;
+		
+		float xp_percent = Peripheral.Instance.getLevelMod().destination_time_based_level;
+		float destination_level = 0f;
+		
+		for (int i = 0; i <= wave_number; i++)
+		{
+			float total_time = Waves[i].total_run_time;			
+			destination_level += xp_percent * total_time / total_level_time;
+		//	Debug.Log($"For wave {i} time: {total_time} level_time: {total_level_time} xp: {xp_percent * total_time / total_level_time}\n");
+		}
+		
+		int whole_lvl = Mathf.FloorToInt(destination_level);
+		float cumulative = (whole_lvl > 0) ? TowerStore.default_xp_req[whole_lvl - 1] : 0;
+		
+		float xp_for_that_level = (whole_lvl > 0)
+			? TowerStore.default_xp_req[whole_lvl] - TowerStore.default_xp_req[whole_lvl - 1]
+			: TowerStore.default_xp_req[whole_lvl];
+		
+		float some_more = xp_for_that_level * (destination_level - whole_lvl);
+		 
+	//	Debug.Log($"For wave: {wave_number} destination_lvl: {destination_level} cumulative {cumulative} + some_more {some_more} xp_percent: {xp_percent} \n");
+		
+		return cumulative + some_more ;
+
 	}
 	
-
-	
+	public void calcTimeBasedXp()
+	{		//I don't like this but whatever
+		float total_xp = calcDestinationLevel(current_wave);
+		float previous_xp = current_wave > 0? calcDestinationLevel(current_wave - 1) : 0f;
+ 					
+		time_based_xp = (total_xp - previous_xp)/ Waves[current_wave].total_run_time;
+		dmg_xp = (total_xp - previous_xp) / Waves[current_wave].monster_count;
+	//	Debug.Log($"Time based XP for wave {current_wave} is {time_based_xp}. Level Time: {Waves[current_wave].total_run_time} total_xp {total_xp} previous_xp {previous_xp}\n");
+	}
 	
     //for use by Distractor
     public void enemySpawned(int wave)
     {
-        if (wave < 0 || wave >= waves.Count) return;
+        if (wave < 0 || wave >= Waves.Count) return;
 
         
-        if (waves[wave].enemies_left < 0)
+        if (Waves[wave].enemies_left < 0)
         {
             Debug.LogError("enemy spawned after we saved the wave?!\n");
             return;
         }
 
-        waves[wave].enemies_left++;
+        Waves[wave].enemies_left++;
     }
 
 
@@ -154,17 +212,17 @@ public class Moon : MonoBehaviour {
     {
        // Debug.Log("Enemy Died for wave " + wave + "\n");
         if (Central.Instance.current_lvl == 0) return; //not on the tutorial
-        if (wave < 0 || wave >= waves.Count) return;
-        waves[wave].enemies_left--;
+        if (wave < 0 || wave >= Waves.Count) return;
+        Waves[wave].enemies_left--;
 
-        if (waves[wave].enemies_left == 0)
+        if (Waves[wave].enemies_left == 0)
         {
             Central.Instance.SaveCurrentGame();
-            waves[wave].enemies_left = -99;
+            Waves[wave].enemies_left = -99;
             return;
         }
 
-        if (waves[wave].enemies_left < 0 && !LevelBalancer.Instance.am_enabled)                    
+        if (Waves[wave].enemies_left < 0 && !LevelBalancer.Instance.am_enabled)                    
             Debug.LogError("enemy Died for wave " + wave + " but we already saved the wave!!?\n");
         
     }
@@ -181,14 +239,14 @@ public class Moon : MonoBehaviour {
 
 
 
-        my_wave = waves[i];
+        my_wave = Waves[i];
 		my_wavelet = null;
 
         LevelMod mod = Peripheral.Instance.getLevelMod();
         point_factor = (mod.dream_uplift + 1f) * my_wave.point_factor();
-		xp_factor = (mod.xp_uplift + 1f) * my_wave.xp_factor();
+		//dmg_xp_factor = (mod.xp_uplift + 1f) * my_wave.xp_factor();
 
-	    Debug.Log($"INITIALIZING WAVE {i} point_factor {point_factor} mod.dream_uplift {mod.dream_uplift} + {Central.Instance.getCurrentDifficultyLevel().ToString()}\n");
+	  //  Debug.Log($"INITIALIZING WAVE {i} point_factor {point_factor} mod.dream_uplift {mod.dream_uplift} + {Central.Instance.getCurrentDifficultyLevel().ToString()}\n");
 	    
         my_wave.enemies_left = (int)my_wave.monster_count;
         done = false;
@@ -198,15 +256,18 @@ public class Moon : MonoBehaviour {
         SetWave(i,0);
         
     }
-    
-    
 
+
+	public void updateMyWave()
+	{
+		my_wave = Waves[current_wave];
+	}
 
     public string getWaveText()
     {
-        if (current_wave < waves.Count - 1)
-            return $"{current_wave+1}.{current_wavelet} out of {waves.Count}";
-        else if (current_wave == waves.Count - 1)        
+        if (current_wave < Waves.Count - 1)
+            return $"{current_wave+1}.{current_wavelet} out of {Waves.Count}";
+        else if (current_wave == Waves.Count - 1)        
             return $"Last Wave! ({current_wave+1}.{current_wavelet})";
         else
             return "Almost\n        there!";
@@ -222,27 +283,25 @@ public class Moon : MonoBehaviour {
         
         foreach (WishDial dial in wish_dials)
         {
-            if (dial.type == type)
-            {
-                float base_adjustment = dial.adjustment;
-                float level_mod = Peripheral.Instance.getLevelMod().sensible_wish_uplift;
-                if (type == WishType.Sensible) base_adjustment *= (1 + level_mod);
+	        if (dial.type != type) continue;
+	        
+	        float base_adjustment = dial.adjustment;
+	        float level_mod = Peripheral.Instance.getLevelMod().sensible_wish_uplift;
+	        if (type == WishType.Sensible) base_adjustment *= (1 + level_mod);
 
-                if (level_mod == -99) return 0; //used by tutorial gameevent
+	        if (level_mod == -99) return 0; //used by tutorial gameevent
 
-                WishDial current_wishes_dial = ScoreKeeper.Instance.getPossibleWish(type);
-                int current_wishes = (current_wishes_dial != null) ? current_wishes_dial.count : 0;
-                    //Peripheral.Instance.my_inventory.GetWishCount(type);
-                float max_wishes = (float)(dial.count);
+	        WishDial current_wishes_dial = ScoreKeeper.Instance.getPossibleWish(type);
+	        int current_wishes = (current_wishes_dial != null) ? current_wishes_dial.count : 0;
+	        //Peripheral.Instance.my_inventory.GetWishCount(type);
+	        float max_wishes = (float)(dial.count);
 
-                if (current_wishes < max_wishes * 0.50f) return base_adjustment;
-                if (current_wishes < max_wishes * 0.75f) return base_adjustment * 0.8f;
-                if (current_wishes < max_wishes) return base_adjustment * 0.6f;
+	        if (current_wishes < max_wishes * 0.50f) return base_adjustment;
+	        if (current_wishes < max_wishes * 0.75f) return base_adjustment * 0.8f;
+	        if (current_wishes < max_wishes) return base_adjustment * 0.6f;
                 
              
-                return base_adjustment*.50f;
-
-            }
+	        return base_adjustment*.50f;
         }
         return 1;
     }
@@ -255,14 +314,12 @@ public class Moon : MonoBehaviour {
         Dictionary<string, Int> monster_count = new Dictionary<string, Int>();
 
         //get total monster count
-        foreach (wave w in waves)
+        foreach (wave w in Waves)
         {
             foreach (InitWavelet wlet in w.wavelets)
-            {
-                
-                List<Wish> inventory;
+            {                                
                 foreach (InitEnemyCount e in wlet.enemies) {
-                    Int count = null;
+                    Int count;
                     monster_count.TryGetValue(e.name, out count);                    
                     if (count == null) monster_count.Add(e.name, new Int(e.c)); else count.value += e.c;
                     
@@ -330,58 +387,78 @@ public class Moon : MonoBehaviour {
 
     }
 
+	
+	
 
-    void Update () {
+    void Update() {
 
         if (!WaveInProgress) { return; }
+       
+	    Sun.Instance.SetTime();
+	    
+        TIME += Time.deltaTime;
 
-        
+	    do_xp = true;
 
-            TIME += Time.deltaTime; 
 
         if (monsters_transform.childCount == 0 && (wait - TIME) > Get.getSkipForwardGap(Central.Instance.current_lvl))
         {
-
             int buffer = 2;
-            Debug.Log($"!!!!! {current_wave}.{current_wavelet} wavelet defined {my_wavelet!=null} SKIPPED {TIME - wait - buffer} seconds!\n");
-            
+            Debug.Log($"!!!!! {current_wave}.{current_wavelet} wavelet defined {my_wavelet!=null} SKIPPED {TIME - wait - buffer} seconds!\n");           
 
             Tracker.Log(PlayerEvent.WaveTiming, true,
-              customAttributes: new Dictionary<string, string>(){ { "attribute_1", $"{current_wave}.{current_wavelet} wavelet defined {my_wavelet!=null}"  },
-                  {"attribute_2", "SKIPPED" } },
-              customMetrics: new Dictionary<string, double>() { { "metric_1",(TIME - wait - buffer)} });
+              new Dictionary<string, string>{ { "attribute_1", $"{current_wave}.{current_wavelet} wavelet defined {my_wavelet!=null}"  },
+                  {"attribute_2", "SKIPPED" } }, new Dictionary<string, double> { { "metric_1",(TIME - wait - buffer)} });
             
-            TIME = wait - buffer; // if we ran out of enemies, let's speed things along
-
+            TIME = wait - buffer; // if we ran out of enemies, let's speed things along	      
+	        do_xp = false;
         }
-        if (!balanceMode()) my_sun.SetTime(TIME);
         
+       
 
-        if (my_wavelet == null)
-        {
-            if (monsters_transform.childCount >= 3)
-            {
-                extra_end_wait += Time.deltaTime;
-                return;
-            }
-            else
-            {
-                TIME = wait;                
-                Debug.Log($"!!!!! Extra end wait {current_wave}.{current_wavelet} wavelet defined {my_wavelet!=null} was {extra_end_wait}\n");
+	    if (my_wavelet == null)
+	    {
+		    if (monsters_transform.childCount >= 3)
+		    {
+			    extra_end_wait += Time.deltaTime;
+			    return;
+		    }
 
-                Tracker.Log(PlayerEvent.WaveTiming, true,
-                            customAttributes: new Dictionary<string, string>(){ { "attribute_1", $"{current_wave}.{current_wavelet} wavelet defined {my_wavelet!=null}"  },
-                                                                        {"attribute_2", "WAITED" } },
-                      customMetrics: new Dictionary<string, double>() { { "metric_1", extra_end_wait } });
-                
-                
-                extra_end_wait = 0f;
-            }
-        }
-        if (wait > 0 && TIME < wait) {  return;}
+		    TIME = wait;
+		    Debug.Log($"!!!!! Extra end wait {current_wave}.{current_wavelet} wavelet defined {my_wavelet != null} was {extra_end_wait}\n");
+
+		    Tracker.Log(PlayerEvent.WaveTiming, true,
+			    new Dictionary<string, string>
+			    {
+				    {"attribute_1", $"{current_wave}.{current_wavelet} wavelet defined {my_wavelet != null}"},
+				    {"attribute_2", "WAITED"}
+			    },
+			    new Dictionary<string, double>() {{"metric_1", extra_end_wait}});
 
 
-        if (!done){
+		    extra_end_wait = 0f;		  
+		    do_xp = false;
+
+	    }
+	    
+	    if (!LevelBalancer.Instance.am_enabled)
+		    if (do_xp)
+		    {
+			    if (TIME > xp_timer)
+			    {
+				    // Debug.Log($"Wave {current_wave} doing XP assignment {time_based_xp} {Time.realtimeSinceStartup} TIME {TIME} xp_timer {xp_timer}\n");			    
+				    onTimeBasedXpAssigned?.Invoke(time_based_xp);
+				    xp_timer += xp_grant_interval;
+			    }
+		    }
+		    else
+		    {
+			    xp_timer = TIME + xp_grant_interval;
+		    }
+
+	    if (wait > 0 && TIME < wait) {  return;}
+	    
+	    if (!done){
 			if (my_wavelet == null || my_wavelet.GetMonsterCount() == 0)
             {             
                 if (current_wavelet < my_wave.wavelets.Count){
@@ -483,10 +560,7 @@ public class Moon : MonoBehaviour {
     
     IEnumerator makeMonster(string m, int p)
     {
-        HitMe monster = Peripheral.Instance.makeMonster(m, p, point_factor, xp_factor);
-
-
-        
+        Peripheral.Instance.makeMonster(m, p, point_factor, dmg_xp);
 
         yield return null;
     }

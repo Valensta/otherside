@@ -53,7 +53,8 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
             l.SetHidden(false);
         }
         selected_button_image.gameObject.SetActive(false);
-        selected_island_image.sprite = TowerStore.getImage(RuneType.Null, ToyType.Null);
+        selected_island_image.sprite = TowerStore.getPreviewSprite(RuneType.Null, ToyType.Null);
+        selected_button_image.gameObject.SetActive(false);
     }
 
     public void SelectButton(Mobile_Toy_Button button, bool set)
@@ -97,7 +98,7 @@ public class Island_Floating_Button_Driver : MonoBehaviour {
 
     public void setSelectedIslandImage(RuneType runeType, ToyType toyType)
     {
-        selected_island_image.sprite = TowerStore.getImage(runeType, toyType);
+        selected_island_image.sprite = TowerStore.getPreviewSprite(runeType, toyType);
 
         if (selected_island == null) return;
 

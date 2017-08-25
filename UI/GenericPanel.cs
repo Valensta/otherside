@@ -68,7 +68,7 @@ public class GenericPanel : MonoBehaviour {
         {
             if (setparent)
             {
-                l.transform.parent = this.transform;
+                l.transform.SetParent(transform);
                 l.transform.localScale = Vector3.one;
                 l.transform.localRotation = Quaternion.identity;
                 list.Add(l);
@@ -161,12 +161,27 @@ public class GenericPanel : MonoBehaviour {
         switch (panel_type)
         {
             case PanelType.Circle:
-
                 //float angle = current * 2 * Mathf.Asin(spacing / (2 * radius));
-                float angle = 2f * Mathf.PI * (float)current / (float)current_buttons;
-                pos.x = radius * Mathf.Cos(angle) + x_offset;
-                pos.y = radius * Mathf.Sin(angle) + y_offset;
+                if (current_buttons < 6)
+                {
+
+                    float angle = 2f * Mathf.PI * (float)current / (float)current_buttons;
+                    pos.x = radius * Mathf.Cos(angle) + x_offset;
+                    pos.y = radius * Mathf.Sin(angle) + y_offset;
+                }
+                else
+                {
+                    
+                    
+                    float half = (float)current_buttons / 2f;
+                    float top_row = Mathf.Ceil((float)current_buttons / 2f);
+                    bool top = current < top_row;
+                    float bottom_row = current_buttons - top_row;
+                    pos.x = (top) ? spacing * (current - top_row/2f + 0.5f)  : spacing *(current - top_row - bottom_row/2f + 0.5f);
+                    pos.y = (top) ? spacing : -spacing ;
+                }
                 return pos;
+                
             case PanelType.Horizontal:
                 pos.x = (dynamic_spacing)? (float)current * ((float)max_width / (float)(current_buttons - 1f)) : current * spacing;
 

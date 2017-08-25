@@ -401,7 +401,7 @@ public class SaveGame
         } else
         {            
             int current_wave = getCurrentWave();
-            if (current_wave > 0) description += " Wave: " + current_wave;
+            if (current_wave > 0) description += " Wave: " + (current_wave + 1);
             string diff = Get.getDifficultyText(getCurrentDifficulty());             
             if (!diff.Equals("")) description += "    (" + diff + ")";
         }

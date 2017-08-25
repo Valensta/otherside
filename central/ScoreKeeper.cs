@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine.UI;
 [System.Serializable]
 public class ScoreDetails
@@ -315,8 +316,15 @@ public class ScoreKeeper : MonoBehaviour {  // THIS IS INTRA LEVEL
 
         float expected_level_time = 30f; //in seconds, minimum for preparation or whatever
 
-        foreach (wave w in Moon.Instance.waves)
-            expected_level_time += w.total_run_time;
+        foreach (wave w in Moon.Instance.Waves)
+        {
+            float extra = 0f;
+            foreach (InitWavelet wlet in w.wavelets)
+            {
+                extra += wlet.end_wait;
+            }
+            expected_level_time += w.total_run_time + extra;
+        }
         float time_factor = 0.25f;
 
         //so tiny because we decided to device score by 5

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 //AKA SKILL TREE
 [System.Serializable]
@@ -34,6 +35,7 @@ public class RuneSaver// : IDeepCloneable<RuneSaver>
     public bool hero;
     public ToyType toy_type;
     
+    
     public RuneSaver()
     {
     }  
@@ -51,14 +53,14 @@ public class Rune
     public int level = 0;
     public float[] xp_reqs;    
     public float xp = 0;
-    int max_level = 1;   //saved by unitStats    
+    int max_level;   //saved by unitStats    
     public float invested_cost;
     public int order = -1;
     public float distance_bonus = 0f;    
     //public bool hero;    
     public ToyType toy_type;
-    
 
+    private float dmg_xp = 0;
     public delegate void OnCanUpgradeHandler(RuneType type);
     public static event OnCanUpgradeHandler onCanUpgrade;
 
@@ -102,8 +104,11 @@ public class Rune
         xp = saver.xp;
         distance_bonus = saver.distance_bonus;
         order = saver.order;
-        if (saver.max_level < 1) saver.max_level = 1;
-        setMaxLevel(saver.max_level);
+        
+        if (saver.max_level < 0) saver.max_level = 0;
+        int max_level = Mathf.Max(saver.max_level,
+            LevelStore.getMaxLevel(Central.Instance.current_lvl, Peripheral.Instance.difficulty, runetype, toy_type));
+        setMaxLevel(max_level);
 
         Sun.OnDayTimeChange += OnDayTimeChange;
         StaticRune.assignStatBits(ref stats, this);
@@ -122,14 +127,14 @@ public class Rune
     public void initStats(RuneType rtype, int _max_lvl, ToyType _toy_type)
     {        
         runetype = rtype;
-        if (_max_lvl < 1) _max_lvl = 1;
+        if (_max_lvl < 0) _max_lvl = 0;
         setMaxLevel(_max_lvl);
         
         toy_type = _toy_type;
         invested_cost = 0;
         Sun.OnDayTimeChange += OnDayTimeChange;
         StaticRune.assignStatBits(ref stats, this);
-
+        dmg_xp = 0f;
         setXpReqs();
     
         UpdateStats();
@@ -137,31 +142,7 @@ public class Rune
 
     void setXpReqs()
     {
-
-        
-        switch (toy_type)
-        {
-            case ToyType.Hero:
-                if (runetype == RuneType.Castle)
-                {                    
-                    this.xp_reqs = new float[12] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                }
-                else
-                {
-                    this.xp_reqs = new float[12] { 200, 400, 800, 1800, 3400, 6000, 14000, 27000, 55000, 110000, 230000, 46000 };
-                    xp_reqs[0] = 60f;
-                    xp_reqs[1] = 180f;
-                }
-                break;
-            case ToyType.Normal:                
-                this.xp_reqs = new float[12] { 40, 130, 380, 700, 1400, 3000, 6000, 12000, 24000, 48000, 96000,192000};
-                break;
-            case ToyType.Temporary:
-                this.xp_reqs = new float[12] { 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000 };
-                break;
-        }
-        
-
+        xp_reqs = TowerStore.getXpReqs(toy_type, runetype);
     }
     
     public void InitHero(int level)
@@ -179,7 +160,7 @@ public class Rune
 
         for (int i = 0; i < Mathf.Min(level, getMaxLevel()); i++)
         {
-            addXp(xp_reqs[i] + 1);
+            addXp(xp_reqs[i] + 1, false);
         //    Debug.Log("Hero got " + dreams + " dreams\n");
             Peripheral.Instance.addDreams(dreams, Vector3.zero, false);                
             dreams += 5f;
@@ -241,6 +222,7 @@ public class Rune
     {
 
         float current_time_bonus = StaticRune.GetTimeBonus(runetype, toy_type);
+        if (stats == null) return;
         for (int i = 0; i < stats.Length; i++)
         {
             //if (!stats[i].active) continue;
@@ -253,6 +235,7 @@ public class Rune
         //     Debug.Log("Updating stats " + stats.Length + "\n");
         int actives = 0;
         int special_actives = 0;
+        if (stats == null) return;
         for (int i = 0; i < stats.Length; i++)
         {
             bool special = Get.isSpecial(stats[i].effect_type);
@@ -391,7 +374,7 @@ public class Rune
         return null;
     }
 
-    public float addXp(float _xp)
+    public float addXp(float _xp, bool damage_based)
     {
         int lvl_cap = getMaxLevel();
         if (xp_reqs.Length <= lvl_cap) { Debug.Log("WTF\n"); return _xp; }
@@ -402,6 +385,8 @@ public class Rune
         
         float add_me = Mathf.Min(xp_cap - xp, _xp);
         xp += add_me;
+        if (damage_based) dmg_xp += add_me; //for testing purposes only
+        
      //   Debug.Log("Added " + add_me + " xp\n");
         return _xp - add_me;
 
@@ -427,7 +412,7 @@ public class Rune
 
     public void setMaxLevel(int _max_level)
     {
- //       Debug.Log(runetype + " " + toy_type + " Setting MaxLevel " + _max_level + "\n");
+        Debug.Log(runetype + " " + toy_type + " Setting MaxLevel " + _max_level + "\n");
         max_level = _max_level;
     }
 

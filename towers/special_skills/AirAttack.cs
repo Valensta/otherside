@@ -125,9 +125,9 @@ public class AirAttack : Interactable, IPointerUpHandler, IPointerDownHandler
             lava.SetFactor(1f);
             lava.gameObject.SetActive(true);
             line_string.Append("|");
-            line_string.Append(target.x);
+            line_string.Append(Get.Round(target.x,2));
             line_string.Append("_");
-            line_string.Append(target.y);
+            line_string.Append(Get.Round(target.y,2));
             yield return new WaitForSeconds(intra_bullet_delay);
         }
 

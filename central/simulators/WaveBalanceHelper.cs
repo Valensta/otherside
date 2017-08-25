@@ -59,7 +59,7 @@ public class WaveBalanceHelper : MonoBehaviour{
 */
     public void CalcStatsByWavelet(bool summary)
     {
-        List<wave> waves = Moon.Instance.waves;
+        List<wave> waves = Moon.Instance.Waves;
         stats = new List<WaveStat>();
 
         for (int wave_number = 0; wave_number < waves.Count; wave_number++)
@@ -94,7 +94,7 @@ public class WaveBalanceHelper : MonoBehaviour{
 
     public void CalcStatsByWave(bool summary)
     {
-        List<wave> waves = Moon.Instance.waves;
+        List<wave> waves = Moon.Instance.Waves;
         stats = new List<WaveStat>();
         for (int wave_number = 0; wave_number < waves.Count; wave_number++)
         {

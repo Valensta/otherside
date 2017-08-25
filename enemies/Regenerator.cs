@@ -153,9 +153,9 @@ public class Regenerator : Modifier
     void EnableVisuals(HitMe me, float timer)
     {
         if (rate > 0)
-            me.EnableVisuals(MonsterType.Mass, timer);
-        else
             me.EnableVisuals(MonsterType.Regeneration, timer);
+        else
+            me.EnableVisuals(MonsterType.DOT, timer);
     }
 
     void HealMe()

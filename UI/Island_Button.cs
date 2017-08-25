@@ -15,7 +15,7 @@ public class Island_Button : MonoBehaviour, IPointerClickHandler, IDropHandler, 
 {
     public string content = "";
     public string ID = "";
-    public bool blocked = false;
+    private bool blocked = false;
     public GameObject parent;
     public GameObject explosion_parent;
     public float size = 1;
@@ -39,6 +39,12 @@ public class Island_Button : MonoBehaviour, IPointerClickHandler, IDropHandler, 
     float press_timer;
     float move_hero_when_timer = 0.35f;
 
+    public void setBlocked(bool am_blocked){
+        if (my_sprite) my_sprite.gameObject.SetActive(!am_blocked);
+        blocked = am_blocked;
+    }
+
+    public bool isBlocked() => blocked;
     public void setID()
     {
        ID = island_type + "_" + Get.Round(transform.position.x, 1) + "_" + Get.Round(transform.position.y, 1);
@@ -118,8 +124,8 @@ public class Island_Button : MonoBehaviour, IPointerClickHandler, IDropHandler, 
         else
         {
             Sprite new_sprite = null;
-            //if (new_type == IslandType.Permanent) new_sprite = Get.getSprite("Levels/red_island");
-            //else new_sprite = Get.getSprite("Levels/blue_island");
+            //if (new_type == IslandType.Permanent) new_sprite = Get.getPreviewSprite("Levels/red_island");
+            //else new_sprite = Get.getPreviewSprite("Levels/blue_island");
             try
             {
 

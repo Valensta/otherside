@@ -39,7 +39,7 @@ public class LevelList : MonoBehaviour {
 
     void onScoreUpdate(int score)
     {
-        Debug.Log("LevelList Onscoreupdate\n");
+    //    Debug.Log("LevelList Onscoreupdate\n");
         special_skill_button_driver.CheckUpgrades();
         setScore();
         setUpgradeFlag();
@@ -51,7 +51,7 @@ public class LevelList : MonoBehaviour {
 
         Difficulty max_diff = level_mod[level_mod.Count - 1].difficulty;
         bool insane_allowed = ScoreKeeper.Instance.checkIfAlreadyHaveScore(Central.Instance.current_lvl, Difficulty.Hard);
-        Debug.Log($"Max is {max_diff} insane allowed? {insane_allowed}\n");
+      //  Debug.Log($"Max is {max_diff} insane allowed? {insane_allowed}\n");
         if (max_diff == Difficulty.Insane)
         {
                                     
@@ -75,7 +75,7 @@ public class LevelList : MonoBehaviour {
 
     void setDifficultyButton(int i, bool active, bool interactable, bool selected)
     {
-        Debug.Log($"Setting {((DifficultyButton)difficulty_buttons.toggles[i]).type} active {active} interactable {interactable}\n");
+     //   Debug.Log($"Setting {((DifficultyButton)difficulty_buttons.toggles[i]).type} active {active} interactable {interactable}\n");
         ((DifficultyButton)difficulty_buttons.toggles[i]).SetInteractable(interactable);            
         difficulty_buttons.toggles[i].gameObject.SetActive(active);
         difficulty_buttons.toggles[i].Selected = selected;
@@ -122,7 +122,7 @@ public class LevelList : MonoBehaviour {
 
     public void SetDifficulty()
     {
-        Debug.Log("Settting difficulty from SLIDER\n");
+    //    Debug.Log("Settting difficulty from SLIDER\n");
         Difficulty diff = _transformSliderDifficulty();
 
         SetDifficulty(diff);

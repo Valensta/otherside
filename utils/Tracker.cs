@@ -62,6 +62,14 @@ public static class Tracker {
                 Encoding.UTF8.GetString(Encoding.Default.GetBytes(customAttributes["attribute_2"]));
             
         }
+
+        if (customAttributes != null)
+        {
+            if (customAttributes.ContainsKey("attribute_2") && customAttributes["attribute_2"].Length > 255)
+                customAttributes["attribute_2"] = customAttributes["attribute_2"].Substring(0, 254);
+            if (customAttributes.ContainsKey("attribute_1") && customAttributes["attribute_1"].Length > 255)
+                customAttributes["attribute_1"] = customAttributes["attribute_1"].Substring(0, 254);
+        }
         
         customAttributes = (customAttributes == null) ? new Dictionary<string, string>() : customAttributes;
         customMetrics = (customMetrics == null) ? new Dictionary<string, double>() : customMetrics;

@@ -23,21 +23,21 @@ public class Converter : Modifier {
 
         if (am_transformed) return true;
 
-
+/*
         float finisher_percent = (stats.Length == StaticStat.StatLength(EffectType.Transform, true)) ? stats[2]/100f : 0;
         if (finisher_percent > 0 && UnityEngine.Random.RandomRange(0, 1) < finisher_percent)
         {
             after = TransformType.Whale;
             timer = 99f;
         }
-        
+       
         else
-        {
+        {*/
             bool flying = (_hitme.gameObject.layer == Get.flyingProjectileLayer); 
             
             if (roll < stats[0])                
                 after = (flying)? TransformType.FruitFly :  TransformType.StickFigure;        
-        }
+        //}
 
 
         if (!ValidateMe(after))

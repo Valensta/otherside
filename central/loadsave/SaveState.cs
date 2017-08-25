@@ -19,8 +19,8 @@ public class SaveState: System.Object {
 	public List<unitStatsSaver> actor_stats = new List<unitStatsSaver> ();
 	public List<RuneSaver> hero_stats = new List<RuneSaver>();
     public List<SpecialSkillSaver> skills_in_inventory = new List<SpecialSkillSaver>();
-
-	public float time_of_day;
+	
+    
     public List<string> concurrent_events = new List<string>();
     public List<Wish> wishes = new List<Wish>();
     public List<Reward> rewards = new List<Reward>();
@@ -168,14 +168,13 @@ public void resetMidLevelStuff()
     public void SaveBasicMidLevelShit(){
 
     //    Debug.Log("Savig basic midlevel shit\n");
-        time_of_day = Sun.Instance.current_time_of_day;
-
         dreams = Peripheral.Instance.dreams;
         health = Peripheral.Instance.GetHealth();
         current_wave = Moon.Instance.GetCurrentWave();
         difficulty = Peripheral.Instance.difficulty;
         //SaveState saver = new SaveState(dreams, health, current_wave, 0, 0, 0, sens_h, airy_h, vex_h, difficulty);
         current_level = Central.Instance.current_lvl;
+     
     }
 
     public void LoadWishes()

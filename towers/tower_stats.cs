@@ -186,7 +186,7 @@ public class tower_stats : IDeepCloneable<tower_stats>
         {
             if (stat.effect_type == type)
             {
-                if (stat.skill_stats[lvl].xp == 0 && xp > 0) stat.skill_stats[lvl].wave_start = Sun.Instance.current_time_of_day;
+                if (stat.skill_stats[lvl].xp == 0 && xp > 0) stat.skill_stats[lvl].wave_start = Moon.Instance.TIME;
                 stat.skill_stats[lvl].xp = xp;
             }
         }
@@ -198,7 +198,7 @@ public class tower_stats : IDeepCloneable<tower_stats>
         foreach (skill_stat_group stat in skill_stats)
         {
             if (stat.effect_type == type) {
-                if (stat.skill_stats[lvl].xp == 0 && xp > 0) stat.skill_stats[lvl].wave_start = Sun.Instance.current_time_of_day;
+                if (stat.skill_stats[lvl].xp == 0 && xp > 0) stat.skill_stats[lvl].wave_start = Moon.Instance.TIME;
                 stat.skill_stats[lvl].xp += xp;
                 return;
             }

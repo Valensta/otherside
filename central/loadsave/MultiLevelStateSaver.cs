@@ -21,10 +21,14 @@ public class MultiLevelStateSaver : MonoBehaviour {
     public void toggleSaveGamePanel()
     {
       //  Debug.Log("Toggle savegame panel to " + !savegame_panel.activeSelf + "\n");
+      EnableMe(!savegame_panel.activeSelf);
+    }
+
+    public void EnableMe(bool set)
+    {
         savegame_panel.SetActive(!savegame_panel.activeSelf);
         if (savegame_panel.activeSelf) Init();
     }
-
     public void OnEnable()
     {
         //Init();
@@ -299,6 +303,7 @@ public class MultiLevelStateSaver : MonoBehaviour {
                     customMetrics: new Dictionary<string, double> { { "metric_1", persistent.current_level } });
 
                 Central.Instance.updateCost(0);
+                Moon.Instance.SetWave(0,0);
                 Central.Instance.changeState(GameState.InGame);
 
                 break;

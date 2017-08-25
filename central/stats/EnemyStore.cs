@@ -86,7 +86,7 @@ public static class EnemyStore
             }
                 
         }
-        Debug.Log($"{type} -> {mass} -> {mass / (1 - total_num / total_denum)}\n");
+//        Debug.Log($"{type} -> {mass} -> {mass / (1 - total_num / total_denum)}\n");
         return mass / (1 - total_num / total_denum);
     }
 

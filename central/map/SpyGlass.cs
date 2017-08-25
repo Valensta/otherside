@@ -57,8 +57,7 @@ public class SpyGlass : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, I
     {
 
         bool mouse = EventSystem.current.IsPointerOverGameObject();
-        bool touch = false;
-        if (Input.touchCount > 0 && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)) touch = true;
+        bool touch = Input.touchCount > 0 && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
 
         //Debug.Log("Over background>? " + blah + "\n");
         return mouse || touch;
@@ -71,7 +70,7 @@ public class SpyGlass : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, I
         my_transform.position = init_position;
         initiated = false;
     }
-	
+    
 	public void DisableByEvent(bool _enabled){        
         disabled_by_event= _enabled;
         initiated = false;
@@ -178,17 +177,13 @@ public class SpyGlass : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, I
 
         //if (disabled_by_event || disabled_by_drag_button || disabled_by_gamestate) return;
         if (!initiated) return;
+        if (!OverBackground()) return;
 
-        if (!OverBackground())
+        if (Peripheral.Instance.getCurrentTimeScale() == TimeScale.SuperFastPress)
         {
-        //   Debug.LogError("not over background\n");
+            initiated = false;
             return;
-        }
-     //   if (!EventSystem.current.IsPointerOverGameObject()) return;
-      //  if (!EventSystem.current.IsPointerOverGameObject(-1)) return;
-
-
-
+        } 
 
         if (Input.GetMouseButtonDown (0)) {
             //  Debug.LogError("Got mouse button down\n");

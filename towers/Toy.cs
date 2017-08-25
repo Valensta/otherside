@@ -1,8 +1,10 @@
+using System.CodeDom;
 using UnityEngine;
 using System.Collections;
 using System.Text;
 using System.IO;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine.EventSystems;
 
 
@@ -51,16 +53,50 @@ public class Toy : MonoBehaviour {
     public delegate void PriceUpdateHandler(string type, float price);
     public static event PriceUpdateHandler onPriceUpdate;
 
+
+    protected void onUpgrade(EffectType type, int ID)
+    {
+        if (!building.tower_visual) return;
+        if (Get.isSpecial(type)) return;
+        if (ID != rune.ID) return;
+
+//        Debug.Log($"Toy setting sprite upon upgrade for type {type}\n");
+        building.tower_visual.updateVisuals();
+         building.tower_visual.setSprite(true);
+
+    }
+
     
-
-
     public void SetBonus(float bonus) {
         //if (toy_type == ToyType.Building)
         rune.distance_bonus = bonus;
        
     }
 
-    
+    public void InitHelperPanels(bool set)
+    {
+//        Debug.Log($"Init helper panels {gameObject.name} {set}\n");
+        if (!set)
+        {
+            if (rune_buttons != null) rune_buttons.gameObject.SetActive(false);
+            if (firearm && firearm.ammo_panel) firearm.ammo_panel.gameObject.SetActive(false);
+            return;
+        }
+        
+        if (stats.ammo != -1)
+        {
+            
+            firearm.setAmmo((int) (Mathf.Max(1, stats.ammo) *
+                                          (1f + StaticRune.GetTimeBonus(rune.runetype, rune.toy_type))));
+
+            firearm.InitAmmoPanel();
+        }
+        else
+        {
+            InitRuneButtons();
+        }
+    }
+
     public void initStats(unitStats s, Vector3 scaleV, Island_Button i, string _name, Rune _rune)    {
         tilesize = i.getPeripheral().tileSize;
         stats = s;
@@ -68,22 +104,34 @@ public class Toy : MonoBehaviour {
         my_name = _name;
         my_tower_stats = new tower_stats();
         my_tower_stats.island_name = string.Copy(i.ID);
-        my_tower_stats.wave_time = Sun.Instance.current_time_of_day;
+        my_tower_stats.wave_time = Moon.Instance.TIME;
         my_tower_stats.initSkillStats(runetype);
-
-        float bonus = StaticRune.GetDistanceBonus(my_name, this.transform.position, this);
-
+        if (building.tower_visual)
+        {
+            building.tower_visual.updateVisuals();
+            building.tower_visual.setSprite(true);
+        }
+        
+        Rune.onUpgrade += onUpgrade;
+        
+        float bonus = 0f;
+      //  float bonus = StaticRune.GetDistanceBonus(my_name, this.transform.position, this);
+        Debug.Log($"TOY Initializing {toy_type} {runetype}\n");
         if (_rune == null || toy_type != ToyType.Hero)
         {
             rune = new Rune();
             SetBonus(bonus);
-            rune.initStats(runetype, stats.getMaxLvl(), toy_type);
+            int max_lvl = LevelStore.getMaxLevel(Central.Instance.current_lvl, Peripheral.Instance.difficulty, runetype, toy_type);
+            
+            rune.initStats(runetype, max_lvl, toy_type);
+            Debug.Log($"TOY Initializing {toy_type} {runetype} new rune lvl {max_lvl}\n");
         }
         else
         {
             SetBonus(bonus);
             rune = _rune;
             rune.UpdateStats();
+            Debug.Log($"TOY Initializing {toy_type} {runetype} EXISTING rune lvl {rune.getMaxLevel()}\n");
         }
         Active = true;
         island = i;
@@ -111,6 +159,8 @@ public class Toy : MonoBehaviour {
         if (firearm != null) firearm.initStats(this);
         //if (rune_buttons != null) rune_buttons.UpdateMe(); // ghost towers don't get their own rune buttons
         TIME_AT_START = Time.time;
+        
+       
     }
 
     public ToySaver getSnapshot()
@@ -145,7 +195,7 @@ public class Toy : MonoBehaviour {
 #else //ugh awkward
         my_tower_stats = new tower_stats();
         my_tower_stats.island_name = string.Copy(island.transform.parent.name);
-        my_tower_stats.wave_time = Sun.Instance.current_time_of_day;
+        my_tower_stats.wave_time = Moon.Instance.TIME;
         my_tower_stats.initSkillStats(runetype);
 #endif
 
@@ -173,6 +223,7 @@ public class Toy : MonoBehaviour {
     {
         if (rune_buttons != null)
         {
+            rune_buttons.gameObject.SetActive(true);
             rune_buttons.InitMiniDriver(this);
             return;
         }
@@ -225,6 +276,8 @@ public class Toy : MonoBehaviour {
 		
 	public void OnDisable()
     {
+        
+       Rune.onUpgrade -= onUpgrade;
        if(firearm != null) firearm.Active = false;        
         Active = false;
         
@@ -242,8 +295,8 @@ public class Toy : MonoBehaviour {
 			Peripheral.Instance.decrementToys();
 		if (island != null) {
             island.my_toy = null;
-            island.blocked = false;
-            transform.parent = null;            
+            island.setBlocked(false);
+            transform.SetParent(null);            
 		}
 
 

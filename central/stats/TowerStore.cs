@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using UnityEngine.UI;
 
 [System.Serializable]
@@ -16,6 +17,12 @@ public static class TowerStore
     public static float lowmid_defense = 0.35f;
     public static float mid_defense = 0.50f;
     public static float high_defense = 0.75f;
+
+    public static float[] default_xp_req;
+
+    private static string basic_dir = "GUI/Toys/Basic"; 
+    private static string upgrades_dir = "GUI/Toys/Upgrades";
+    private static string image_dir = "GUI/Toys/Images/";
 
     public static void initTowers()
     {
@@ -38,6 +45,7 @@ public static class TowerStore
 
         Central.Instance.setUnitStats(getBasicStats(RuneType.Castle, ToyType.Normal), false);
 
+        initDefaultXp();
 
     }
     public static unitStats getBasicStats(RuneType runetype, ToyType toytype)
@@ -153,8 +161,33 @@ public static class TowerStore
 
     }
 
+    public static float[] getXpReqs(ToyType toyType, RuneType runeType)
+    {// THIS IS CUMULATIVE, NOT XP NEEDED PER LEVEL
+        switch (toyType)
+        {
+            case ToyType.Hero:
+                return runeType == RuneType.Castle ? new float[12] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} : 
+                    new float[12] {150, 320, 510, 720, 950, 1200, 1470, 1760, 2070, 2400, 2750, 3120};                                    
+                
+            case ToyType.Normal: 
+                //return new float[12] {40, 130, 380, 700, 1400, 3000, 6000, 12000, 24000, 48000, 96000, 192000};
+                return new float[12] {100,220, 360, 520, 700, 900, 1120, 1360, 1620, 1900, 2200, 2520};
+                
+            default:
+                return new float[12] {10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000};                
+        }
+    }
 
+    public static void initDefaultXp()
+    {
+        default_xp_req = getXpReqs(ToyType.Normal, RuneType.Sensible);
+        
+        
 
+        Debug.Log($"default: {String.Join(" ",default_xp_req.Select(x => x.ToString()).ToArray())}\n");
+       
+    }
+    
     public static CostType costType(RuneType rune_type, ToyType toy_type)
     {
         //{ Dreams, Wishes, SensibleHeroPoint, AiryHeroPoint, VexingHeroPoint, ScorePoint };
@@ -179,11 +212,59 @@ public static class TowerStore
         else if (toy_type == ToyType.Temporary) { return CostType.Wishes; }
         else return CostType.Dreams;
     }
+
+    public static SpriteRenderer getSpriteRendererGameObject()
+    {
+        return Zoo.Instance.getObject("GUI/Toys/selected_island_image", true).GetComponent<SpriteRenderer>();
+    }
+
+    public static SpriteRenderer getSpriteRendererGameObject(RuneType rune_type, ToyType toy_type)
+    {
+        return Zoo.Instance.getObject(getImage(rune_type, toy_type),false).GetComponent<SpriteRenderer>();
+    }        
     
+    public static SpriteRenderer getSpriteRendererGameObject(Rune rune, EffectType upgrade_type, bool upgrade)
+    {
+
+        string get_me;
+        switch (rune.runetype)
+        {
+            case RuneType.Airy:
+
+                bool weaken = (rune.getLevel(EffectType.Weaken) == 1 && (upgrade_type == EffectType.Weaken || upgrade_type == EffectType.Null));                                 
+                bool calamity = (rune.getLevel(EffectType.Calamity) == 1 && (upgrade_type == EffectType.Calamity || upgrade_type == EffectType.Null));
+                bool hero = rune.toy_type == ToyType.Hero;
+
+                if (!hero)
+                {
+                    get_me = getImage(rune.runetype, rune.toy_type);                    
+                }
+                else
+                {
+                    if (weaken) get_me = "airy_tower_hero_passive";
+                    else if (calamity) get_me = "airy_tower_hero_aggressive";
+                    else get_me = getImage(rune.runetype, rune.toy_type);
+                }
+                break;              
+            default:
+                get_me = getImage(rune.runetype, rune.toy_type);
+                break;
+        }
+
+        get_me = upgrades_dir + get_me;
+        if (upgrade) get_me += "_upgrade_visual"; 
+
+        return  Zoo.Instance.getObject(get_me, false).GetComponent<SpriteRenderer>();
+
+    }
+
+
+    public static Sprite getPreviewSprite(RuneType rune_type, ToyType toy_type)
+    {
+        return Get.getSprite(image_dir + getImage(rune_type, toy_type));
+    }
     
-    
-    
-    public static Sprite getImage(RuneType rune_type, ToyType toy_type)
+    public static string getImage(RuneType rune_type, ToyType toy_type)
     {
         //{ Dreams, Wishes, SensibleHeroPoint, AiryHeroPoint, VexingHeroPoint, ScorePoint };
 
@@ -191,29 +272,29 @@ public static class TowerStore
             switch (rune_type)
             {
                 case RuneType.SensibleCity:
-                    return Get.getSprite("GUI/Toys/sensible_city");
+                    return "sensible_city";
                 case RuneType.Sensible:
 
-                if (toy_type == ToyType.Hero) return Get.getSprite("GUI/Toys/sensible_tower_hero");
-                else return Get.getSprite("GUI/Toys/sensible_tower");
+                if (toy_type == ToyType.Hero) return "sensible_tower_hero";
+                else return "sensible_tower";
 
             case RuneType.Airy:
-                if (toy_type == ToyType.Hero) return Get.getSprite("GUI/Toys/airy_tower_hero");
-                else return Get.getSprite("GUI/Toys/airy_tower");
+                if (toy_type == ToyType.Hero) return "airy_tower_hero";
+                else return "airy_tower";
 
             case RuneType.Vexing:
-                if (toy_type == ToyType.Hero) return Get.getSprite("GUI/Toys/vexing_tower_hero");
-                else return Get.getSprite("GUI/Toys/vexing_tower");
+                if (toy_type == ToyType.Hero) return "vexing_tower_hero";
+                else return "vexing_tower";
             case RuneType.Slow:
-                return Get.getSprite("GUI/Toys/slow_ghost");
+                return "slow_ghost";
             case RuneType.Fast:
-                return Get.getSprite("GUI/Toys/sensible_tower_ghost");
+                return "sensible_tower_ghost";
             case RuneType.Time:
-                return Get.getSprite("GUI/Toys/time_ghost");
+                return "time_ghost";
             case RuneType.Modulator:
-                return Get.getSprite("GUI/Toys/modulator");
+                return "modulator";
             default:
-                    return Get.getSprite("GUI/Toys/selected_island_image");
+                return "selected_island_image";
 
         }
         

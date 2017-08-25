@@ -102,7 +102,7 @@ public class DrawLine : MonoBehaviour
 
     public void EndLine()
     {
-        Debug.Log("END " + Sun.Instance.current_time_of_day + "\n");
+        //Debug.Log("END " + Sun.Instance.current_time_of_day + "\n");
         am_active = false;
         
     }
@@ -113,7 +113,7 @@ public class DrawLine : MonoBehaviour
      //   Debug.Log("drawline onbegindrag\n");
         am_active = true;
         time_to_draw_line = 0f;
-        Debug.Log("START " + Sun.Instance.current_time_of_day + "\n");
+        //Debug.Log("START " + Sun.Instance.current_time_of_day + "\n");
         blah = true;        
         clearLine();
         line.SetColors(Color.green, Color.green);

@@ -25,14 +25,15 @@ public class EnemyAnimator : MonoBehaviour
 
     public void Start()
     {
-        min_direction_time = (type == AnimationType.Animate_Vehicle_4Dir) ? 0.2f : 0.01f;
+        min_direction_time = (type == AnimationType.Animate_Vehicle_4Dir) ? 0.2f : 0.2f;
     }
     
     void Update()
     {
         if (my_ai.animate == AnimationType.None) return;
                 
-        isWalking = (my_ai.current_speed > 0.1f);
+        //isWalking = (my_ai.current_speed > 0.1f);
+        isWalking = (my_rigidbody.velocity.magnitude > 0.02f);
         
         bool changed_direction = false;
 
@@ -55,6 +56,7 @@ public class EnemyAnimator : MonoBehaviour
         animator.SetBool("isWalking", isWalking);
         if (isWalking && changed_direction)
         {
+       //    Debug.Log($"Velocity {my_rigidbody.velocity} changed direction {changed_direction}\n");
             animator.SetFloat("x", input_x);
             animator.SetFloat("y", input_y);
          //   Debug.Log(my_ai.forward_direction_angle + " -> " + " X " + input_x + " Y " + input_y + "\n");
@@ -63,7 +65,14 @@ public class EnemyAnimator : MonoBehaviour
 
     bool changeDirection(float new_x, float new_y)
     {
-        if (new_x == desired_input_x && new_y == desired_input_y)
+        /*
+        if (desired_input_x == 0 && desired_input_y == 0 && (new_x != 0 || new_y != 0))
+        {
+            desired_input_x = new_x;
+            desired_input_y = new_y;
+            direction_time = min_direction_time;
+        }
+        else(*/ if (new_x == desired_input_x && new_y == desired_input_y)
             direction_time += Time.deltaTime;
         else
         {

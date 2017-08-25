@@ -296,7 +296,7 @@ public class RegularTrigger : Trigger {
 
     void onUpgrade(EffectType type, int ID)
     {
-             Debug.Log("received upgrade event " + type + "\n");
+    //         Debug.Log("received upgrade event " + type + "\n");
         if (text.Equals("") || type.ToString().Equals(text))
         {
             selected = true;
@@ -304,7 +304,7 @@ public class RegularTrigger : Trigger {
     }
 
     void onSelected(SelectedType type, string content){
-        Debug.Log("Got selected " + type + " " + content + "\n");
+   //     Debug.Log("Got selected " + type + " " + content + "\n");
 		if (text.Equals(content) || text.Equals(type.ToString().ToLower()))
 			selected = true;
 	}

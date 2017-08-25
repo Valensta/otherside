@@ -270,7 +270,7 @@ public class Inventory : MonoBehaviour {
     
     public float AddWish(WishType type, float strength, int count)
     {
-        Debug.Log($"Adding wish {type} {strength} {count}\n");
+//      Debug.Log($"Adding wish {type} {strength} {count}\n");
 
         if (type == WishType.Sensible)
         {

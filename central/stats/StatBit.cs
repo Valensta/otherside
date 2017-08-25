@@ -822,10 +822,10 @@ public class StatBit
         int cl = level + lvl_increase;
 
         float rt = (cl == 1) ? recharge_time : (cl == 2) ? recharge_time - 5 : (cl == 3) ? recharge_time - 9 : (cl == 4) ? (recharge_time - 14) : (recharge_time - 20);
-        float damage_mult = (cl == 1) ? 35f : (cl == 2) ? 75f : (cl == 3) ? 170f : (cl == 4) ? 220 : 280;
+        float damage_mult = (cl == 1) ? 35f : (cl == 2) ? 60f : (cl == 3) ? 99.5f : (cl == 4) ? 165 : 230;
         
         float slow = (cl == 1) ? 85f : (cl == 2) ? 90f : 100f;
-        float lava_size = (cl == 1) ? 2.5f : (cl == 3.0f) ? 3.5f : 4f;
+        float lava_size = (cl == 1) ? 2.5f : (cl==2)? 3f : (cl == 3) ? 3.5f : 4f;
                 
         numbers[0] = new MyFloat(damage_mult, LabelName.SkillStrength, LabelUnit.Damage);
         numbers[1] = new MyFloat(1f, LabelName.TimeRemaining, LabelUnit.Duration); //lava life               

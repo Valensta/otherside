@@ -18,9 +18,9 @@ public class wave : IDeepCloneable<wave> {
 	public float monster_count = 0f;
 	public TimeName time_name_start;
 	public TimeName time_name_end;
-	public float time_change;
+	public float time_change_percent;
 	public float time_start;
-	public float time_end;
+	public float time_change_at;
     public int enemies_left;
 
 
@@ -37,9 +37,9 @@ public class wave : IDeepCloneable<wave> {
         my_clone.monster_count = this.monster_count;
         my_clone.time_name_start = this.time_name_start;
         my_clone.time_name_end = this.time_name_end;
-        my_clone.time_change = this.time_change;
+        my_clone.time_change_percent = this.time_change_percent;
         my_clone.time_start = this.time_start;
-        my_clone.time_end = this.time_end;
+        my_clone.time_change_at = this.time_change_at;
         my_clone.enemies_left = this.enemies_left;
 
         return my_clone;
@@ -52,13 +52,13 @@ public class wave : IDeepCloneable<wave> {
     public void SetTime(TimeName _tstart, TimeName _tend, float _tchange){
 		time_name_start = _tstart;
 		time_name_end = _tend;		
-		time_change = _tchange;
+		time_change_percent = _tchange;
 	}
 	
 	public void SetStartTime(TimeName _tstart){
 		time_name_start = _tstart;		
 		time_name_end = TimeName.Null;
-		time_change = 9999999999;
+		time_change_percent = 9999999999;
 	}
 	
 	public wave(){
@@ -90,19 +90,6 @@ public class wave : IDeepCloneable<wave> {
 		total_run_time += w.GetTotalRunTime(old_school);
 	}
 
-	float calc_cheapest_monster(List<string> haveMonsters){
-		unitStats max_monster = new unitStats();
-		max_monster.cost_type.Amount = 9999;		
-		
-		//find the cheapest monster
-		foreach (string m in haveMonsters) {
-			if (max_monster.cost_type.Amount > Central.Instance.getToy(m).cost_type.Amount) {
-				max_monster = Central.Instance.getToy(m);
-			}
-		}
-		
-		return max_monster.cost_type.Amount;
-	}
 }
 
 [System.Serializable]

@@ -248,12 +248,10 @@ public static class Get {
                 return (island_type == IslandType.Temporary) ? getSprite("Levels/Islands/desert_temporary_island") : getSprite("Levels/Islands/desert_permanent_island");
             case EnvType.Forest:
                 return (island_type == IslandType.Temporary) ? getSprite("Levels/Islands/forest_temporary_island") : getSprite("Levels/Islands/forest_permanent_island");
-            case EnvType.ForestGreen:
-                return (island_type == IslandType.Temporary) ? getSprite("Levels/Islands/forest_green_temporary_island") : getSprite("Levels/Islands/forest_green_permanent_island");
-            case EnvType.Urban:
-                return (island_type == IslandType.Temporary) ? getSprite("Levels/Islands/urban_temporary_island") : getSprite("Levels/Islands/urban_permanent_island");
+            case EnvType.DarkForest:
+                return (island_type == IslandType.Temporary) ? getSprite("Levels/Islands/dark_forest_temporary_island") : getSprite("Levels/Islands/dark_forest_permanent_island");           
             default:
-                return (island_type == IslandType.Temporary) ? getSprite("Levels/Islands/default_temporary_island") : getSprite("Levels/Islands/default_permanent_island");
+                return (island_type == IslandType.Temporary) ? getSprite("Levels/Islands/forest_temporary_island") : getSprite("Levels/Islands/forest_permanent_island");
 
         }
     }
@@ -267,7 +265,7 @@ public static class Get {
             return;
         }
         if (firearm == null) return;
-        float return_xp = firearm.addXp(xp);//if tower is at max xp, return the xp,
+        float return_xp = firearm.addXp(xp, true);//if tower is at max xp, return the xp,
 
         // if xp is from damage done, it is tied to health. Otherwise, 
         //if xp is from Speed/Teleport/Weaken etc, just assign the XP. this is handled by HitMe.stats.getXp though
@@ -451,7 +449,7 @@ public static class Get {
         // Debug.Log("Making arrow " + arrow_name + "\n");
         origin.z = 0f;
         newMissile.transform.position = origin;
-        newMissile.transform.parent = Peripheral.Instance.arrows_transform;
+        newMissile.transform.SetParent(Peripheral.Instance.arrows_transform);
 
         newMissile.tag = "PlayerArrow";
 
@@ -495,7 +493,7 @@ public static class Get {
 
 	public static bool isBasic(EffectType type)
 	{
-	    return type == EffectType.Force || type == EffectType.Speed;
+	    return type == EffectType.Force || type == EffectType.Speed || type == EffectType.VexingForce;
 	}
 
 	

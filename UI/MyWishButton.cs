@@ -38,7 +38,7 @@ public class MyWishButton : UIButton
 
     public void setCount(int by, bool abs)
     {
-        Debug.Log($"Setting count for {my_wish.type} to {by} abs {abs}\n");
+   //     Debug.Log($"Setting count for {my_wish.type} to {by} abs {abs}\n");
         if (abs) count = by; else count += by;
         if (count_text) count_text.text = count.ToString();
     }
@@ -50,7 +50,7 @@ public class MyWishButton : UIButton
 
     public void SetWish(Wish w)
     {
-        Debug.Log($"Setting wish {w.type} {w.strength}\n");
+//        Debug.Log($"Setting wish {w.type} {w.strength}\n");
         interactable = true;
         if (w == null)
         {
@@ -66,7 +66,7 @@ public class MyWishButton : UIButton
             SetSprite("GUI/Inventory/" + w.type.ToString() + "_button_image");
                         
             info_box = Zoo.Instance.getObject("GUI/tiny_info/" + w.type.ToString() + "_tiny_info", false);
-            info_box.transform.parent = this.transform;
+            info_box.transform.SetParent(transform);
             info_box.transform.localScale = Vector3.one;
             info_box.transform.localRotation = Quaternion.identity;
             info_box.transform.GetComponent<RectTransform>().anchoredPosition = Vector3.zero;            

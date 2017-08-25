@@ -83,7 +83,7 @@ public class Effect_Explosion : MonoBehaviour {
        
 		
 		for(int i = 0; i < targets.Count; i++){
-			arrow.myFirearm.addXp(targets[i].HurtMe(explode_statsum, null, EffectType.Null));		
+			arrow.myFirearm.addXp(targets[i].HurtMe(explode_statsum, null, EffectType.Null), true);		
 			float mass = targets[i].my_rigidbody.mass;
             //Vector3 dir3 = targets[i].transform.position - from;
             Vector3 dir3 = this.transform.position - from;

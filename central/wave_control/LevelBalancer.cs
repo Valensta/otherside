@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
-
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 using UnityEngine.UI;
@@ -52,7 +52,7 @@ public class LevelBalancer : MonoBehaviour
         if (am_enabled)
         {
             Init();
-            LevelBalancer.Instance.original_waves = CloneUtil.copyList<wave>(Moon.Instance.waves);
+            LevelBalancer.Instance.original_waves = CloneUtil.copyList<wave>(Moon.Instance.Waves);
             LevelBalancer.Instance.AutoSetPaths();
             EagleEyes.Instance.WaveButton(false);
             Moon.Instance.abortWave();
@@ -71,13 +71,13 @@ public class LevelBalancer : MonoBehaviour
     {
         Peripheral.Instance.Pause(true);
         FancyLoader.Instance.LoadWavesOnly(Central.Instance.level_list.levels[Central.Instance.current_lvl].name);
-        Sun.Instance.InitChangeTimes();
+        Moon.Instance.updateMyWave();
         Peripheral.Instance.Pause(false);
     }
     
     public void PlayOriginalWave()
     {
-        Moon.Instance.waves[currentWave] = original_waves[currentWave];
+        Moon.Instance.Waves[currentWave] = original_waves[currentWave];
         Moon.Instance.current_wave = currentWave;
         Peripheral.Instance.StartWave();
     }
@@ -110,9 +110,9 @@ public class LevelBalancer : MonoBehaviour
         Debug.Log(JsonUtility.ToJson(my_wave.wavelets[0], false));
         Debug.Log(JsonUtility.ToJson(my_wave, false));
 
-        Moon.Instance.waves[currentWave] = my_wave;
+        Moon.Instance.Waves[currentWave] = my_wave;
         Peripheral.Instance.StartWave();
-        
+        ShowStats();
     }
 
 
@@ -129,7 +129,7 @@ public class LevelBalancer : MonoBehaviour
             if (wlet.lull == 0) wlet.lull = 15;
         }
 
-        Moon.Instance.waves[currentWave] = waveInProgress;
+        Moon.Instance.Waves[currentWave] = waveInProgress;
         Peripheral.Instance.StartWave();
         Debug.Log(JsonUtility.ToJson(waveInProgress, true) + "\n");
 
@@ -259,11 +259,11 @@ public class LevelBalancer : MonoBehaviour
         if (!AnyValid()) return;
 
         String log = "";
-        WaveletStatDetails stats = calculateStats(generateWavelet());
+        WaveletStatDetails stats = calculateStats(generateWavelet(), false);
 
         StringBuilder sb = new StringBuilder();
-        sb.Append($"DPS: {Get.Round(stats.summary.mass_per_second, 1)}\n");
-        sb.Append($"Total: {Get.Round(stats.summary.total_modified_mass, 1)}\n");
+        //sb.Append($"DPS: {Get.Round(stats.summary.mass_per_second, 1)}\n");
+        //sb.Append($"Total: {Get.Round(stats.summary.total_modified_mass, 1)}\n");
         sb.Append($"Time: {stats.summary.time}\n");
         sb.Append($"Count: {stats.summary.count}\n");
         summary[0].text = sb.ToString();
@@ -274,7 +274,8 @@ public class LevelBalancer : MonoBehaviour
         int i = 1;
         foreach (WaveStat s in stats.details)
         {
-            summary[i].text = $"{s.name}\nC: {s.count}\nDPS: {Get.Round(s.mass_per_second,1)}\nTotal: {Get.Round(s.total_modified_mass,1)}\nTime: {s.time}\n";
+            //summary[i].text = $"{s.name}\nC: {s.count}\nDPS: {Get.Round(s.mass_per_second,1)}\nTotal: {Get.Round(s.total_modified_mass,1)}\nTime: {s.time}\n";
+            summary[i].text = $"{s.name}\nC: {s.count}\nTime: {s.time}\n";
             
             log += summary[i].text.Replace("\n", "\t");
             log += "\n";
@@ -284,8 +285,40 @@ public class LevelBalancer : MonoBehaviour
         Debug.Log(log);
         
     }
+
+    public void ShowTimeForAllWaves()
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int wcount = 0; wcount < Moon.Instance.Waves.Count; wcount++)
+        {
+            float total = 0f;
+            float full_total = 0f;
+            for (int wletCount = 0; wletCount < Moon.Instance.Waves[wcount].wavelets.Count; wletCount++)
+            {
+                WaveletStatDetails details = calculateStats(Moon.Instance.Waves[wcount].wavelets[wletCount], false);
+                WaveletStatDetails details_full = calculateStats(Moon.Instance.Waves[wcount].wavelets[wletCount], true);
+                
+                sb.Append("W: ");
+                sb.Append(wcount);
+                sb.Append("  WLET: ");
+                sb.Append(wletCount);
+                sb.Append("  TIME: ");
+                sb.Append(details.summary.time);
+                sb.Append("  FULL: ");
+                sb.Append(details_full.summary.time);
+                sb.Append("\n");
+                
+                total += details.summary.time;
+                full_total += details_full.summary.time;
+            }
+            sb.Append($"WAVE:\t{wcount}\tTOTAL:\t{total}\tFULL:\n");            
+        }
+        
+        summary[0].text = sb.ToString();
+        Debug.Log(summary[0].text);
+    }
     
-    public WaveletStatDetails calculateStats(InitWavelet wavelet)
+    public WaveletStatDetails calculateStats(InitWavelet wavelet, bool include_end_time)
     {
         WaveletStatDetails details = new WaveletStatDetails();
 
@@ -294,15 +327,15 @@ public class LevelBalancer : MonoBehaviour
         int max = (repeatTimes > 0)? wavelet.enemies.Length / repeatTimes : wavelet.enemies.Length ;
         for (int x = 0; x < max; x++)
         {
-            InitEnemyCount i = wavelet.enemies[x];
+            InitEnemyCount i = wavelet.enemies[x];            
             WaveStat subStat = new WaveStat();
             
             float mass = EnemyStore.getEffectiveMass(EnumUtil.EnumFromString(i.name, EnemyType.Null));
             float speed = EnemyStore.getSpeed(EnumUtil.EnumFromString(i.name, EnemyType.Null));
             
-            Debug.Log($"BEFORE {i.name} Mass {mass} Speed {speed}\n");
+      //      Debug.Log($"BEFORE {i.name} Mass {mass} Speed {speed}\n");
             
-            if (speed == 0) Debug.LogError($"Trying to get speed for an unsupported enemy {i.name}\n");
+            //if (speed == 0) Debug.LogError($"Trying to get speed for an unsupported enemy {i.name}\n");
             float time = i.c * wavelet.interval;
 
             if (i.name.Equals("Tank"))
@@ -343,11 +376,13 @@ public class LevelBalancer : MonoBehaviour
             
             if (i.name.Equals("Turtle")) mass += 8*EnemyStore.getEffectiveMass(EnemyType.TinyPlane);
             
-            Debug.Log($"AFTER {i.name} Mass {mass} Speed {speed}\n");
+      //      Debug.Log($"AFTER {i.name} Mass {mass} Speed {speed}\n");
+
             
             summary.count += i.c * repeatTimes;
             summary.total_modified_mass += i.c * mass * repeatTimes;
-            summary.time += ((i.c - 1) * wavelet.interval + wavelet.lull) * repeatTimes;
+         //   Debug.Log($"{i.c - 1} * {wavelet.interval} * {repeatTimes}\n");
+            summary.time += ((i.c - 1) * wavelet.interval) * repeatTimes;
             summary.speed += speed * i.c  * repeatTimes;
 
             subStat.speed = speed;
@@ -360,10 +395,11 @@ public class LevelBalancer : MonoBehaviour
             
             details.details.Add(subStat);
         }        
-        
+        float extra = (include_end_time) ? wavelet.end_wait : 0;
         summary.speed /= summary.count;
-
-        Debug.Log($"Speed: {summary.speed} Mass: {summary.total_modified_mass} Time: {summary.time}\n");
+        summary.time += (wavelet.enemies.Length - 1) * wavelet.lull + extra;
+//        Debug.Log($" + {wavelet.enemies.Length - 1} * {wavelet.lull} + {extra}\n");
+    //    Debug.Log($"Speed: {summary.speed} Mass: {summary.total_modified_mass} Time: {summary.time}\n");
         summary.mass_per_second = summary.speed * summary.total_modified_mass / summary.time;
 
         details.summary = summary;
@@ -376,7 +412,7 @@ public class LevelBalancer : MonoBehaviour
     {
         if (!am_enabled) return;
 
-        Debug.Log("initializing LevelBalancer\n");
+      //  Debug.Log("initializing LevelBalancer\n");
 
         foreach (WaveletBuilder wb in waveletBuilders)
         {

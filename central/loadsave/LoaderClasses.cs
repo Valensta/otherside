@@ -88,20 +88,18 @@ public class InitWave
 {
     public string time_start;
     public string time_end;
-    public float time_change;
-    public int points;
-    public int xp;
+    public float time_change_percent;
+    public int points;    
     public int wait_time;
     public InitWavelet[] wavelets;
     public int id; 
 
-    public InitWave(TimeName time_start, TimeName time_end, float time_change, int points, int xp, int wait_time, InitWavelet[] wavelets)
+    public InitWave(TimeName time_start, TimeName time_end, float timeChangePercent, int points, int wait_time, InitWavelet[] wavelets)
     {
         this.time_start = time_start.ToString();
         this.time_end = time_end.ToString();
-        this.time_change = time_change;
-        this.points = points;
-        this.xp = xp;
+        this.time_change_percent = timeChangePercent;
+        this.points = points;        
         this.wait_time = wait_time;
         this.wavelets = wavelets;
     }
@@ -112,7 +110,7 @@ public class InitWave
 
     }
 
-    //{"mode":"list","time_start":"dawn","time_end":"day","time_change":"0.8","points":"60","xp":"55","wait_time":"3","1":{"interval":"1", "lull":"12","list":"soldier,5"},"2":{"interval":"1.3", "lull":"10","list":"magical,2"},"3":{"interval":"1.5", "lull":"12","list":"soldier,2,magical,1,soldier,2"},"4":{"interval":"1.5", "lull":"6","list":"soldier,6"},"5":{"interval":"1.5", "lull":"20","list":"plane,1,soldier,3"}}
+    //{"mode":"list","time_start":"dawn","time_change_at":"day","time_change_percent":"0.8","points":"60","xp":"55","wait_time":"3","1":{"interval":"1", "lull":"12","list":"soldier,5"},"2":{"interval":"1.3", "lull":"10","list":"magical,2"},"3":{"interval":"1.5", "lull":"12","list":"soldier,2,magical,1,soldier,2"},"4":{"interval":"1.5", "lull":"6","list":"soldier,6"},"5":{"interval":"1.5", "lull":"20","list":"plane,1,soldier,3"}}
 }
 
 [System.Serializable]

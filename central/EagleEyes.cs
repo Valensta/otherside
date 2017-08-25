@@ -64,11 +64,18 @@ public class EagleEyes : MonoBehaviour {
     public MarketplaceDriver marketplace_driver;
     public string UIFilterType = "";
     public string UIFilterContent = "";
-
+	public GameObject reportBugUI;
+	
     public float getMapXSize() { return default_map_x_tiles; }
 
     public float getMapYSize() { return default_map_y_tiles; }
 
+	public void toggleReportBugIU()
+	{
+		reportBugUI.gameObject.SetActive(!reportBugUI.gameObject.activeSelf);
+		Peripheral.Instance.Pause(true);
+	}
+	
     public void setMapSize(float x, float y)
     {
         default_map_x_tiles = x;
@@ -96,6 +103,7 @@ public class EagleEyes : MonoBehaviour {
 	
 		for (int i = 0; i < GUI_states.Count; i++){
 		//	GUI_states[i].bucket.transform.localScale = new Vector3(100f, adjusted_y, 1f);
+			Debug.Log($"{GUI_states[i].bucket.name}\n");
             if (GUI_states[i].fademe == null) GUI_states[i].fademe = GUI_states[i].bucket.GetComponent<FadeMe>();
             for (int j = 0; j < GUI_states[i].bucket.childCount; j++){
 
@@ -153,25 +161,17 @@ public class EagleEyes : MonoBehaviour {
             b.ShowSelectedAccent(b.timescale == type);        
     }
 
-    public void SetActiveFFButtons(bool set)
-    {
-      //  Debug.Log("SetActiveFFButtons: " + set.ToString().ToUpper() + "\n");
-       
-        foreach (FFButton b in ff_buttons)
-            b.SetActiveState(set);
+	public void SetActiveFFButtons(bool set)
+	{
+		//  Debug.Log("SetActiveFFButtons: " + set.ToString().ToUpper() + "\n");
 
-        //if (!set) Peripheral.Instance.ChangeTime(TimeScale.Resume);
-    }
+		foreach (FFButton b in ff_buttons)
+			b.SetActiveState(set);
 
-    Vector3 endpoint()
-    {
-        Vector3 endpoint = Vector3.forward * 1000;
-        return endpoint;
-    }
+		//if (!set) Peripheral.Instance.ChangeTime(TimeScale.Resume);
+	}
 
-
-
-    void PlaceButtons(string state, bool bg, List<MenuButton> buttons)
+	void PlaceButtons(string state, bool bg, List<MenuButton> buttons)
     {
         int i = buttons.Count;
 
@@ -181,12 +181,13 @@ public class EagleEyes : MonoBehaviour {
         }else
         {
             PlaceElement("mainmenu_transparent_bg");
+	        PlaceElement("mainmenu_button_bg");
         }
 
 #if UNITY_EDITOR
         PlaceElement("mainmenu_simulator");
 #endif
-        PlaceElement("mainmenu_button_bg");
+        
         foreach (MenuButton b in buttons)
         {
             switch (b)
@@ -225,11 +226,21 @@ public class EagleEyes : MonoBehaviour {
                     i--;
                     break;
 
+	            case MenuButton.SaveGamePanel:
+		            //PlaceElement("mainmenu_savegame_panel");
+		            Central.Instance.game_saver.EnableMe(true);
+		            i--;
+		            break;
                 case MenuButton.Quit:
                     PlaceElement("mainmenu_quit");
 
                     i--;
                     break;
+	            case MenuButton.QuitCorner:
+		            PlaceElement("mainmenu_quit_corner");
+
+		            i--;
+		            break;
                 case MenuButton.Settings:
                     PlaceElement("mainmenu_sound");
                     //PlaceElement("mainmenu_settings");
@@ -629,11 +640,14 @@ public class EagleEyes : MonoBehaviour {
 		foreach (Transform gamestate in canvas.transform) {
 			if (!gamestate.name.Equals(string_state) && !gamestate.name.Equals(menu)){          
 				Transform bucket = gamestate.transform;
+//				Debug.Log($"{bucket} {bucket.gameObject.GetInstanceID()} {reportBugUI.gameObject.GetInstanceID()}\n");
+				if (bucket.gameObject.GetInstanceID() == reportBugUI.transform.parent.gameObject.GetInstanceID()) continue;
+				
 				int c = bucket.transform.childCount;
 				for (int i = 0; i < c; i++){			
-					Transform child = bucket.GetChild(i);
-					for (int j = 0; j < child.transform.childCount; j++){
-						child.transform.GetChild(j).gameObject.SetActive(false);			
+					Transform child = bucket.GetChild(i);					
+					for (int j = 0; j < child.transform.childCount; j++){												
+							child.transform.GetChild(j).gameObject.SetActive(false);			
 					}					
 				}
 			}
@@ -843,17 +857,18 @@ public class EagleEyes : MonoBehaviour {
                 {
                     Debug.Log("Placing LOST Main menu\n");
                     list.Add(MenuButton.LoadSnapshot);
-                    list.Add(MenuButton.Quit);
-                    list.Add(MenuButton.ToMap);
+                    //list.Add(MenuButton.Quit);
+                    //list.Add(MenuButton.ToMap);
                     PlaceButtons("MainMenu", true, list);
                 }
                 else
                 {
                     //very very intro screen before game starts
 
-                    if (Central.Instance.saved_level != -1) list.Add(MenuButton.LoadSnapshot);
-                    list.Add(MenuButton.Start);
-                    list.Add(MenuButton.Quit);
+                    //if (Central.Instance.saved_level != -1) list.Add(MenuButton.LoadSnapshot);
+                    //list.Add(MenuButton.Start);
+                    list.Add(MenuButton.QuitCorner);
+	                list.Add(MenuButton.SaveGamePanel);
                     list.Add(MenuButton.Settings);
                     PlaceButtons("MainMenu", true, list);
                 }

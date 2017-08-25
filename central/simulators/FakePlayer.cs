@@ -230,7 +230,7 @@ public class FakePlayer : MonoBehaviour
 
         //if (wave == 0 && wavelet == 0) save = true;
         
-        if (wave == Moon.Instance.waves.Count - 1 && wavelet == 0) save = true;
+        if (wave == Moon.Instance.Waves.Count - 1 && wavelet == 0) save = true;
         //if (wave == Moon.Instance.waves.Count - 2 && wavelet == 0) save = true;
         //if (wavelet == 0 && Get.SaveGameNow(wave)) save = true;
 
@@ -255,8 +255,8 @@ public class FakePlayer : MonoBehaviour
 
             FakePotion wish = wishes[done];
             if (wish.done) { done++; continue; }
-            if (wish.wave_start_time > Sun.Instance.current_time_of_day) continue;
-            if (wish.wave_start_time < Sun.Instance.current_time_of_day - 2f) { wish.done = true; done++; continue; }
+            if (wish.wave_start_time > Moon.Instance.TIME) continue; //not sure this will work, used to read time off of Sun
+            if (wish.wave_start_time < Moon.Instance.TIME - 2f) { wish.done = true; done++; continue; }
 
 
             Wish w = new Wish();
@@ -293,7 +293,7 @@ public class FakePlayer : MonoBehaviour
 
             FakeSpecialAttack attack = special_attacks[done];
             if (attack.done) { done++; continue; }
-            if (attack.wave_start_time < Sun.Instance.current_time_of_day)
+            if (attack.wave_start_time < Moon.Instance.TIME)
             {
                 Peripheral.Instance.my_skillmaster.SimulateSkill(attack.positions, attack.type);
                 yield return new WaitForSeconds(1f);
@@ -343,7 +343,7 @@ public class FakePlayer : MonoBehaviour
 
             }
 
-            if (Central.Instance.state == GameState.InGame && Moon.Instance.current_wave == Moon.Instance.waves.Count)
+            if (Central.Instance.state == GameState.InGame && Moon.Instance.current_wave == Moon.Instance.Waves.Count)
             {
                 if (take_snapshots) TakeSnapshot(filename);
             }
@@ -386,7 +386,7 @@ public class FakePlayer : MonoBehaviour
             foreach (TowerUpgrade upgrade in upgrades)
             {
                 if (upgrade.done == true) continue;
-                if (!towers[upgrade.tower_id].island.blocked || towers[upgrade.tower_id].island.my_toy.building.construction_in_progress) continue;
+                if (!towers[upgrade.tower_id].island.isBlocked() || towers[upgrade.tower_id].island.my_toy.building.construction_in_progress) continue;
 
                 //force = just upgrade, don't bother checking if you can afford it. for balancing skills.
                 bool force = upgrade.force || force_all_upgrades;

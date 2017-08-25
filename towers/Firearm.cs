@@ -108,10 +108,11 @@ public class Firearm : MonoBehaviour {
     public Transform arrow_origin;
     public bool ammo_by_time;
     float ammo_timer;
+    public float ammo_per_shot = 1;
     bool start_ammo_by_time;
     public ArrowType default_arrow_type;
     public ArrowName current_arrow_name;
-	public int max_ammo = 20;
+	public float max_ammo = 20;
 	public float firePauseTime;
 	private float nextMoveTime;
 	private float nextFireTime;
@@ -124,7 +125,7 @@ public class Firearm : MonoBehaviour {
     public Vector2 myPreviousTarget = Vector2.zero;
     public Vector2 myTargetPosition = Vector2.zero;
     
-    int ammo = -1;
+    float ammo = -1;
 	Vector2 myAngle = new Vector2 (0, -1);
 	public float turnSpeed = 0.1f; //(between 0 and 1, should be angle/360) this is only for turning the tower, not for aiming the arrows unfortunately
     public float ghost_timer;
@@ -140,9 +141,7 @@ public class Firearm : MonoBehaviour {
     float lastFireTime;
     public Toy toy;
     
-
 	EnemyList enemy_list;
-//	public BuildingID ammo_bonus_parent_id = new BuildingID();
 	public Mini_Toy_Button_Driver ammo_panel;
     	
     //THIS IS AWEFUL
@@ -181,20 +180,30 @@ public class Firearm : MonoBehaviour {
 		return (ammo > -1);
 	}
 
+    
+    public void onTimeBasedXpAssigned(float xp)
+    {
+        
+        addXp(xp, false);
+    }
+    
 
 
-    public float addXp(float xp){
+    public float addXp(float xp, bool damage_based){
         //if (toy_type == ToyType.Temporary) return;
         float return_xp = 0f;
+        
+    //    Debug.Log($"Adding XP {xp} damage based: {damage_based}\n");
+        //xp = (damage_based)? xp * 0.1f : xp;
         if (toy.parent_toy != null)
         {            
-            return_xp = toy.parent_toy.rune.addXp(xp * Peripheral.Instance.XpFactor());
+            return_xp = toy.parent_toy.rune.addXp(xp * Peripheral.Instance.XpFactor(), damage_based);
             //toy.my_tower_stats.Xp = toy.parent_toy.rune.getXp();
             toy.parent_toy.rune_buttons.UpdateMe();            
         }
         else
         {
-            return_xp = toy.rune.addXp(xp * Peripheral.Instance.XpFactor());
+            return_xp = toy.rune.addXp(xp * Peripheral.Instance.XpFactor(), damage_based);
             //toy.my_tower_stats.Xp = toy.rune.getXp();
             if (toy.rune_buttons != null) toy.rune_buttons.UpdateMe(); //else { Debug.Log("Want to update rune_buttons but they are null for " + name + "\n"); }
         }
@@ -202,7 +211,8 @@ public class Firearm : MonoBehaviour {
     }
 
 	public void SetDistanceBonus(float bonus){
-        UnityEngine.Debug.Log("Setting distance bonus\n");
+        Debug.Log($"Setting distance bonus {bonus}\n");
+	    
         toy.rune.distance_bonus = bonus;
 	}
 
@@ -211,6 +221,12 @@ public class Firearm : MonoBehaviour {
 
     public void initStats(Toy toy)
     {
+        if (toy.runetype != RuneType.Castle && toy.runetype != RuneType.SensibleCity)
+        {
+            Moon.onTimeBasedXpAssigned += onTimeBasedXpAssigned;
+            //Debug.Log($"{gameObject.nam}e} wants xp\n");
+        }
+
         this.toy = toy;
         Active = false;
         start_ammo_by_time = false;
@@ -235,9 +251,8 @@ public class Firearm : MonoBehaviour {
         {
             
             GameObject buttons = Peripheral.Instance.zoo.getObject("GUI/ammo_panel", false);
-            Debug.Log($"Initializing ammo panel for ${this.gameObject.name} ${buttons.GetInstanceID()}\n");
-            ammo_panel = buttons.GetComponent<Mini_Toy_Button_Driver>();
-            
+        //    Debug.Log($"Initializing ammo panel for ${this.gameObject.name} ${buttons.GetInstanceID()}\n");
+            ammo_panel = buttons.GetComponent<Mini_Toy_Button_Driver>();                       
         }
         
         ammo_panel.gameObject.SetActive(true);
@@ -542,7 +557,11 @@ public class Firearm : MonoBehaviour {
         CancelInvoke();
         myTarget = null;
         Rune.onUpgrade -= onUpgrade;
-        
+        if (toy.runetype != RuneType.Castle && toy.runetype != RuneType.SensibleCity)
+        {
+            Moon.onTimeBasedXpAssigned -= onTimeBasedXpAssigned;
+        }
+
     }
 
 	
@@ -561,9 +580,9 @@ public class Firearm : MonoBehaviour {
 	public void UseAmmo(){
         if (ammo == -1) return;
 
-        ammo--;
+        ammo -= ammo_per_shot;
 
-        if (ammo_panel != null) ammo_panel.SetAmmo(); else Debug.Log($"{this.gameObject.name} Ammo panel is empty!\n");
+        if (ammo_panel != null) ammo_panel.SetAmmo(); else Debug.Log($"{gameObject.name} Ammo panel is empty!\n");
 
         if (ammo == 0)
         {
@@ -580,7 +599,7 @@ public class Firearm : MonoBehaviour {
         ammo = a;
     }
     
-	public int Ammo(){
+	public float Ammo(){
 		return ammo;		
 	}
 	
@@ -597,7 +616,7 @@ public class Firearm : MonoBehaviour {
 
     public void AddAmmo(int a, bool force){
 
-		if (ammo >= max_ammo) { UnityEngine.Debug.Log("no good\n");return;}
+		if (ammo >= max_ammo) { Debug.Log("no good\n");return;}
 		if (force || Peripheral.Instance.UseResource((new Cost(CostType.Wishes, a)), Vector3.zero)){
 			ammo += a* toy.stats.ammo;
 			if (ammo > max_ammo) ammo = max_ammo;
@@ -703,6 +722,8 @@ public class Firearm : MonoBehaviour {
 	}
 
 
+    
+    
     void getNewestEnemy()
     {
         Transform best = null;

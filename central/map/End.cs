@@ -12,12 +12,10 @@ public class End : MonoBehaviour {
 	}
 
 	void OnTriggerEnter2D(Collider2D c){
-	//	Debug.Log ("END REACHED\n");
+		Debug.Log ($"END REACHED by {c.gameObject.name} tag {c.tag}\n");
 		Collider2D other = c;
-		if (other.tag.Equals("Enemy") ){//&& other.GetComponentInChildren<Body> ()){ //why was this added??
-			//actor.GetComponent<Peripheral>().max_dreams -= (int)Mathf.Ceil(other.GetComponent<Actor> ()./3);
-			other.tag.Equals("EnemyWon");
-			
+		if (other.tag.Equals("Enemy") ){			
+			//other.tag.Equals("EnemyWon");			
 			
 			HitMe my_hitme = other.attachedRigidbody.gameObject.GetComponent<HitMe>();
             string label = my_hitme.my_ai.my_dogtag.getLabel();
@@ -48,7 +46,7 @@ public class End : MonoBehaviour {
             return;
         }
 
-        Debug.Log("** " + label + "\n");
+//        Debug.Log("** " + label + "\n");
 
         Tracker.Log(PlayerEvent.NightTowerHit,true,
             customAttributes: new Dictionary<string, string>() { { "attribute_1", label } },

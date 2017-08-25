@@ -319,7 +319,7 @@ public class MyButton : UIButton {
                         case "reset_special_skills":
                             break;
                         default:
-                            Debug.Log($"Special skill button set parent {content}\n");
+                          //  Debug.Log($"Special skill button set parent {content}\n");
                             Central.Instance.level_list.special_skill_button_driver.SetParent(null);
                             break;
                     }

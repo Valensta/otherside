@@ -31,13 +31,13 @@ public static class StaticStat {
                 return true;
 
             case RuneType.Sensible:
-                return !hero || current_lvl >= 1;
+                return unlocked || !hero || current_lvl >= 1;
 
             case RuneType.Airy:
-                return !hero || current_lvl >= 2;
+                return unlocked || !hero || current_lvl >= 2;
 
             case RuneType.Vexing:
-                return !hero || current_lvl >= 3;
+                return unlocked || !hero || current_lvl >= 3;
 
             case RuneType.SensibleCity:
                 return (unlocked || (test_mode && current_lvl >= 1));  //unlocked by event
@@ -170,7 +170,7 @@ public static class StaticStat {
                 switch (effect_type)
                 {
                     case EffectType.Range:
-                        return (level == 0) ? 2.25f : .4f;
+                        return (level == 0) ? 2.75f : .4f;
                     case EffectType.ReloadTime:
                         return (level == 0) ? 0.9f : -.1f;
                     case EffectType.Force:
@@ -183,7 +183,7 @@ public static class StaticStat {
                     case EffectType.Range:
                         return (level == 0) ? 1.8f : .4f;
                     case EffectType.ReloadTime:
-                        return (level == 0) ? 3f : -.8f;
+                        return (level == 0) ? 0.5f : -.1f;
                     case EffectType.Speed:
                         return (level == 0) ? 70f : 80f;
                 }

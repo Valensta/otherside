@@ -226,13 +226,13 @@ public class PlayerSimulator : MonoBehaviour
         switch (e.eventtype)
         {
             case PlayerEvent.StartWaveEarly:
-                float hey = (e.wave_time + e.metric_1 - e.metric_2);
-                float comp = Sun.Instance.current_time_of_day + timer;
+                
+                float comp = Moon.Instance.TIME + timer;
             //    Debug.Log("wavetime " + e.wave_time + " wave interval - " + e.metric_1 + " time saved " + e.metric_2 + " -> " + hey + " " + comp + "\n");
                 return (e.wave_time + e.metric_1 - e.metric_2 <= comp);
             default:
 
-                return (e.wave_time <= Sun.Instance.current_time_of_day);
+                return (e.wave_time <= Moon.Instance.TIME);
 
         }         
     }
@@ -298,7 +298,7 @@ public class PlayerSimulator : MonoBehaviour
         }
 
 
-        if (!upgrade_me.island.blocked || upgrade_me.island.my_toy.building.construction_in_progress)
+        if (!upgrade_me.island.isBlocked() || upgrade_me.island.my_toy.building.construction_in_progress)
         {
             Debug.LogError("Toy of order " + order + " does not exist or is still building\n");
             return false;

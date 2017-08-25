@@ -16,7 +16,7 @@ using System;
     public void TestToJson()
     {
         InitLevel test = new InitLevel();
-        test.init_stats = new InitStats(90, 10, TimeName.Dawn, 24, 20, 16, new LevelMod[1], EnvType.Default);
+        test.init_stats = new InitStats(90, 10, TimeName.Day, 24, 20, 16, new LevelMod[1], EnvType.Default);
         
 
         test.toys = new InitToy[2];
@@ -42,8 +42,8 @@ using System;
         wavelets[1] = new InitWavelet(0.8f, 5, enemies1);
         
 
-        test.waves[0] = new InitWave(TimeName.Dawn, TimeName.Day, 0.8f, 90, 55, 3, wavelets);
-        test.waves[1] = new InitWave(TimeName.Day, TimeName.Day, 0.8f, 95, 60, 4, wavelets);
+        test.waves[0] = new InitWave(TimeName.Night, TimeName.Day, 0.8f, 90,  3, wavelets);
+        test.waves[1] = new InitWave(TimeName.Day, TimeName.Day, 0.8f, 95,  4, wavelets);
 
         test.wishes = new InitWish[2];
         test.wishes[0] = new InitWish(WishType.MoreDamage, 2);
@@ -174,7 +174,7 @@ using System;
 
         LevelMod level_mod = Peripheral.Instance.getLevelMod();
 
-        Moon.Instance.waves = new List<wave>();
+        Moon.Instance.Waves = new List<wave>();
         
 
         for (int x = 0; x < level.waves.Length; x++)
@@ -183,7 +183,7 @@ using System;
             int i = 1;
             wave mywave = new wave();
             mywave.points = init_wave.points;
-            mywave.xp = init_wave.xp;
+            mywave.xp = 5f;
 
             for (int y = 0; y < init_wave.wavelets.Length; y++)
             {
@@ -196,9 +196,9 @@ using System;
 
             TimeName time_start = EnumUtil.EnumFromString<TimeName>(init_wave.time_start, TimeName.Null);
             TimeName time_end = EnumUtil.EnumFromString<TimeName>(init_wave.time_end, TimeName.Null);
-            if (init_wave.time_change > 0 && time_start != TimeName.Null && time_end != TimeName.Null)
+            if (time_start != TimeName.Null && time_end != TimeName.Null)
             {
-                mywave.SetTime(time_start, time_end, init_wave.time_change);
+                mywave.SetTime(time_start, time_end, init_wave.time_change_percent);
             }
             else if (time_start != TimeName.Null)
             {
@@ -208,12 +208,12 @@ using System;
                 mywave.SetStartTime(TimeName.Day);
                // Debug.Log("WAVE missing start time! Assuming Day\n");
             }
-            mywave.adjust_total_run_time();
+            //mywave.adjust_total_run_time();
             Moon.Instance.AddWave(mywave);
         }
         if (LevelBalancer.Instance.am_enabled)
         {
-            LevelBalancer.Instance.original_waves = CloneUtil.copyList<wave>(Moon.Instance.waves);
+            LevelBalancer.Instance.original_waves = CloneUtil.copyList<wave>(Moon.Instance.Waves);
             LevelBalancer.Instance.AutoSetPaths();
         }
 

@@ -67,7 +67,7 @@ public class AreaEffector : MonoBehaviour {
         halo_active = false;
         if (halo == null) {
             halo = Zoo.Instance.getObject("Surfaces/Units/toy_halo", true);
-            halo.transform.parent = this.transform;
+            halo.transform.SetParent(transform);
             halo.transform.position = this.transform.position;
             updateHaloSize();
         }

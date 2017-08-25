@@ -113,7 +113,7 @@ public class HitMe : DistractorObject
     public void initVisuals() {
         GameObject thing = Peripheral.Instance.zoo.getObject("Core/EffectVisuals", true);
         my_visuals = thing.GetComponent<EffectVisuals>();
-        my_visuals.transform.parent = this.transform.GetChild(0).transform;
+        my_visuals.transform.SetParent(transform.GetChild(0).transform);
         my_visuals.transform.localPosition = Vector3.zero;
         my_visuals.auto_stabilize = my_ai.orient;
         my_ai.visuals = my_visuals;
@@ -145,12 +145,12 @@ public class HitMe : DistractorObject
         modified_defenses = false;
         normalize_defenses_is_running = false;
 
-        if (mass != null) mass.gameObject.transform.parent = this.transform; 
+        if (mass != null) mass.gameObject.transform.SetParent(transform); 
         if (mass == null) mass = Peripheral.Instance.zoo.getObject("Monsters/Helpers/Mass", true).GetComponent<Mass>();
         if (!mass.gameObject.activeSelf) mass.gameObject.SetActive(true);
         
         _initMass();
-        mass.gameObject.transform.parent = this.transform;
+        mass.gameObject.transform.SetParent(transform);
         mass.gameObject.transform.localPosition = Vector3.zero;
         mass.gameObject.transform.localScale = Vector3.one;
         mass.gameObject.transform.localRotation = Quaternion.identity;
@@ -499,10 +499,13 @@ public class HitMe : DistractorObject
                 case RuneType.Slow:
                     if (statbits[i].effect_type == EffectType.Force)
                     {
+                        
                         defense = Get.GetDefense(defenses, StaticRune.getPrimaryDamageType(statsum.runetype));
+                        
                         if (defense >= 1) return xp;
-
+                        
                         float add = stats.getXp(ForceMe(skill_stats.getModifiedStats(factor, defense)));
+                        Debug.Log($"Night tower {Sun.Instance.GetCurrentTime()} {firearm.gameObject.name} {this.gameObject.name} defense {defense} xp {add} primary effect {primary_effecttype}\n");
                         xp += add;
                         assignXp(add, firearm, primary_effecttype, EffectType.Force, primary_level, skill_stats.level);
 
@@ -613,6 +616,7 @@ public class HitMe : DistractorObject
 
     void assignXp(float add, Firearm firearm, EffectType primary_effecttype, EffectType override_effecttype, int primary_level, int override_level)
     {
+      //  Debug.Log($"Assigned xp {add}\n");
         EffectType use_effecttype = (primary_effecttype == EffectType.Null) ? override_effecttype : primary_effecttype;
         int use_level = (primary_level == -1) ? override_level : primary_level;
         if (firearm != null) Get.assignXP(add, use_level, this, firearm, this.transform.position, use_effecttype);
@@ -704,7 +708,7 @@ public class HitMe : DistractorObject
         if (health_over_time != null) health_over_time.StopMe();
         Peripheral.Instance.targets.removeByID(this);
         Moon.Instance.enemyDied(my_ai.my_dogtag.wave);
-        this.transform.parent = null;
+        this.transform.SetParent(null);
         Peripheral.Instance.zoo.returnObject(this.gameObject, true);
 
     }
@@ -809,6 +813,7 @@ public class HitMe : DistractorObject
 
     public void EnableVisuals(MonsterType type, float timer)
     {
+//        Debug.Log($"Want visuals of type {type} for {timer} seconds\n");
         if (my_visuals != null || !my_visuals.gameObject.activeSelf) my_visuals.Enable(type, timer); 
     }
 

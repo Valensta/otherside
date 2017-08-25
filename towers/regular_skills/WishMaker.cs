@@ -46,8 +46,9 @@ public class WishMaker: MonoBehaviour {
         for (int i = 0; i < inventory.Count; i++)
         {
             
-            WishType t = inventory[i].type;
+            WishType t = inventory[i].type;            
             if (t == WishType.Null) { continue; }
+         //   if (t == WishType.MoreXP) { continue; }
             e = inventory[i];
             strength = e.Strength;
             h += "init strength " + strength;

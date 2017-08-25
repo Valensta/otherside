@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections;
 
-public enum MonsterType{Null, Speed, Mass, SummonDecoy, Weaken,Teleport, Burning, Fear, Wishful, Plague, Regeneration, Freeze}; 
+public enum MonsterType{Null, Speed, Mass, SummonDecoy, Weaken,Teleport, Burning, Fear, Wishful, Plague, Regeneration, Freeze, DOT}; 
 
 public class EffectVisuals : MonoBehaviour {
     
@@ -17,6 +17,7 @@ public class EffectVisuals : MonoBehaviour {
 	void Start () {
         //Debug.Log("Disabling sprites for effectvisual\n");
         DisableAll();
+	    
 	}
 
 	public void Enable(MonsterType type, float time){
@@ -25,7 +26,7 @@ public class EffectVisuals : MonoBehaviour {
         AuraType aura = GetAura(type);	   
         if (aura == null) { return;  }
 		Set (aura, time, true, false);
-        auras_count = auras.Length;
+        
 	}
 
     public void setRotation()
@@ -43,7 +44,8 @@ public class EffectVisuals : MonoBehaviour {
     }
 
     public void Set(AuraType auratype, float time, bool on, bool instantly)
-    {        
+    {
+        
         auratype.timer = time;
         if (on && on == auratype.am_running) return;
 
@@ -82,6 +84,7 @@ public class EffectVisuals : MonoBehaviour {
 
     void OnEnable()
     {
+        auras_count = auras.Length;
         foreach (AuraType a in auras)
         {
             a.aura.color = new Color(a.aura.color.r, a.aura.color.g, a.aura.color.b, 0);

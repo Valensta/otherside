@@ -25,8 +25,7 @@ public class Monitor : MonoBehaviour {
 	public bool is_active = true;
     //public ClearBackground background;
     bool showing_island_sprites = false;
-        
-    public List<TimeOfDay> color_settings = new List<TimeOfDay>();
+            
 	public SpriteRenderer background_image;
 	public SpriteRenderer glowy_image;
 	public SpriteRenderer light;
@@ -121,31 +120,7 @@ public class Monitor : MonoBehaviour {
         foreach (Island_Button i in islands.Values) { i.ResetIslandType(); }
     }
 
-    public Color GetIslandColorSetting(TimeName tod)
-    {
-        foreach (TimeOfDay t in color_settings)
-        {
-            if (tod == t.name)
-            {                
-                    return t.island_color;
-            }
-        }
-        return Color.red;
-    }
-
-    public Color GetColorSetting(TimeName tod, bool glowy)//false sprite bg,  true glowy bg
-    {
-        foreach(TimeOfDay t in color_settings)
-        {
-            if (tod == t.name)
-            {
-                if (!glowy) return t.bg_color;
-                else
-                    return t.glowy_color;
-            }
-        }
-        return Color.red;
-    }
+    
 
 
     void OnDisable()
@@ -471,7 +446,7 @@ public class Monitor : MonoBehaviour {
         }
         my_signal.gameObject.SetActive(true); //soft clear removes signal
 
-        my_signal.gameObject.transform.parent = island.transform;
+        my_signal.gameObject.transform.SetParent(island.transform);
         my_signal.gameObject.transform.position = island.transform.position;
         SetSignalSize(my_signal, _size);
 

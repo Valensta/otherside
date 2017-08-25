@@ -13,7 +13,7 @@ public class dead_island : MonoBehaviour {
         my_button = island;
         my_time = timer;
 		StartCoroutine ("DisableMe");
-        this.transform.parent = island.transform;
+        this.transform.SetParent(island.transform);
 	}
 
 	IEnumerator DisableMe(){
@@ -22,7 +22,7 @@ public class dead_island : MonoBehaviour {
             yield return new WaitForSeconds(interval);
             my_time -= interval;
         }
-        my_button.blocked = false;
+        my_button.setBlocked(false);
         my_button = null;
     
 		Peripheral.Instance.zoo.returnObject (this.gameObject);

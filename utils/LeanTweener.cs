@@ -124,7 +124,7 @@ public class LeanTweener : MonoBehaviour {
                 break;
             case LeanTweenerPreset.DefaultSlowButton:
                 duration = -99;
-                time = 0.35f;
+                time = 0.5f;
                 leantweentype = LeanTweenType.easeInCubic;
                 delay = 0f;
                 type = TweenType.Scale;
@@ -132,7 +132,7 @@ public class LeanTweener : MonoBehaviour {
                 break;
 	        case LeanTweenerPreset.DefaultSlowButtonAlpha:
 		        duration = -99;
-		        time = 0.35f;
+		        time = 0.5f;
 		        leantweentype = LeanTweenType.easeInCubic;
 		        delay = 0f;
 		        type = TweenType.ColorChange;
@@ -140,7 +140,7 @@ public class LeanTweener : MonoBehaviour {
 		        break;
             case LeanTweenerPreset.GentleSlow:
                 duration = -99;
-                time = 0.35f;
+                time = 0.5f;
                 leantweentype = LeanTweenType.easeInOutSine;
                 delay = 0f;
                 type = TweenType.Scale;
@@ -149,8 +149,8 @@ public class LeanTweener : MonoBehaviour {
 	            
 	        case LeanTweenerPreset.GentleSlowAlpha:
 		        duration = -99;
-		        time = 0.7f;
-		        leantweentype = LeanTweenType.easeInCubic;
+		        time = 1.5f;
+		        leantweentype = LeanTweenType.easeInOutSine;
 		        delay = 0f;
 		        type = TweenType.ColorChange;
 		        pingpong = -1;

@@ -13,7 +13,7 @@ public enum EffectSubType {  Null, Junk, Freeze, Ultra }
 public enum PlayerEvent { Null, AmmoRecharge, TowerBuilt, SpecialSkillUsed, UsedInventory,SkillUpgrade,LoadGame, CastleReached,FinishedLevel,NightTowerHit,StartGame, StartWaveEarly, TimeScaleChange,SellTower, ResetSkills, Error, XP, WaveTiming, MarketPlace }
 public enum UIButtonType {  RewardButton, Fade}
 public enum LabelText { Null, DPS, Damage, PCT, Range, Recharge, Duration, Attacks }
-public enum EnvType { Default , Forest, Desert, Urban, ForestGreen}
+public enum EnvType { Default , Forest, Desert, DarkForest}
 public enum TransformType { Null, Toad, StickFigure, FruitFly, Whale }
 public enum TimeScale { Null, Normal, Fast, SuperFastPress, Pause, Resume }
 public enum SaveWhen { Null, MidLevel, EndOfLevel, BetweenLevels, BeginningOfLevel, GoBack1, GoBack2 }
@@ -52,7 +52,7 @@ public enum ArrowType {Sensible, Vexing, Explode,  Slow, Fast, Sparkle, Null, Di
 
 public enum GameState{InGame, Inventory, Won, Lost, MainMenu, Null, WonGame, Loading, LevelList, LoadingWave, Settings, Quit};
 
-public enum MenuButton{Start, Continue, Settings, Inventory, Quit, ToMainMenu, LoadSnapshot, LoadStartLevelSnapshot, ToMap, LoadLatestGame, Rewards, Play, GoBack1, GoBack2, Marketplace};
+public enum MenuButton{Start, Continue, Settings, Inventory, Quit, ToMainMenu, LoadSnapshot, LoadStartLevelSnapshot, ToMap, LoadLatestGame, Rewards, Play, GoBack1, GoBack2, Marketplace, SaveGamePanel, QuitCorner};
 
 public enum ToyType { Hero, Normal, Temporary, Null};
 
@@ -318,6 +318,7 @@ public class Central : MonoBehaviour {
                 break;
             case GameState.Loading:
                 softClearLevel();//clear towers
+                DynamicLoadingBackground.Instance.InitRandom();
                 switch (content)
                 {
 
@@ -633,9 +634,8 @@ public class Central : MonoBehaviour {
 
             if (Levelmakers == SaveWhen.BeginningOfLevel)
             { 
-			//	Debug.Log("Loaded not from file\n");
-				Sun.Instance.SetTimePassively(0);
-				Sun.Instance.Init();
+			//	Debug.Log("Loaded not from file\n");				
+				Sun.Instance.Init(0f);
                 Peripheral.Instance.PlaceCastle();
                 ScoreKeeper.Instance.ResetMidLevelScore();              
 				changeState(GameState.InGame);          
@@ -656,7 +656,7 @@ public class Central : MonoBehaviour {
         //if (current_lvl == 0) return;
         if (Monitor.Instance == null) return;
         foreach (Island_Button island in Monitor.Instance.islands.Values){
-			island.blocked = false;
+			island.setBlocked(false);
 			island.my_toy = null;
         }
         Peripheral.Instance.my_skillmaster.resetSkills();

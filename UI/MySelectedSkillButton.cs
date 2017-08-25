@@ -59,7 +59,7 @@ public class MySelectedSkillButton : MonoBehaviour
         else
         {
             Show.SetAlpha(my_button.image, 1f);
-            Debug.Log($"SelectedSkillButton setSprite {s}\n");
+//            Debug.Log($"SelectedSkillButton setSprite {s}\n");
             my_button.image.sprite = s;
         }
     }

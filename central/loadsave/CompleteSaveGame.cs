@@ -61,15 +61,13 @@ public class CompleteSaveState : System.Object
     public List<WishDial> possible_wishes;
     public float possible_dreams;
     public Difficulty difficulty;
+    public float percent_sun_change;
 
     public int current_wave;
     public int current_wavelet;    
     public int current_event;        //level-specific eventoverseer
     public int current_global_event; //rewardoverseer
     public List<tower_stats> tower_stats;
-
-
-    public TimeName time_name;
     public List<unitStatsSaver> actor_stats = new List<unitStatsSaver>();
     public List<Rune> hero_stats = new List<Rune>();
     public List<SpecialSkillSaver> skills_in_inventory = new List<SpecialSkillSaver>();
@@ -139,7 +137,7 @@ public class CompleteSaveState : System.Object
         tower_stats = new List<tower_stats>();
         foreach (Island_Button island in Monitor.Instance.islands.Values)
         {
-            if (island.blocked && island.my_toy != null)
+            if (island.isBlocked() && island.my_toy != null)
             {
                 tower_stats.Add(island.my_toy.my_tower_stats.TrimClone());
             }
@@ -164,15 +162,13 @@ public class CompleteSaveState : System.Object
 
     public void SaveBasicMidLevelShit()
     {
-
-        time_of_day = Sun.Instance.current_time_of_day;
+     
         dreams = Peripheral.Instance.dreams;
         health = Peripheral.Instance.GetHealth();
         current_wave = Moon.Instance.GetCurrentWave();
         difficulty = Peripheral.Instance.difficulty;
-        current_wavelet = Moon.Instance.current_wavelet;
-        time_name = Sun.Instance.GetCurrentTime();
-        time_of_day = Sun.Instance.current_time_of_day;
+        current_wavelet = Moon.Instance.current_wavelet;        
+        percent_sun_change = Sun.Instance.percentComplete;
         current_level = Central.Instance.current_lvl;
     }
     

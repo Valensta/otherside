@@ -47,7 +47,7 @@ public class Peripheral : MonoBehaviour {
 
     //bool done_making_wave = false;
     public float default_wave_interval;         // waves are spaced at least X seconds apart
-    private float wave_interval;         // waves are spaced at least X seconds apart
+
     float next_wave_time;                   // first wave time
     
     TimeScale previous_timeScale;
@@ -102,19 +102,7 @@ public class Peripheral : MonoBehaviour {
 
     public static Peripheral Instance { get; private set; }
 
-    public float Wave_interval
-    {
-        get
-        {
-            return wave_interval;
-        }
-
-        set
-        {
-        //    Debug.Log("Setting wave interval\n");
-            wave_interval = value;
-        }
-    }
+    public float Wave_interval { get; set; }
 
     public float MaxHealth
     {
@@ -148,7 +136,6 @@ public class Peripheral : MonoBehaviour {
         Wave_interval = 0;
         next_monster_time = 0;
         level_active = false;
-        if (Moon.Instance != null) Moon.Instance.InitEmpty();
 
         island_selected = null;        
         make_wave = false;
@@ -157,30 +144,11 @@ public class Peripheral : MonoBehaviour {
         all_toys = 0;
         TIME = 0f;
         my_inventory.InitWishes();
-        hero_points = new Dictionary<RuneType, int>();
-        hero_points.Add(RuneType.Sensible, 1);
-        hero_points.Add(RuneType.Airy, 1);
-        hero_points.Add(RuneType.Vexing, 1);
+        hero_points = new Dictionary<RuneType, int> {{RuneType.Sensible, 1}, {RuneType.Airy, 1}, {RuneType.Vexing, 1}};
         zoo = Zoo.Instance;
     }
 
-    public LevelMod getLevelMod()
-    {
-        List<LevelMod> level_mod = LevelStore.getLevelSettings(Central.Instance.current_lvl);
-        foreach (LevelMod mod in level_mod)
-        {
-            if (difficulty == mod.difficulty) return mod;
-        }
-  //      Debug.LogWarning("Could not find a level mod for difficulty " + difficulty + "\n");
-        //fallback - need better fallback or don't let people load a difficulty setting that's not defined for the level, duh
-        foreach (LevelMod mod in level_mod)
-        {
-            if (mod.difficulty == Difficulty.Normal) return mod;
-        }
-
-        Debug.LogError("Could not find a level mod!\n");
-        return null;
-    }
+   
 
     void Awake()
     {// Debug.Log("Peripheral awake\n");
@@ -200,36 +168,20 @@ public class Peripheral : MonoBehaviour {
         
     }
 
-    void Start()
-    {
-        
-       // Central.Instance.game_saver.Init();
-    }
 
-
-    public void decrementToys()
-    {
-        toys--;
-     //   Debug.Log("decrement toy\n");
-    }
-
-    public void incrementToys(){toys++;
-       // Debug.Log("increment toy\n");
-    }
+    public void decrementToys() => toys--;   
+    public void incrementToys() => toys++;
+       
     public int getToys(){return toys;}
-    public void setToys(int i) {// Debug.Log("Setting toys " + toys + "\n");
-        toys = i;}
+
+    public void setToys(int i) => toys = i;
 
 
+    public string getSelectedToy()
+    {
+        return (toy_selected?.name != null) ? toy_selected.name : "";
 
-    public string getSelectedToy(){
-        if (toy_selected != null && toy_selected.name != null)
-        {       
-            return toy_selected.name;
-        }
-        else
-            return "";
-	}
+    }
 
     public Firearm getHeroFirearm (RuneType type)
     {
@@ -532,15 +484,16 @@ public class Peripheral : MonoBehaviour {
             FancyLoader.Instance.LoadWavesOnly(Central.Instance.level_list.levels[Central.Instance.current_lvl].name);
 
             Moon.Instance.SetWave(saver.current_wave,0);
+            Sun.Instance.Init(0);
             Moon.Instance.WaveInProgress = false;
-            Moon.Instance.SetTime(saver.time_of_day);
             foreach (unitStatsSaver a in saver.actor_stats) { Central.Instance.setUnitStats(a, true); }
             
             TIME = next_wave_time;
             Debug.Log("Peripheral Loading snapshot\n");
            // Sun.Instance.SetTimePassively(saver.time_of_day);
             
-            Sun.Instance.Init();
+            
+            
 
             PlaceCastle();
             RuneSaver castle_toysaver = saver.getCastle();
@@ -554,12 +507,10 @@ public class Peripheral : MonoBehaviour {
             dreams = saver.dreams;
             setToys(0);
             monster_count = 0;
-                     
-            IslandSaver island_saver;
 
             for (int i = 0; i < saver.islands.Count; i++)
             {
-                island_saver = saver.islands[i];
+                var island_saver = saver.islands[i];
                 Island_Button island = null;                
                 Monitor.Instance.islands.TryGetValue(island_saver.name, out island);
 
@@ -583,22 +534,14 @@ public class Peripheral : MonoBehaviour {
                     {
                         incrementToys();
                     }
-
-                    if (island_saver.toy_saver.type == ToyType.Hero)
-                    {
-                  //      Debug.Log("SETTING HERO MAX LEVEL TO " + toy.rune.getMaxLevel() + " OR " + Central.Instance.getToy(island_saver.toy_saver.toy_name).getMaxLvl() + "\n");
-                    }
+                    
                 }
-                if (island_saver.block_timer > 0)
-                {
-                    island.MakeDeadIsland(island_saver.block_timer);
-                    Debug.Log("Place blocker on island " + island_saver.name + "\n");
-                }
-
+                if (!(island_saver.block_timer > 0)) continue;
+                island.MakeDeadIsland(island_saver.block_timer);
+              
             }            
             //skillmaster is initialized indirectly, when the toys are initialized, through Rune
-            Central.Instance.level_list.special_skill_button_driver.Init();
-          //  EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Normal);
+            Central.Instance.level_list.special_skill_button_driver.Init();          
             EagleEyes.Instance.UpdateToyButtons("blah", ToyType.Normal, false);
         }
         else
@@ -606,11 +549,8 @@ public class Peripheral : MonoBehaviour {
             Debug.LogError("Loading midlevel shit on a non midlevel savegame!\n");
             Debug.Log("Peripheral loaded start level snapshot, current wave is " + 0 + "\n");
             Moon.Instance.SetWave(0,0);
-            Sun.Instance.SetTimePassively(0);
-            Sun.Instance.Init();
-
-
-
+            
+            Sun.Instance.Init(0);
 
             PlaceCastle();
 
@@ -696,15 +636,6 @@ public class Peripheral : MonoBehaviour {
                         { "attribute_1", current_timeScale.ToString() } },
                        customMetrics: null);
 
-        /*
-		if (Duration.timeScale == f) {
-			if (previous_timeScale == f) previous_timeScale = 1f;
-			Duration.timeScale = previous_timeScale;
-		} else {
-			previous_timeScale = Duration.timeScale;
-			Duration.timeScale = f;				
-		}
-        */
     }
 
     bool TimeScaleAbsolute(TimeScale type)
@@ -984,7 +915,7 @@ public class Peripheral : MonoBehaviour {
         
 
 
-		toy.transform.parent = monsters_transform;
+		toy.transform.SetParent(monsters_transform);
 		toy.transform.position = posv;
         toy.transform.localScale = Vector3.one;// = Vector3.one;
 
@@ -1072,12 +1003,16 @@ public class Peripheral : MonoBehaviour {
 
 	    foreach (Island_Button b in Monitor.Instance.fake_castles)
 	    {
-	        if (!b.blocked)InitToyObj(b, "fake_castle", true);
+	        if (!b.isBlocked())InitToyObj(b, "fake_castle", true);
+	        b.setBlocked(true);
 	    }
 	}
 
 
- 
+    public LevelMod getLevelMod()
+    {
+        return LevelStore.getLevelMod(Central.Instance.current_lvl, difficulty);
+    }
 
     public GameObject makeToy(string name, GameObject parent, ref Toy firearm)
     {
@@ -1096,7 +1031,7 @@ public class Peripheral : MonoBehaviour {
         GameObject parent = island_b.parent;
         Vector3 posv = parent.transform.position;
 
-        island_b.blocked = true;
+        island_b.setBlocked(true);
         GameObject toy_obj = zoo.getObject("Toys/" + toy_name, false);
 
         toy_obj.tag = "Player";               
@@ -1104,7 +1039,7 @@ public class Peripheral : MonoBehaviour {
         
         Toy toy = toy_obj.GetComponent<Toy>();        
                 
-        toy_obj.transform.parent = parent.transform;
+        toy_obj.transform.SetParent(parent.transform);
         toy_obj.transform.position = posv;
         toy_obj.transform.localScale = Vector3.one;// = Vector3.one;
         toy_obj.transform.localRotation = Quaternion.identity;
@@ -1159,9 +1094,12 @@ public class Peripheral : MonoBehaviour {
 
         //   Debug.Log("NEW TOY cost toytype " + my_cost_type.toytype + "\n");
 
+        
         _toy.name = toy_name + "|" + all_toys;
         _toy.rune.order = all_toys;
-
+        
+         
+        
         all_toys++;
         if (check_cost || my_cost_type.isHero())
         {
